@@ -14,7 +14,7 @@ interface BrandMarkProps {
 export function BrandMark({ className, size = 32, priority = false }: BrandMarkProps) {
   return (
     <Image
-      src="/brand/seder-logo-v2.png"
+      src="/seder/brand/seder-logo-v2.png"
       alt=""
       aria-hidden
       width={size}
