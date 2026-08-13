@@ -149,6 +149,19 @@ export function TaskList({
   const isEmpty = flat.length === 0;
   const openTask = flat.find((t) => t.id === openTaskId) ?? null;
 
+  /* Stepping through the list from inside the editor. The list is the only
+     thing that knows the order, so it hands the editor a step function rather
+     than the editor reaching for the data. */
+  const openIndex = openTaskId ? flat.findIndex((t) => t.id === openTaskId) : -1;
+  const step = useCallback(
+    (direction: -1 | 1) => {
+      if (openIndex < 0) return;
+      const next = flat[openIndex + direction];
+      if (next) setOpenTaskId(next.id);
+    },
+    [flat, openIndex],
+  );
+
   // Drop ids that the server has since removed, so the sets cannot grow
   // unbounded across a long session.
   useEffect(() => {
@@ -682,6 +695,8 @@ export function TaskList({
         projects={projects}
         labels={labels}
         collaborators={collaborators}
+        onStep={step}
+        canStep={{ prev: openIndex > 0, next: openIndex >= 0 && openIndex < flat.length - 1 }}
         onClose={() => setOpenTaskId(null)}
         onDelete={handleDelete}
       />

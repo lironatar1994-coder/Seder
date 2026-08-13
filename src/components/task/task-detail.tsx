@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Check, Flag, Plus, Repeat, Trash2, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Flag, Plus, Repeat, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { TaskDTO } from '@/server/tasks/queries';
 import { PRIORITIES, PRIORITY_LABELS, swatchVar, type Priority } from '@/lib/constants';
@@ -13,6 +13,7 @@ import {
   Menu,
   MenuContent,
   MenuItem,
+  MenuLabel,
   MenuSeparator,
   MenuTrigger,
   Popover,
@@ -52,6 +53,10 @@ interface DetailProps {
   /** Everyone in this task's project — empty unless it is shared, in which
    *  case the rail gains an assignee. */
   collaborators?: Collaborator[];
+  /** Moves to the neighbouring task in the list behind the modal. Absent at
+   *  the ends, which is what disables the chevrons. */
+  onStep?: (direction: -1 | 1) => void;
+  canStep?: { prev: boolean; next: boolean };
   onClose: () => void;
   onDelete: (task: TaskDTO) => void;
 }
@@ -64,6 +69,8 @@ export function TaskDetail({
   projects,
   labels,
   collaborators = [],
+  onStep,
+  canStep,
   onClose,
   onDelete,
 }: DetailProps) {
@@ -98,6 +105,39 @@ export function TaskDetail({
   }, [openId]);
 
   const task = incoming ?? (draft && draft.id === openId ? draft : null);
+
+  /* Step between tasks without closing, the way Todoist's task view does.
+     Triage is the reason this modal is open at all — the alternative is
+     close, find the next row, open, six times over. */
+  useEffect(() => {
+    if (!onStep) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      // The title and the notes are text fields inside this very modal, and
+      // "j" is a letter before it is a shortcut.
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+
+      if (event.key === 'j' || event.key === 'J') {
+        event.preventDefault();
+        onStep!(1);
+      } else if (event.key === 'k' || event.key === 'K') {
+        event.preventDefault();
+        onStep!(-1);
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onStep]);
 
   useEffect(() => {
     setTitle(task?.title ?? '');
@@ -287,42 +327,31 @@ export function TaskDetail({
       )}
 
       <MetaRow label="עדיפות">
-        {/* Two by two rather than one row: four labelled chips in a 17rem rail
-            would either wrap unevenly or have to be cut down to icons. */}
-        <div className="grid grid-cols-2 gap-1.5">
-          {PRIORITIES.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => {
-                patch({ priority: p });
-                run(() => setPriorityAction(task.id, p));
-              }}
-              aria-pressed={task.priority === p}
-              className={cn(
-                'inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold transition-colors',
-                task.priority === p
-                  ? 'border-accent bg-accent-soft text-accent'
-                  : 'border-line-strong text-muted hover:border-muted',
-              )}
-            >
-              <Flag
-                className={cn(
-                  'size-3 shrink-0',
-                  p === 1
-                    ? 'text-p1'
-                    : p === 2
-                      ? 'text-p2'
-                      : p === 3
-                        ? 'text-p3'
-                        : 'text-line-strong',
-                )}
-                aria-hidden
-              />
-              <span className="truncate">{PRIORITY_LABELS[p]}</span>
-            </button>
-          ))}
-        </div>
+        <Menu>
+          <MenuTrigger asChild>
+            <Button variant="secondary" size="sm" className="w-full justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-2">
+                <Flag className={cn('size-3.5 shrink-0', PRIORITY_TONE[task.priority])} aria-hidden />
+                <span className="truncate">{PRIORITY_LABELS[task.priority]}</span>
+              </span>
+            </Button>
+          </MenuTrigger>
+          <MenuContent className="w-52">
+            {PRIORITIES.map((p) => (
+              <MenuItem
+                key={p}
+                onSelect={() => {
+                  patch({ priority: p });
+                  run(() => setPriorityAction(task.id, p));
+                }}
+              >
+                <Flag className={cn('size-3.5', PRIORITY_TONE[p])} aria-hidden />
+                <span className="flex-1">{PRIORITY_LABELS[p]}</span>
+                {task.priority === p && <Check className="size-3.5 text-accent" aria-hidden />}
+              </MenuItem>
+            ))}
+          </MenuContent>
+        </Menu>
       </MetaRow>
 
       <MetaRow label="חזרה">
@@ -397,34 +426,59 @@ export function TaskDetail({
       </MetaRow>
 
       <MetaRow label="תוויות">
-        <div className="flex flex-wrap gap-1.5">
-          {labels.length === 0 && <p className="text-sm text-muted">עוד אין תוויות.</p>}
-          {labels.map((label) => {
-            const on = task.labels.some((l) => l.id === label.id);
-            return (
-              <button
-                key={label.id}
-                type="button"
-                onClick={() => toggleLabel(label.id)}
-                aria-pressed={on}
-                className={cn(
-                  'rounded-md border px-2 py-1 text-xs font-medium transition-colors',
-                  on ? 'border-transparent' : 'border-line-strong text-muted hover:text-ink',
-                )}
-                style={
-                  on
-                    ? {
+        <Menu>
+          <MenuTrigger asChild>
+            <Button variant="secondary" size="sm" className="w-full justify-between gap-2">
+              {task.labels.length ? (
+                <span className="flex min-w-0 flex-wrap items-center gap-1">
+                  {task.labels.slice(0, 2).map((label) => (
+                    <span
+                      key={label.id}
+                      className="truncate rounded px-1.5 py-0.5 text-xs font-medium"
+                      style={{
                         color: swatchVar(label.color),
                         backgroundColor: `color-mix(in oklab, ${swatchVar(label.color)} 14%, transparent)`,
-                      }
-                    : undefined
-                }
-              >
-                {label.name}
-              </button>
-            );
-          })}
-        </div>
+                      }}
+                    >
+                      {label.name}
+                    </span>
+                  ))}
+                  {task.labels.length > 2 && (
+                    <span className="num text-xs text-muted">+{task.labels.length - 2}</span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-muted">בלי תוויות</span>
+              )}
+            </Button>
+          </MenuTrigger>
+          <MenuContent className="max-h-72 w-52 overflow-y-auto">
+            {labels.length === 0 && <MenuLabel>עוד אין תוויות.</MenuLabel>}
+            {labels.map((label) => {
+              const on = task.labels.some((l) => l.id === label.id);
+              return (
+                <MenuItem
+                  key={label.id}
+                  /* The menu stays open: choosing labels is usually choosing
+                     several, and a picker that closes after each one turns
+                     three labels into three round trips. */
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    toggleLabel(label.id);
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: swatchVar(label.color) }}
+                  />
+                  <span className="flex-1 truncate">{label.name}</span>
+                  {on && <Check className="size-3.5 text-accent" aria-hidden />}
+                </MenuItem>
+              );
+            })}
+          </MenuContent>
+        </Menu>
       </MetaRow>
     </>
   );
@@ -451,7 +505,7 @@ export function TaskDetail({
             עריכת פרטי המשימה
           </DialogPrimitive.Description>
 
-          <header className="flex shrink-0 items-center gap-2 border-be border-line px-4 py-2.5">
+          <header className="flex shrink-0 items-center gap-2 border-be border-line px-4 py-2">
             {/* Where the task lives — which the modal is covering up. */}
             <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
               {project ? (
@@ -468,6 +522,27 @@ export function TaskDetail({
               )}
             </span>
             <span className="flex-1" />
+            {onStep && (
+              <>
+                <IconButton
+                  label="המשימה הקודמת"
+                  disabled={!canStep?.prev}
+                  onClick={() => onStep(-1)}
+                  title="המשימה הקודמת (K)"
+                >
+                  <ChevronUp className="size-4" aria-hidden />
+                </IconButton>
+                <IconButton
+                  label="המשימה הבאה"
+                  disabled={!canStep?.next}
+                  onClick={() => onStep(1)}
+                  title="המשימה הבאה (J)"
+                >
+                  <ChevronDown className="size-4" aria-hidden />
+                </IconButton>
+                <span aria-hidden className="mx-1 h-5 w-px bg-line" />
+              </>
+            )}
             <IconButton label="מחיקת המשימה" onClick={() => onDelete(task)}>
               <Trash2 className="size-4" aria-hidden />
             </IconButton>
@@ -476,8 +551,14 @@ export function TaskDetail({
             </IconButton>
           </header>
 
-          <div className="scroll-quiet flex min-h-0 flex-1 flex-col overflow-y-auto md:grid md:grid-cols-[minmax(0,1fr)_17rem] md:grid-rows-[auto_1fr]">
-            <div className="order-1 min-w-0 p-5 md:col-start-1 md:row-start-1">
+          <div className="scroll-quiet flex min-h-0 flex-1 flex-col overflow-y-auto md:grid md:grid-cols-[minmax(0,1fr)_17rem] md:grid-rows-[1fr_auto]">
+            {/* The description takes the slack.
+                The rail is intrinsically taller than a short task's content, so
+                something has to absorb the difference. Left as a gap it reads
+                as a section that failed to load; given to the notes field it
+                becomes what Todoist uses it for — a large, obvious place to
+                click and start writing. */}
+            <div className="order-1 flex min-w-0 flex-col p-6 md:col-start-1 md:row-start-1">
               <div className="flex items-start gap-3">
                 <button
                   type="button"
@@ -516,20 +597,25 @@ export function TaskDetail({
                 />
               </div>
 
+              {/* One line at rest, growing to fit. A fixed three rows
+                  reserved two empty lines on every task that has no notes —
+                  which is most of them — and pushed the checklist down for
+                  nothing. `field-sizing` does it in CSS where it is supported;
+                  the rows fallback keeps it sane elsewhere. */}
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 onBlur={saveNotes}
-                rows={3}
+                rows={1}
                 placeholder="הערות"
                 aria-label="הערות"
-                className="ms-8 mt-2 resize-none border-transparent bg-transparent px-0 text-sm"
+                className="ms-8 mt-1 min-h-16 flex-1 resize-none border-transparent bg-transparent px-0 text-sm [field-sizing:content]"
               />
             </div>
 
             <aside
               className={cn(
-                'order-2 shrink-0 space-y-4 border-line bg-surface-2/50 p-4',
+                'order-2 shrink-0 space-y-4 border-line bg-surface-2/50 p-5',
                 'border-bs md:order-none md:col-start-2 md:row-span-2 md:row-start-1',
                 'md:border-bs-0 md:border-s',
               )}
@@ -537,8 +623,16 @@ export function TaskDetail({
               {meta}
             </aside>
 
-            <div className="order-3 min-w-0 border-bs border-line p-5 md:order-none md:col-start-1 md:row-start-2">
-              <h3 className="mb-2 text-sm font-bold text-ink">רשימת משנה</h3>
+            <div className="order-3 min-w-0 border-bs border-line p-6 md:order-none md:col-start-1 md:row-start-2">
+              <h3 className="mb-2 flex items-baseline gap-2 text-sm font-bold text-ink">
+                רשימת משנה
+                {task.subtasks.length > 0 && (
+                  <span className="num text-xs font-normal text-muted">
+                    {task.subtasks.filter((sub) => sub.status !== 'TODO').length}/
+                    {task.subtasks.length}
+                  </span>
+                )}
+              </h3>
               <ul className="space-y-1">
                 {task.subtasks.map((sub) => (
                   <li key={sub.id} className="flex items-center gap-2.5">
@@ -609,6 +703,13 @@ export function TaskDetail({
   );
 }
 
+const PRIORITY_TONE: Record<number, string> = {
+  1: 'text-p1',
+  2: 'text-p2',
+  3: 'text-p3',
+  4: 'text-line-strong',
+};
+
 /** One labelled control in the side rail. */
 function MetaRow({
   label,
@@ -619,9 +720,18 @@ function MetaRow({
   htmlFor?: string;
   children: React.ReactNode;
 }) {
+  /* 4px inside the pair, 16px between pairs — a 1:4 ratio, so the label
+     visibly belongs to the control under it rather than floating between two.
+     Both sit on the 4/8 scale the rest of the app uses.
+
+     The label is a size smaller than the app's default field label. Seven of
+     them stacked set the height of the whole dialog, and every 4px here is
+     28px of emptiness at the bottom of the column beside it. */
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={htmlFor}>{label}</Label>
+    <div className="space-y-1">
+      <Label htmlFor={htmlFor} className="text-xs">
+        {label}
+      </Label>
       {children}
     </div>
   );

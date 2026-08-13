@@ -61,6 +61,7 @@ Prefer npm directly? `npm install && npm run setup && npm run dev` does the same
 | `node scripts/contrast-check.mjs` | WCAG audit of the colour tokens in both themes |
 | `node scripts/theme-matrix.mjs` | Renders every OS-preference × choice combination and checks what resolved |
 | `node scripts/mobile-audit.mjs` | Overflow and touch-target sweep at 320 / 390 / 430px, in a real touch context |
+| `node scripts/spacing-check.mjs` | Measures the task editor: spacing scale, group ratios, trailing void |
 | `node scripts/zoom.mjs <path> <selector> <name>` | Crops one element for close inspection |
 
 The three scripts above sign in by minting a session row directly, so no password is typed
@@ -487,6 +488,50 @@ chopped through a letter. In RTL the clip eats the inline-end edge and the icons
 live at the inline-start, so the icons are what survives — and the header
 reverses while collapsed, or the button that reopens the rail would be the first
 thing to disappear behind it.
+
+## The task editor
+
+A centred modal split the way Todoist splits its task view: the main column
+holds what the task *is* — checkbox and title, description, checklist — and a
+17rem rail holds what it is *tagged with*. Todoist's own note on their redesign
+is that attributes are written out rather than reduced to icons, and this
+follows that: every rail row is a spelled-out label over exactly one control,
+so the rail scans as a list rather than a puzzle.
+
+Priority and labels are pickers rather than a grid of chips and a wall of
+toggles. Not only for tidiness — seven fields set the height of the whole
+dialog, and every row that is taller than it needs to be is emptiness in the
+column beside it.
+
+**J** and **K** step to the next and previous task without closing, with
+chevrons in the header for the mouse. Triage is why the editor is open; the
+alternative is close, find the next row, open, six times over. The list owns
+the order, so it hands the editor a step function rather than the editor
+reaching for the data.
+
+### Spacing, measured
+
+```bash
+node scripts/spacing-check.mjs
+```
+
+Three things, none of them by eye:
+
+- **On the scale.** Layout spacing — 12px and up — is a multiple of 4. Below
+  that the rule is multiples of 2, because that range is not layout: it is the
+  gap between an icon and its label, which belongs to the text beside it rather
+  than to the page grid. Forcing those to 4 would not tighten anything, it
+  would only pick a wrong value.
+- **Internal < external.** 4px between a rail label and its control, 16px
+  between one field and the next. A 1:4 ratio, so the label visibly belongs to
+  the control under it. Get this backwards and the panel reads as one
+  undifferentiated stack however tidy each gap is.
+- **No trailing void.** Measured from where the content actually stops, not
+  from the box holding it — a grid row set to `1fr` stretches to the tall rail
+  beside it and reports a comfortable 100% while the eye sees a third of a
+  column of nothing. That was real: 126px, 23% of the dialog. The description
+  field takes the slack now, which is what Todoist uses that space for — it
+  becomes a large, obvious place to click and write instead of a gap.
 
 ### Moving between views
 
