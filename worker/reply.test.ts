@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { captureReply, needsSecondOpinion, readCommand } from './reply';
+import { captureReply, morningMessage, needsSecondOpinion, readCommand } from './reply';
 import type { QuickAddResult } from '@/server/tasks/capture';
 
 /** A capture result, with only the parts a test cares about spelled out. */
@@ -91,6 +91,33 @@ describe('needsSecondOpinion', () => {
 
   it('asks again when nothing could be made of the message at all', () => {
     expect(needsSecondOpinion('???', { ok: false, error: 'לכל משימה צריך שם' })).toBe(true);
+  });
+});
+
+describe('morningMessage', () => {
+  it('says nothing when there is nothing', () => {
+    expect(morningMessage([])).toBe('');
+  });
+
+  it('reads as a sentence for a single task, not a list of one', () => {
+    expect(morningMessage(['לקנות חלב'])).toBe('היום: *לקנות חלב*');
+  });
+
+  it('counts and lists when there are several', () => {
+    const message = morningMessage(['לקנות חלב', 'להתקשר לרופא', 'לאסוף חבילה']);
+    expect(message).toContain('היום (3):');
+    expect(message).toContain('• לקנות חלב');
+    expect(message).toContain('• לאסוף חבילה');
+  });
+
+  it('stops before it becomes a wall, and says how many it held back', () => {
+    const titles = Array.from({ length: 14 }, (_, i) => `משימה ${i + 1}`);
+    const message = morningMessage(titles);
+
+    expect(message).toContain('היום (14):');
+    expect(message).toContain('• משימה 10');
+    expect(message).not.toContain('• משימה 11');
+    expect(message).toContain('ועוד 4.');
   });
 });
 

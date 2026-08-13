@@ -94,6 +94,30 @@ export function reminderMessage(title: string, time: string): string {
   return `תזכורת: *${title}*\nמתחיל בשעה ${time}.`;
 }
 
+/** Past this the list stops being a reminder and starts being a wall. */
+const MORNING_MAX = 10;
+
+/**
+ * The morning note about today's tasks that carry a date but no time.
+ *
+ * One message, not one per task. A task with a time has a moment worth
+ * interrupting for; a task that is merely "today" does not, and eight of them
+ * arriving separately at 08:00 is how a person mutes the number — and how the
+ * number spends its daily send budget before nine.
+ */
+export function morningMessage(titles: string[]): string {
+  if (titles.length === 0) return '';
+  if (titles.length === 1) return `היום: *${titles[0]}*`;
+
+  const shown = titles.slice(0, MORNING_MAX);
+  const rest = titles.length - shown.length;
+
+  const lines = [`היום (${titles.length}):`, ...shown.map((title) => `• ${title}`)];
+  if (rest > 0) lines.push(`ועוד ${rest}.`);
+
+  return lines.join('\n');
+}
+
 /** Sent once, when someone messages from a number that is set up. */
 export function helpMessage(): string {
   return [

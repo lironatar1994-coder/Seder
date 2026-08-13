@@ -28,6 +28,7 @@ import { Boom } from '@hapi/boom';
 import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
+  jidNormalizedUser,
   useMultiFileAuthState,
   type WASocket,
 } from '@whiskeysockets/baileys';
@@ -43,17 +44,24 @@ import { dayStartInstant, today } from '@/lib/dates';
 import {
   captureReply,
   helpMessage,
+  morningMessage,
   needsSecondOpinion,
   readCommand,
   reminderMessage,
 } from './reply';
 import { toQuickAddLine } from './rewrite';
+import { decideTimed, morningInstant, morningIsDue } from './schedule';
 import { DailyCapReached, SendQueue } from './queue';
 
 const AUTH_DIR = process.env.WHATSAPP_AUTH_DIR ?? '/var/lib/seder/whatsapp-auth';
 const STATUS_FILE = process.env.WHATSAPP_STATUS_FILE ?? '/var/lib/seder/whatsapp-status.json';
 const LEAD_MINUTES = Number(process.env.WHATSAPP_REMINDER_LEAD ?? 15);
 const STALE_MINUTES = Number(process.env.WHATSAPP_REMINDER_STALE ?? 90);
+/** When a task has a date but no time, this is the hour it is worth a nudge. */
+const MORNING_HOUR = Number(process.env.WHATSAPP_MORNING_HOUR ?? 8);
+/** How long after that hour the morning note may still go out, so a worker
+ *  that was down at 08:00 still sends it rather than skipping the day. */
+const MORNING_GRACE_MINUTES = Number(process.env.WHATSAPP_MORNING_GRACE ?? 180);
 const DAILY_CAP = Number(process.env.WHATSAPP_DAILY_CAP ?? 200);
 
 const SWEEP_MS = 60_000;
@@ -83,6 +91,27 @@ let sweeping = false;
 
 /** Recent inbound per phone, for the rate limit. */
 const inboundAt = new Map<string, number[]>();
+
+/**
+ * Ids of messages this worker sent.
+ *
+ * Only needed because of the note-to-self chat: there, our own reply comes
+ * straight back through `messages.upsert` looking exactly like a new message
+ * from the operator. Without this the reply becomes a task, which produces a
+ * reply, which becomes a task. Bounded, because the loop it prevents would
+ * otherwise be prevented by memory exhaustion.
+ */
+const sentIds = new Set<string>();
+const SENT_MEMORY = 200;
+
+function rememberSent(id: string | null | undefined): void {
+  if (!id) return;
+  sentIds.add(id);
+  if (sentIds.size > SENT_MEMORY) {
+    // Insertion-ordered, so the first key is the oldest.
+    sentIds.delete(sentIds.values().next().value as string);
+  }
+}
 /** The last task each user created here, so "בטל" has something to undo.
  *  In memory on purpose: the window is minutes, and a worker restart
  *  forgetting it is a better outcome than a table that must be pruned. */
@@ -196,7 +225,8 @@ async function send(
     await queue.run(async () => {
       const jid = await resolveJid(localPhone);
       if (!jid) throw new Error('the number is not on WhatsApp');
-      await sock!.sendMessage(jid, { text });
+      const receipt = await sock!.sendMessage(jid, { text });
+      rememberSent(receipt?.key?.id);
     });
 
     await record({ ...meta, phone: localPhone, direction: 'OUT', body: text, status: 'sent' });
@@ -237,14 +267,34 @@ function overRate(phone: string): boolean {
   return recent.length > MAX_PER_HOUR;
 }
 
+/** Is this the paired account's own chat with itself? */
+function isNoteToSelf(jid: string): boolean {
+  const me = sock?.user?.id ? jidNormalizedUser(sock.user.id) : null;
+  const lid = sock?.user?.lid ? jidNormalizedUser(sock.user.lid) : null;
+  const normalized = jidNormalizedUser(jid);
+  return normalized === me || (lid !== null && normalized === lid);
+}
+
 async function handleMessage(raw: any): Promise<void> {
-  if (!raw?.message || raw.key?.fromMe) return;
+  if (!raw?.message) return;
 
   const jid: string | undefined = raw.key?.remoteJid;
   // Groups, status posts and newsletters are not one person's inbox.
   if (!jid || jid.endsWith('@g.us') || jid.endsWith('@newsletter') || jid === 'status@broadcast') {
     return;
   }
+
+  /**
+   * "Message yourself" is a real inbox, and for whoever runs the service it is
+   * the *only* way in: the paired number and their own number are the same
+   * phone, so every message they send it is technically one they sent.
+   *
+   * `fromMe` therefore cannot mean "ignore". It means "ignore unless this is
+   * the self-chat" — and separately, ignore anything we sent ourselves, which
+   * in that chat comes straight back looking like a fresh message.
+   */
+  if (raw.key?.fromMe && !isNoteToSelf(jid)) return;
+  if (sentIds.has(String(raw.key?.id))) return;
 
   const text = textOf(raw.message);
   if (!text) return;
@@ -371,16 +421,17 @@ async function sweep(): Promise<void> {
       const person = task.assignee ?? task.user;
       if (!person?.phone || !person.whatsappEnabled) continue;
 
-      const [hours, minutes] = String(task.scheduledTime).split(':').map(Number);
-      if (!Number.isFinite(hours) || !Number.isFinite(minutes)) continue;
+      const verdict = decideTimed({
+        now,
+        dayStart,
+        time: String(task.scheduledTime),
+        leadMinutes: LEAD_MINUTES,
+        staleMinutes: STALE_MINUTES,
+      });
 
-      // Built from the real instant the Israeli day began, not from the
-      // server's own midnight — the two differ by the UTC offset, and by an
-      // extra hour for half the year.
-      const startsAt = dayStart + (hours * 60 + minutes) * 60_000;
-      if (now < startsAt - LEAD_MINUTES * 60_000) continue;
+      if (verdict === 'wait') continue;
 
-      if (now > startsAt + STALE_MINUTES * 60_000) {
+      if (verdict === 'stale') {
         // Too late to be a reminder. Marked so it does not queue up behind
         // every future sweep, and recorded so the silence is explainable.
         await db.task.update({ where: { id: task.id }, data: { remindedAt: new Date() } });
@@ -408,10 +459,83 @@ async function sweep(): Promise<void> {
         await db.task.update({ where: { id: task.id }, data: { remindedAt: new Date() } });
       }
     }
+
+    await sweepMorning(day, dayStart, now);
   } catch (error) {
     console.error('[whatsapp] sweep failed:', (error as Error).message);
   } finally {
     sweeping = false;
+  }
+}
+
+/**
+ * The morning note about today's dated-but-untimed tasks.
+ *
+ * One message per person listing all of them, rather than one message per
+ * task: "today" is not a moment worth interrupting for the way "14:30" is, and
+ * eight separate pings at 08:00 is how a person mutes the number.
+ *
+ * Only tasks that already existed at 08:00 are included. Something added at
+ * 09:30 for today does not need to be announced back to the person who just
+ * typed it, and without that rule every afternoon addition would ping
+ * instantly, since the morning hour is already behind us.
+ */
+async function sweepMorning(day: Date, dayStart: number, now: number): Promise<void> {
+  if (!morningIsDue({ now, dayStart, hour: MORNING_HOUR, graceMinutes: MORNING_GRACE_MINUTES })) {
+    return;
+  }
+  const morning = morningInstant(dayStart, MORNING_HOUR);
+
+  const tasks = await db.task.findMany({
+    where: {
+      status: 'TODO',
+      scheduledFor: day,
+      scheduledTime: null,
+      remindedAt: null,
+      parentId: null,
+      createdAt: { lt: new Date(morning) },
+      OR: [
+        { assigneeId: null, user: { whatsappEnabled: true, phone: { not: null } } },
+        { assignee: { whatsappEnabled: true, phone: { not: null } } },
+      ],
+    },
+    select: {
+      id: true,
+      title: true,
+      createdAt: true,
+      user: { select: { id: true, phone: true, whatsappEnabled: true } },
+      assignee: { select: { id: true, phone: true, whatsappEnabled: true } },
+    },
+    orderBy: { createdAt: 'asc' },
+    take: 200,
+  });
+
+  // Grouped by whoever is doing them, not by who wrote them.
+  const byPerson = new Map<string, { phone: string; ids: string[]; titles: string[] }>();
+  for (const task of tasks) {
+    const person = task.assignee ?? task.user;
+    if (!person?.phone || !person.whatsappEnabled) continue;
+
+    const bucket = byPerson.get(person.id) ?? { phone: person.phone, ids: [], titles: [] };
+    bucket.ids.push(task.id);
+    bucket.titles.push(task.title);
+    byPerson.set(person.id, bucket);
+  }
+
+  for (const [userId, bucket] of byPerson) {
+    const sent = await send(bucket.phone, morningMessage(bucket.titles), {
+      userId,
+      kind: 'REMINDER',
+    });
+
+    // All of them, or none: they went out in one message, so marking only some
+    // would repeat the whole list tomorrow minus a few.
+    if (sent) {
+      await db.task.updateMany({
+        where: { id: { in: bucket.ids } },
+        data: { remindedAt: new Date() },
+      });
+    }
   }
 }
 
