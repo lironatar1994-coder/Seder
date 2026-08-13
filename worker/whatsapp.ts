@@ -57,6 +57,16 @@ const STALE_MINUTES = Number(process.env.WHATSAPP_REMINDER_STALE ?? 90);
 const DAILY_CAP = Number(process.env.WHATSAPP_DAILY_CAP ?? 200);
 
 const SWEEP_MS = 60_000;
+/**
+ * How often the status file is rewritten with no change to report.
+ *
+ * Without this the file is only touched on a transition, so a worker that
+ * connected an hour ago and has been fine ever since looks exactly like one
+ * that connected an hour ago and died — both leave a READY file with an old
+ * timestamp. The reader treats a stale timestamp as "not responding", so the
+ * heartbeat is what makes that judgement mean anything.
+ */
+const HEARTBEAT_MS = 60_000;
 /** Per sender, per rolling hour. A person does not send thirty tasks an hour;
  *  something looping does, and every one of them costs a parse and a reply. */
 const MAX_PER_HOUR = 30;
@@ -83,6 +93,12 @@ const UNDO_WINDOW_MS = 15 * 60 * 1000;
 
 type Status = 'INITIALIZING' | 'NEEDS_SCAN' | 'READY' | 'DISCONNECTED' | 'LOGGED_OUT' | 'ERROR';
 
+/** The last thing written, so the heartbeat can restate it. */
+let current: { status: Status; qr: string | null; reason?: string } = {
+  status: 'INITIALIZING',
+  qr: null,
+};
+
 /**
  * Written for the settings page to read.
  *
@@ -91,8 +107,21 @@ type Status = 'INITIALIZING' | 'NEEDS_SCAN' | 'READY' | 'DISCONNECTED' | 'LOGGED
  * document renders as "something is broken" rather than "reconnecting".
  */
 function setStatus(status: Status, qr: string | null = null, reason?: string): void {
+  current = { status, qr, reason };
+  writeStatus();
+  console.log(`[whatsapp] ${status}${reason ? `: ${reason}` : ''}`);
+}
+
+/** Rewrites the file with whatever the state already is, refreshing the
+ *  timestamp. Silent: a heartbeat that logged would fill the log with itself. */
+function writeStatus(): void {
   const payload = JSON.stringify(
-    { status, qr, reason: reason ?? null, updatedAt: new Date().toISOString() },
+    {
+      status: current.status,
+      qr: current.qr,
+      reason: current.reason ?? null,
+      updatedAt: new Date().toISOString(),
+    },
     null,
     2,
   );
@@ -101,7 +130,6 @@ function setStatus(status: Status, qr: string | null = null, reason?: string): v
   const temp = `${STATUS_FILE}.tmp`;
   writeFileSync(temp, payload, { mode: 0o600 });
   renameSync(temp, STATUS_FILE);
-  console.log(`[whatsapp] ${status}${reason ? `: ${reason}` : ''}`);
 }
 
 /* -- logging --------------------------------------------------------------- */
@@ -490,4 +518,6 @@ process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
 setStatus('INITIALIZING');
 setInterval(() => void sweep(), SWEEP_MS);
+// Proof of life, whatever the state. A stale file now means a stopped process.
+setInterval(writeStatus, HEARTBEAT_MS);
 void connect();

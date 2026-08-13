@@ -169,9 +169,11 @@ export function WhatsappForm({
                   : 'text-sm font-semibold text-p1'
             }
           >
-            {/* A worker that crashed leaves its last line saying READY. Saying
-                so out loud beats a dashboard that is confidently wrong. */}
-            {state.stale && state.status === 'READY' ? 'לא מגיב' : connection.text}
+            {/* A crashed worker leaves its last line behind — READY, or
+                "reconnecting" with nothing reconnecting. The file is rewritten
+                every minute while the process lives, so an old timestamp means
+                the process is gone, whatever the line says. */}
+            {state.stale && state.status !== 'OFFLINE' ? 'לא מגיב' : connection.text}
           </span>
         </SettingRow>
       </SettingsSection>
