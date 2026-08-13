@@ -16,6 +16,7 @@ import {
   Settings,
   Sun,
   Tag,
+  Users,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -165,7 +166,15 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
                         className="size-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: swatchVar(project.color) }}
                       />
-                      <span className="flex-1 truncate">{project.name}</span>
+                      <span className="min-w-0 flex-1 truncate">{project.name}</span>
+                      {/* A shared list is worth recognising before you open it:
+                          its count is everyone's work, not just yours. */}
+                      {project.memberCount > 0 && (
+                        <Users
+                          className="size-3.5 shrink-0 text-muted"
+                          aria-label={project.joined ? 'שותפו איתכם' : 'משותף'}
+                        />
+                      )}
                       {project.openCount > 0 && <Count value={project.openCount} />}
                     </NavLink>
                   </li>

@@ -204,6 +204,34 @@
   color-scheme: light dark;
 }
 
+/* Product screenshots on the landing page.
+
+   A capture of the interface cannot be a token, so the two brightnesses ship as
+   two files and the same three tiers above decide which one is shown. Light is
+   the resting state here too, so the dark file is the one that has to be asked
+   for. */
+[data-shot='dark'] {
+  display: none;
+}
+
+:root[data-theme='dark'] [data-shot='light'] {
+  display: none;
+}
+
+:root[data-theme='dark'] [data-shot='dark'] {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] [data-shot='light'] {
+    display: none;
+  }
+
+  :root[data-theme='system'] [data-shot='dark'] {
+    display: block;
+  }
+}
+
 
 @theme inline {
   --color-paper: var(--paper);

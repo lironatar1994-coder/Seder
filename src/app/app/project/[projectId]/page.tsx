@@ -52,7 +52,13 @@ export default async function ProjectPage({
               : `${remaining} משימות פתוחות`
         }
         progress={data.progress}
-        action={<ProjectMenu project={data.project} />}
+        action={
+          <ProjectMenu
+            project={data.project}
+            joined={data.role !== 'owner'}
+            memberCount={data.collaborators.length - 1}
+          />
+        }
       />
       <TaskList
         groups={data.groups}
@@ -60,6 +66,7 @@ export default async function ProjectPage({
         projects={sidebar.projects}
         labels={sidebar.labels}
         hideProject
+        collaborators={data.collaborators}
         empty={{
           title: 'הפרויקט ריק',
           body: `אין עדיין משימות ב״${data.project.name}״. הוסיפו את הצעד הראשון.`,

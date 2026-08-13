@@ -14,6 +14,11 @@ const db = new PrismaClient();
 const EMAIL = 'demo@seder.app';
 const PASSWORD = 'demo1234';
 
+/** A second account, so shared projects have somebody to be shared *with*.
+ *  Collaboration is the one feature that cannot be demonstrated single-handed. */
+const PARTNER_EMAIL = 'partner@seder.app';
+const PARTNER_PASSWORD = 'demo1234';
+
 /** UTC midnight, `offset` days from today — matching how the app stores dates. */
 function day(offset: number): Date {
   const now = new Date();
@@ -276,6 +281,41 @@ async function main() {
     }
   }
 
+  /* The trip is the natural thing to plan with somebody else, so that is the
+     one that gets shared — and one of its tasks is handed over, so the assignee
+     avatar and the "not in my Today" rule are both visible from a cold start. */
+  const partner = await db.user.upsert({
+    where: { email: PARTNER_EMAIL },
+    update: {},
+    create: {
+      email: PARTNER_EMAIL,
+      name: 'נועה',
+      passwordHash: await hash(PARTNER_PASSWORD),
+    },
+  });
+
+  const sharedTrip = await db.project.findFirst({
+    where: { userId: user.id, name: 'טיול ליוון' },
+    select: { id: true },
+  });
+
+  if (sharedTrip) {
+    await db.projectMember.upsert({
+      where: { projectId_userId: { projectId: sharedTrip.id, userId: partner.id } },
+      update: {},
+      create: { projectId: sharedTrip.id, userId: partner.id },
+    });
+
+    const first = await db.task.findFirst({
+      where: { projectId: sharedTrip.id, parentId: null, status: 'TODO' },
+      orderBy: { position: 'asc' },
+      select: { id: true },
+    });
+    if (first) {
+      await db.task.update({ where: { id: first.id }, data: { assigneeId: partner.id } });
+    }
+  }
+
   const [projectCount, labelCount, inboxCount] = await Promise.all([
     db.project.count({ where: { userId: user.id } }),
     db.label.count({ where: { userId: user.id } }),
@@ -283,6 +323,7 @@ async function main() {
   ]);
 
   console.log(`נוצר משתמש דמו: ${EMAIL} / ${PASSWORD}`);
+  console.log(`שותפה לדוגמה: ${PARTNER_EMAIL} / ${PARTNER_PASSWORD} — חברה ב״טיול ליוון״.`);
   console.log(
     `${rows.length} משימות (${inboxCount} בתיבה הנכנסת), ${projectCount} פרויקטים, ${labelCount} תוויות.`,
   );

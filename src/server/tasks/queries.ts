@@ -1,33 +1,51 @@
 import 'server-only';
 import { db } from '@/server/db';
+import {
+  accessibleProjectIds,
+  labelsFor,
+  myWork,
+  projectCollaborators,
+  projectRole,
+  visibleTasks,
+} from '@/server/access';
 import { today, addDays, dayStartInstant, toDayStart } from '@/lib/dates';
 import type { Priority, ViewSlug, WhenBucket } from '@/lib/constants';
 
-/** One projection for every task the client renders, so the shape is identical
- *  whichever view produced it. Exported so search returns the same shape. */
-export const TASK_SELECT = {
-  id: true,
-  title: true,
-  notes: true,
-  priority: true,
-  status: true,
-  whenBucket: true,
-  scheduledFor: true,
-  scheduledTime: true,
-  deadline: true,
-  completedAt: true,
-  recurrence: true,
-  position: true,
-  projectId: true,
-  sectionId: true,
-  parentId: true,
-  project: { select: { id: true, name: true, color: true } },
-  labels: { select: { label: { select: { id: true, name: true, color: true } } } },
-  subtasks: {
-    select: { id: true, title: true, status: true, position: true },
-    orderBy: { position: 'asc' },
-  },
-} as const;
+/**
+ * One projection for every task the client renders, so the shape is identical
+ * whichever view produced it. Exported so search returns the same shape.
+ *
+ * It takes the viewer because one field depends on who is asking: labels are
+ * personal and are never shared, so a task in a shared project shows each of
+ * its readers only their own.
+ */
+export function taskSelect(viewerId: string) {
+  return {
+    id: true,
+    title: true,
+    notes: true,
+    priority: true,
+    status: true,
+    whenBucket: true,
+    scheduledFor: true,
+    scheduledTime: true,
+    deadline: true,
+    completedAt: true,
+    recurrence: true,
+    position: true,
+    projectId: true,
+    sectionId: true,
+    parentId: true,
+    assigneeId: true,
+    project: { select: { id: true, name: true, color: true } },
+    assignee: { select: { id: true, name: true } },
+    labels: labelsFor(viewerId),
+    subtasks: {
+      select: { id: true, title: true, status: true, position: true },
+      orderBy: { position: 'asc' },
+    },
+  } as const;
+}
 
 export interface TaskDTO {
   id: string;
@@ -46,12 +64,17 @@ export interface TaskDTO {
   projectId: string | null;
   sectionId: string | null;
   parentId: string | null;
+  /** Who is doing it, in a shared project. Null means unclaimed. */
+  assigneeId: string | null;
+  assignee: { id: string; name: string } | null;
   project: { id: string; name: string; color: string } | null;
   labels: { id: string; name: string; color: string }[];
   subtasks: { id: string; title: string; status: string; position: string }[];
 }
 
-type RawTask = Awaited<ReturnType<typeof db.task.findMany<{ select: typeof TASK_SELECT }>>>[number];
+type RawTask = Awaited<
+  ReturnType<typeof db.task.findMany<{ select: ReturnType<typeof taskSelect> }>>
+>[number];
 
 export function toDTO(task: RawTask): TaskDTO {
   return {
@@ -84,22 +107,28 @@ export interface ViewData {
 export async function getViewTasks(userId: string, view: ViewSlug): Promise<ViewData> {
   const base = today();
 
+  /* The standing views are "my plate": everything I can see, minus work that
+     is explicitly someone else's. A shared task nobody has claimed shows for
+     everyone in the project, which is what turns "who is taking this?" into a
+     visible question instead of a silent gap. */
+  const mine = await myWork(userId);
+
   switch (view) {
     case 'today': {
       const [open, doneToday] = await Promise.all([
         db.task.findMany({
           where: {
-            userId,
+            ...mine,
             ...TOP_LEVEL,
             status: 'TODO',
             OR: [{ scheduledFor: { lte: base } }, { deadline: { lte: base } }],
           },
-          select: TASK_SELECT,
+          select: taskSelect(userId),
           orderBy: [{ priority: 'asc' }, { position: 'asc' }],
         }),
         db.task.count({
           where: {
-            userId,
+            ...mine,
             ...TOP_LEVEL,
             status: { not: 'TODO' },
             // `completedAt` is a real timestamp, so it is compared against the
@@ -139,12 +168,12 @@ export async function getViewTasks(userId: string, view: ViewSlug): Promise<View
       const horizon = addDays(base, 30);
       const rows = await db.task.findMany({
         where: {
-          userId,
+          ...mine,
           ...TOP_LEVEL,
           status: 'TODO',
           scheduledFor: { gt: base, lte: horizon },
         },
-        select: TASK_SELECT,
+        select: taskSelect(userId),
         orderBy: [{ scheduledFor: 'asc' }, { scheduledTime: 'asc' }, { position: 'asc' }],
       });
 
@@ -169,7 +198,7 @@ export async function getViewTasks(userId: string, view: ViewSlug): Promise<View
       // never filed belongs both here and in "בקרוב".
       const rows = await db.task.findMany({
         where: { userId, ...TOP_LEVEL, status: 'TODO', projectId: null },
-        select: TASK_SELECT,
+        select: taskSelect(userId),
         orderBy: [{ position: 'asc' }],
       });
       return { groups: [{ key: view, title: null, tasks: rows.map(toDTO) }] };
@@ -180,13 +209,13 @@ export async function getViewTasks(userId: string, view: ViewSlug): Promise<View
       // sorted, so the two views never say the same thing twice.
       const rows = await db.task.findMany({
         where: {
-          userId,
+          ...mine,
           ...TOP_LEVEL,
           status: 'TODO',
           whenBucket: 'ANYTIME',
           projectId: { not: null },
         },
-        select: TASK_SELECT,
+        select: taskSelect(userId),
         orderBy: [{ position: 'asc' }],
       });
       return { groups: [{ key: view, title: null, tasks: rows.map(toDTO) }] };
@@ -196,8 +225,8 @@ export async function getViewTasks(userId: string, view: ViewSlug): Promise<View
       // Deferring is an explicit decision, so it holds whether or not the task
       // has been filed.
       const rows = await db.task.findMany({
-        where: { userId, ...TOP_LEVEL, status: 'TODO', whenBucket: 'SOMEDAY' },
-        select: TASK_SELECT,
+        where: { ...mine, ...TOP_LEVEL, status: 'TODO', whenBucket: 'SOMEDAY' },
+        select: taskSelect(userId),
         orderBy: [{ position: 'asc' }],
       });
       return { groups: [{ key: view, title: null, tasks: rows.map(toDTO) }] };
@@ -234,7 +263,11 @@ export async function getLogbookPage(userId: string, cursor?: string): Promise<L
 
   const rows = await db.task.findMany({
     where: {
-      userId,
+      // The same "my plate" rule the standing views use, so the Logbook is the
+      // record of what closed in my world — including work in a shared project
+      // that nobody had claimed, and excluding what was explicitly someone
+      // else's to do.
+      ...(await myWork(userId)),
       ...TOP_LEVEL,
       status: { not: 'TODO' },
       ...(decoded
@@ -247,7 +280,7 @@ export async function getLogbookPage(userId: string, cursor?: string): Promise<L
           }
         : {}),
     },
-    select: TASK_SELECT,
+    select: taskSelect(userId),
     orderBy: [{ completedAt: 'desc' }, { id: 'desc' }],
     // One extra row tells us whether there is another page, without a count().
     take: LOGBOOK_PAGE_SIZE + 1,
@@ -294,8 +327,14 @@ export function groupByCompletionDay(tasks: TaskDTO[]): TaskGroup[] {
 
 /** A project view keeps its sections as groups, with loose tasks on top. */
 export async function getProjectView(userId: string, projectId: string) {
-  const project = await db.project.findFirst({
-    where: { id: projectId, userId },
+  /* Reachability is decided by the access layer, not by matching `userId` here:
+     a project you were let into is not owned by you. Everything below scopes on
+     `projectId` alone, which is only safe *because* this returned a role. */
+  const role = await projectRole(userId, projectId);
+  if (!role) return null;
+
+  const project = await db.project.findUnique({
+    where: { id: projectId },
     select: {
       id: true,
       name: true,
@@ -305,12 +344,16 @@ export async function getProjectView(userId: string, projectId: string) {
   });
   if (!project) return null;
 
+  /* Everyone's tasks, not just mine. A shared project is a shared list: seeing
+     only your own half of it would make the board meaningless. */
   const rows = await db.task.findMany({
-    where: { userId, projectId, ...TOP_LEVEL, status: 'TODO' },
-    select: TASK_SELECT,
+    where: { projectId, ...TOP_LEVEL, status: 'TODO' },
+    select: taskSelect(userId),
     orderBy: [{ position: 'asc' }],
   });
   const tasks = rows.map(toDTO);
+
+  const collaborators = await projectCollaborators(projectId);
 
   const groups: TaskGroup[] = [
     { key: 'loose', title: null, tasks: tasks.filter((t) => !t.sectionId) },
@@ -322,10 +365,16 @@ export async function getProjectView(userId: string, projectId: string) {
   ];
 
   const doneCount = await db.task.count({
-    where: { userId, projectId, ...TOP_LEVEL, status: { not: 'TODO' } },
+    where: { projectId, ...TOP_LEVEL, status: { not: 'TODO' } },
   });
 
-  return { project, groups, progress: { done: doneCount, total: doneCount + tasks.length } };
+  return {
+    project,
+    groups,
+    role,
+    collaborators,
+    progress: { done: doneCount, total: doneCount + tasks.length },
+  };
 }
 
 export async function getLabelView(userId: string, labelId: string) {
@@ -336,8 +385,16 @@ export async function getLabelView(userId: string, labelId: string) {
   if (!label) return null;
 
   const rows = await db.task.findMany({
-    where: { userId, ...TOP_LEVEL, status: 'TODO', labels: { some: { labelId } } },
-    select: TASK_SELECT,
+    /* The label is already this user's — labels are never shared — but the
+       task carrying it may live in a shared project, so visibility still has
+       to be checked rather than assumed from the label. */
+    where: {
+      ...(await visibleTasks(userId)),
+      ...TOP_LEVEL,
+      status: 'TODO',
+      labels: { some: { labelId } },
+    },
+    select: taskSelect(userId),
     orderBy: [{ position: 'asc' }],
   });
 
@@ -383,14 +440,16 @@ export async function getCalendarView(
 
   const rows = await db.task.findMany({
     where: {
-      userId,
+      // My calendar, not the team's: work assigned to someone else has a date
+      // but it is not a date of mine.
+      ...(await myWork(userId)),
       ...TOP_LEVEL,
       OR: [
         { scheduledFor: { gte: from, lte: to } },
         { deadline: { gte: from, lte: to } },
       ],
     },
-    select: TASK_SELECT,
+    select: taskSelect(userId),
     orderBy: [{ scheduledTime: 'asc' }, { priority: 'asc' }, { position: 'asc' }],
   });
 
@@ -444,7 +503,16 @@ export async function getCalendarView(
 }
 
 export interface SidebarData {
-  projects: { id: string; name: string; color: string; openCount: number }[];
+  projects: {
+    id: string;
+    name: string;
+    color: string;
+    openCount: number;
+    /** How many people besides the owner. 0 for a private project. */
+    memberCount: number;
+    /** Someone else owns it and let this user in. */
+    joined: boolean;
+  }[];
   labels: { id: string; name: string; color: string }[];
   counts: Record<ViewSlug, number>;
 }
@@ -454,36 +522,68 @@ export interface SidebarData {
 export async function getSidebarData(userId: string): Promise<SidebarData> {
   const base = today();
   const horizon = addDays(base, 30);
+  const mine = await myWork(userId);
 
-  const [projects, labels, grouped, todayCount, upcomingCount, inboxCount] = await Promise.all([
-    db.project.findMany({
-      where: { userId, archivedAt: null },
-      select: { id: true, name: true, color: true },
-      orderBy: [{ position: 'asc' }],
-    }),
-    db.label.findMany({
-      where: { userId },
-      select: { id: true, name: true, color: true },
-      orderBy: { position: 'asc' },
-    }),
-    db.task.groupBy({
-      by: ['whenBucket', 'projectId'],
-      where: { userId, parentId: null, status: 'TODO' },
-      _count: { _all: true },
-    }),
-    db.task.count({
-      where: {
-        userId,
-        parentId: null,
-        status: 'TODO',
-        OR: [{ scheduledFor: { lte: base } }, { deadline: { lte: base } }],
-      },
-    }),
-    db.task.count({
-      where: { userId, parentId: null, status: 'TODO', scheduledFor: { gt: base, lte: horizon } },
-    }),
-    db.task.count({ where: { userId, parentId: null, status: 'TODO', projectId: null } }),
-  ]);
+  const [projects, labels, grouped, byProject, todayCount, upcomingCount, inboxCount] =
+    await Promise.all([
+      db.project.findMany({
+        where: {
+          archivedAt: null,
+          OR: [{ userId }, { members: { some: { userId } } }],
+        },
+        select: {
+          id: true,
+          name: true,
+          color: true,
+          userId: true,
+          _count: { select: { members: true } },
+        },
+        orderBy: [{ position: 'asc' }],
+      }),
+      db.label.findMany({
+        where: { userId },
+        select: { id: true, name: true, color: true },
+        orderBy: { position: 'asc' },
+      }),
+      // Bucket counts are "my plate", so they match what the views will show.
+      db.task.groupBy({
+        by: ['whenBucket', 'projectId'],
+        where: { ...mine, parentId: null, status: 'TODO' },
+        _count: { _all: true },
+      }),
+      /* A project's own badge counts everything open in it, including work
+         assigned to other people. A shared list has a length, and it is the
+         same length for everyone looking at it — a per-viewer number beside a
+         shared project would have two people reading different totals for the
+         same list and no way to tell why. */
+      db.task.groupBy({
+        by: ['projectId'],
+        where: {
+          parentId: null,
+          status: 'TODO',
+          projectId: { in: await accessibleProjectIds(userId) },
+        },
+        _count: { _all: true },
+      }),
+      db.task.count({
+        where: {
+          ...mine,
+          parentId: null,
+          status: 'TODO',
+          OR: [{ scheduledFor: { lte: base } }, { deadline: { lte: base } }],
+        },
+      }),
+      db.task.count({
+        where: {
+          ...mine,
+          parentId: null,
+          status: 'TODO',
+          scheduledFor: { gt: base, lte: horizon },
+        },
+      }),
+      // The Inbox is unfiled and mine by definition, so it needs no scope.
+      db.task.count({ where: { userId, parentId: null, status: 'TODO', projectId: null } }),
+    ]);
 
   const sumBucket = (bucket: WhenBucket, filedOnly = false) =>
     grouped
@@ -491,13 +591,18 @@ export async function getSidebarData(userId: string): Promise<SidebarData> {
       .reduce((n, g) => n + g._count._all, 0);
 
   const perProject = new Map<string, number>();
-  for (const row of grouped) {
+  for (const row of byProject) {
     if (!row.projectId) continue;
-    perProject.set(row.projectId, (perProject.get(row.projectId) ?? 0) + row._count._all);
+    perProject.set(row.projectId, row._count._all);
   }
 
   return {
-    projects: projects.map((p) => ({ ...p, openCount: perProject.get(p.id) ?? 0 })),
+    projects: projects.map(({ userId: ownerId, _count, ...p }) => ({
+      ...p,
+      openCount: perProject.get(p.id) ?? 0,
+      memberCount: _count.members,
+      joined: ownerId !== userId,
+    })),
     labels,
     counts: {
       inbox: inboxCount,

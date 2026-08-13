@@ -26,7 +26,9 @@ import { useToast } from '@/components/ui/toast';
 import { TaskRow } from './task-row';
 import { TaskDetail } from './task-detail';
 import { Composer } from './composer';
+import type { Collaborator } from '@/server/access';
 import {
+  assignTaskAction,
   bulkCompleteAction,
   bulkDeleteAction,
   bulkMoveAction,
@@ -67,6 +69,9 @@ export interface TaskListProps {
   /** Off in the Logbook: most of the bar's verbs — complete, reschedule,
    *  prioritise — mean nothing to a task that is already done. */
   selectable?: boolean;
+  /** Everyone in this view's project. Only a project view has one, and only a
+   *  shared one has more than a single name in it. */
+  collaborators?: Collaborator[];
   /** Rendered under the last group — the Logbook's "load more" lives here. */
   footer?: React.ReactNode;
 }
@@ -82,6 +87,7 @@ export function TaskList({
   reorderable = true,
   showComposer = true,
   selectable = true,
+  collaborators,
   footer,
 }: TaskListProps) {
   const [completing, setCompleting] = useState<Set<string>>(new Set());
@@ -288,6 +294,17 @@ export function TaskList({
       if (target) toast({ message: `הועבר ל${target}` });
     },
     [run, projects, toast],
+  );
+
+  const handleAssign = useCallback(
+    (task: TaskDTO, assigneeId: string | null) => {
+      run(() => assignTaskAction(task.id, assigneeId));
+      const who = assigneeId
+        ? collaborators?.find((c) => c.id === assigneeId)?.name
+        : null;
+      toast({ message: who ? `הוקצה ל${who}` : 'המשימה פנויה' });
+    },
+    [run, collaborators, toast],
   );
 
   const handleSchedule = useCallback(
@@ -644,6 +661,8 @@ export function TaskList({
                           onSchedule={handleSchedule}
                           onMove={handleMove}
                           projects={projects}
+                          collaborators={collaborators}
+                          onAssign={collaborators ? handleAssign : undefined}
                         />
                       ))}
                     </ul>

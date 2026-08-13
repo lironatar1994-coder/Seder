@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Prisma } from '@prisma/client';
 import { db } from '@/server/db';
+import { canUseProject } from '@/server/access';
 import { requireUser } from '@/server/auth/session';
 import { projectSchema, sectionSchema, labelSchema, fieldErrors } from '@/lib/validation';
 import { keyAfterLast, keyBetween } from '@/lib/ordering';
@@ -42,6 +43,9 @@ export async function renameProjectAction(id: string, input: unknown): Promise<A
     return { ok: false, error: Object.values(fieldErrors(parsed.error))[0] };
   }
 
+  /* Owner only, here and for deletion. Everyone in a shared project can work
+     the list — add, edit, complete, file — but renaming or deleting it changes
+     the thing itself for everybody, so it stays with whoever made it. */
   const result = await db.project.updateMany({
     where: { id, userId: user.id },
     data: parsed.data,
@@ -74,11 +78,9 @@ export async function createSectionAction(input: unknown): Promise<ActionResult>
     return { ok: false, error: Object.values(fieldErrors(parsed.error))[0] };
   }
 
-  const owned = await db.project.findFirst({
-    where: { id: parsed.data.projectId, userId: user.id },
-    select: { id: true },
-  });
-  if (!owned) return { ok: false, error: 'הפרויקט לא נמצא' };
+  if (!(await canUseProject(user.id, parsed.data.projectId))) {
+    return { ok: false, error: 'הפרויקט לא נמצא' };
+  }
 
   const siblings = await db.section.findMany({
     where: { projectId: parsed.data.projectId },
@@ -98,11 +100,15 @@ export async function createSectionAction(input: unknown): Promise<ActionResult>
 export async function deleteSectionAction(id: string): Promise<ActionResult> {
   const user = await requireUser();
 
-  const section = await db.section.findFirst({
-    where: { id, project: { userId: user.id } },
-    select: { id: true },
+  /* A heading is part of working the list, not a setting, so anyone in the
+     project may add or remove one. */
+  const section = await db.section.findUnique({
+    where: { id },
+    select: { id: true, projectId: true },
   });
-  if (!section) return { ok: false, error: 'הקטע לא נמצא' };
+  if (!section || !(await canUseProject(user.id, section.projectId))) {
+    return { ok: false, error: 'הקטע לא נמצא' };
+  }
 
   // onDelete: SetNull on the relation means the tasks survive and fall back to
   // the project's loose list. Deleting a heading must not delete work.

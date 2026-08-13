@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Plus, Trash2, UserPlus, Users } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { SWATCHES, SWATCH_LABELS, swatchVar, type Swatch } from '@/lib/constants';
 import { IconButton, Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import {
   MenuTrigger,
 } from '@/components/ui/overlays';
 import { useToast } from '@/components/ui/toast';
+import { ShareDialog } from './share-dialog';
 import {
   createSectionAction,
   deleteProjectAction,
@@ -25,9 +26,16 @@ import {
 
 export function ProjectMenu({
   project,
+  /** Somebody else owns it and let this user in: they may leave and add
+   *  headings, but renaming or deleting the list is not theirs to do. */
+  joined = false,
+  memberCount = 0,
 }: {
   project: { id: string; name: string; color: string };
+  joined?: boolean;
+  memberCount?: number;
 }) {
+  const [shareOpen, setShareOpen] = useState(false);
   const [sectionOpen, setSectionOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -46,32 +54,54 @@ export function ProjectMenu({
 
   return (
     <>
+      <ShareDialog
+        projectId={project.id}
+        projectName={project.name}
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+      />
+
       <Menu>
         <MenuTrigger asChild>
           <IconButton label="אפשרויות לפרויקט">
             <MoreHorizontal className="size-4" aria-hidden />
           </IconButton>
         </MenuTrigger>
-        <MenuContent align="end" className="w-52">
-          <MenuItem
-            onSelect={() => {
-              setName(project.name);
-              setColor((project.color as Swatch) ?? 'teal');
-              setRenameOpen(true);
-            }}
-          >
-            <Pencil className="size-4" aria-hidden />
-            שינוי שם וצבע
+        <MenuContent align="end" className="w-56">
+          <MenuItem onSelect={() => setShareOpen(true)}>
+            {memberCount > 0 ? (
+              <Users className="size-4" aria-hidden />
+            ) : (
+              <UserPlus className="size-4" aria-hidden />
+            )}
+            <span className="flex-1">{memberCount > 0 ? 'האנשים בפרויקט' : 'שיתוף'}</span>
+            {memberCount > 0 && <span className="num text-xs text-muted">{memberCount + 1}</span>}
           </MenuItem>
+          {!joined && (
+            <MenuItem
+              onSelect={() => {
+                setName(project.name);
+                setColor((project.color as Swatch) ?? 'teal');
+                setRenameOpen(true);
+              }}
+            >
+              <Pencil className="size-4" aria-hidden />
+              שינוי שם וצבע
+            </MenuItem>
+          )}
           <MenuItem onSelect={() => setSectionOpen(true)}>
             <Plus className="size-4" aria-hidden />
             קטע חדש
           </MenuItem>
-          <MenuSeparator />
-          <MenuItem tone="danger" onSelect={() => setConfirmOpen(true)}>
-            <Trash2 className="size-4" aria-hidden />
-            מחיקת הפרויקט
-          </MenuItem>
+          {!joined && (
+            <>
+              <MenuSeparator />
+              <MenuItem tone="danger" onSelect={() => setConfirmOpen(true)}>
+                <Trash2 className="size-4" aria-hidden />
+                מחיקת הפרויקט
+              </MenuItem>
+            </>
+          )}
         </MenuContent>
       </Menu>
 

@@ -266,6 +266,60 @@ nowhere in the visible row.
 | `Ctrl/⌘ A` | Select every task in the view |
 | `Delete` | Delete the selected task |
 
+## Working together
+
+Things has no sharing at all — Cultured Code's own support says a list can only
+be shared as plain text — so the model here is Todoist's, and its shape is
+copied deliberately:
+
+**Sharing lives on a project and goes nowhere else.** The Inbox is "no project",
+so it can never be shared; there is no path from a shared list to an unfiled
+task. Labels stay personal too: a task two people can both see shows each of
+them only their own labels, and editing it clears only the editor's.
+
+**An invitation is a link, then an email.** A deployment may have no SMTP at
+all, and a feature that only works when mail is configured is a feature that
+mostly does not work. Give an address as well and the link is mailed; leave it
+blank and you paste the link into whatever conversation you were already having.
+The link is not consumed on first use — it may have gone to a family — and
+expires after a week.
+
+**One assignee per task.** Two names on a task is how a task ends up with
+nobody doing it. Unclaimed is a real state, and a visible one: an unassigned
+task shows in everyone's Today, which turns "who is taking this?" into a
+question somebody answers instead of a silent gap. Work assigned to someone else
+stays on the shared list and leaves your Today and your calendar.
+
+**Everyone in the project can work the list** — add, edit, reschedule, complete.
+Renaming or deleting the project itself stays with its owner, as does inviting.
+Removing somebody never deletes their work; it unassigns them, because a task
+assigned to a person who can no longer see it is stranded.
+
+### Where access is decided
+
+`src/server/access.ts`, and nowhere else. Before sharing, every query said
+`where: { userId }` — correct, and repeated at fifty-five call sites. A second
+way to reach a task would have meant editing all fifty-five and getting every
+one right, where the first one missed is a task leaking between accounts. The
+rule is stated once and the call sites ask for it:
+
+| Helper | Answers |
+|---|---|
+| `visibleTasks(userId)` | What may this person see: anything in a project they can reach, or unfiled and theirs |
+| `myWork(userId)` | That, minus work explicitly assigned to somebody else — what the standing views show |
+| `canUseTask` / `canUseProject` | May this person write here |
+| `projectCollaborators` | Who can a task be handed to |
+
+`visibleTasks` returns its predicate wrapped in `AND` rather than as a bare
+`OR`, so spreading it into a `where` that has an `OR` of its own is safe — and
+several do. The failure mode of getting that wrong is a query with no access
+predicate at all.
+
+Five end-to-end tests cover it, and three of them are about what does *not*
+happen: an uninvited stranger holding the project's address gets the 404 page,
+the Inbox does not appear for a collaborator, and a private task cannot be
+reached through search from a shared project.
+
 ## On a phone
 
 The phone is not the desk with less room. It is for capture, a glance at what

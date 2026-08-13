@@ -36,6 +36,14 @@ model User {
   tasks       Task[]
   labels      Label[]
   resetTokens PasswordResetToken[]
+
+  /// Projects other people have let this user into.
+  memberships   ProjectMember[]
+  invitesSent   ProjectInvite[] @relation("InvitesSent")
+  /// Tasks in shared projects handed to this user. Separate from `tasks`,
+  /// which is authorship: the person who wrote a task and the person doing it
+  /// are usually the same and sometimes are not.
+  assignedTasks Task[]          @relation("Assignee")
 }
 
 /// Same shape as Session: the emailed link carries a random token, only its
@@ -85,8 +93,57 @@ model Project {
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   sections Section[]
   tasks    Task[]
+  members  ProjectMember[]
+  invites  ProjectInvite[]
 
   @@index([userId, position])
+}
+
+/// Everyone who has been let into a project, *not counting its owner* — the
+/// owner is `Project.userId` and stays the single source of truth for who may
+/// delete or rename it. Storing an owner row here as well would be a second
+/// place for the same fact to be right or wrong.
+///
+/// Access to a project, and so to every task inside it, is "owner or has a row
+/// here". Sharing is deliberately per project and goes no further: the Inbox
+/// has no project, so it can never be shared, and personal labels stay
+/// personal even on a task two people can both see.
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// One membership per person per project; the invite flow relies on this to
+  /// make accepting twice a no-op rather than a duplicate.
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+/// An invitation to join a project.
+///
+/// Same shape as PasswordResetToken and Session: the link carries a random
+/// token, only its SHA-256 is stored, and it is deleted the moment it is used.
+/// A link rather than an email address as the primary mechanism, because this
+/// app may have no SMTP configured — the address is optional and only recorded
+/// when we actually sent it somewhere.
+model ProjectInvite {
+  id          String   @id @default(cuid())
+  tokenHash   String   @unique
+  projectId   String
+  invitedById String
+  email       String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  invitedBy User    @relation("InvitesSent", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([expiresAt])
 }
 
 /// Things calls these "headings" — a titled break inside a project.
@@ -139,6 +196,16 @@ model Task {
   /// Set on the Logbook copies, pointing back at the live task.
   recurrenceParentId String?
 
+  /// Who is doing it, in a shared project. Null means nobody has picked it up
+  /// yet, which is different from "assigned to the owner" — an unclaimed task
+  /// still shows in everyone's project view, and in nobody's Today.
+  ///
+  /// `userId` above is authorship and does not change; this does. In an
+  /// unshared project it is always null, so it costs nothing there.
+  /// SetNull rather than Cascade: removing a person from a project must
+  /// unassign their tasks, never delete them.
+  assigneeId String?
+
   /// Fractional index (see lib/ordering.ts) — reordering writes one row.
   position    String
 
@@ -146,6 +213,7 @@ model Task {
   updatedAt DateTime @updatedAt
 
   user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignee User?       @relation("Assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
   project  Project?    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   section  Section?    @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   parent   Task?       @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
@@ -160,6 +228,9 @@ model Task {
   /// The Inbox is "projectId is null", so that lookup gets its own index.
   @@index([userId, status, projectId])
   @@index([recurrenceParentId])
+  /// "What is on my plate across every shared project" is the query the Today
+  /// view runs for a collaborator.
+  @@index([assigneeId, status])
 }
 
 model Label {

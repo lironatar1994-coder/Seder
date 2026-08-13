@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Browser, type Page } from '@playwright/test';
 import { BASE_PATH, MAIL_LOG } from '../playwright.config';
 
 /** Playwright resolves an absolute path against the *origin*, which would drop
@@ -11,10 +11,10 @@ function uniqueEmail() {
   return `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@seder.test`;
 }
 
-async function register(page: Page) {
+async function register(page: Page, name = 'בודק') {
   const email = uniqueEmail();
   await page.goto(at('/register'));
-  await page.getByLabel('שם').fill('בודק');
+  await page.getByLabel('שם').fill(name);
   await page.getByLabel('אימייל').fill(email);
   await page.getByLabel('סיסמה').fill('bodek-1234');
   await page.getByRole('button', { name: 'יצירת חשבון' }).click();
@@ -673,6 +673,134 @@ test.describe('organising', () => {
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('עבודה ולימודים');
     await expect(page.getByRole('link', { name: /עבודה ולימודים/ })).toBeVisible();
+  });
+});
+
+test.describe('working together', () => {
+  /** Opens the share dialog on a project and returns the invitation link. */
+  async function inviteLink(page: Page, projectName: string): Promise<string> {
+    await page.getByRole('link', { name: new RegExp(projectName) }).click();
+    await page.waitForURL('**/app/project/**');
+    await page.getByRole('button', { name: 'אפשרויות לפרויקט' }).click();
+    await page.getByRole('menuitem', { name: /שיתוף|האנשים בפרויקט/ }).click();
+    await page.getByRole('button', { name: 'יצירת קישור' }).click();
+
+    const link = page.getByRole('dialog').locator('code');
+    await expect(link).toBeVisible();
+    const href = (await link.textContent())!.trim();
+    await page.keyboard.press('Escape');
+    return href;
+  }
+
+  /** A second signed-in person, in their own context. */
+  async function secondPerson(browser: Browser, name = 'נועה') {
+    const context = await browser.newContext({ locale: 'he-IL', timezoneId: 'Asia/Jerusalem' });
+    const page = await context.newPage();
+    await register(page, name);
+    return { context, page };
+  }
+
+  test('an invited person joins, sees the list, and can close a task on it', async ({
+    browser,
+    page,
+  }) => {
+    await register(page);
+    await addTask(page, 'להזמין טיסות #חופשה');
+    const href = await inviteLink(page, 'חופשה');
+
+    const guest = await secondPerson(browser);
+    await guest.page.goto(href);
+    await guest.page.waitForURL('**/app/project/**');
+
+    // The whole list, not just their own half of it.
+    await expect(list(guest.page).getByText('להזמין טיסות')).toBeVisible();
+
+    await completeTask(guest.page, 'להזמין טיסות');
+
+    // And the owner sees it closed, because it is one list.
+    await page.reload();
+    await expect(list(page).getByText('להזמין טיסות')).toHaveCount(0);
+
+    await guest.context.close();
+  });
+
+  test('assigning to someone else takes it off my plate but not off the list', async ({
+    browser,
+    page,
+  }) => {
+    await register(page);
+    await addTask(page, 'לבדוק מלונות #חופשה היום');
+    const href = await inviteLink(page, 'חופשה');
+
+    const guest = await secondPerson(browser);
+    await guest.page.goto(href);
+    await guest.page.waitForURL('**/app/project/**');
+    await guest.context.close();
+
+    // Mine until it is somebody's.
+    await page.goto(at('/app/today'));
+    await expect(list(page).getByText('לבדוק מלונות')).toBeVisible();
+
+    await page.getByRole('link', { name: /חופשה/ }).click();
+    await page.getByRole('button', { name: 'אפשרויות למשימה' }).click();
+    await page.getByRole('menuitem', { name: 'נועה', exact: true }).click();
+    await expect(page.getByTestId('toasts')).toContainText('הוקצה לנועה');
+
+    // Still on the shared list — it is not gone, it is theirs.
+    await expect(list(page).getByText('לבדוק מלונות')).toBeVisible();
+
+    // Gone from my Today, which is the point of assigning it.
+    await page.goto(at('/app/today'));
+    await expect(list(page).getByText('לבדוק מלונות')).toHaveCount(0);
+  });
+
+  test('sharing a project shares nothing else', async ({ browser, page }) => {
+    await register(page);
+    // One unfiled task, which lives in the Inbox and has no project to inherit
+    // access from, and one inside the project that gets shared.
+    await addTask(page, 'סוד שלי');
+    await addTask(page, 'לשכור רכב #חופשה');
+    const href = await inviteLink(page, 'חופשה');
+
+    const guest = await secondPerson(browser);
+    await guest.page.goto(href);
+    await guest.page.waitForURL('**/app/project/**');
+
+    await expect(list(guest.page).getByText('לשכור רכב')).toBeVisible();
+
+    // The Inbox is "no project", so there is nothing for sharing to reach.
+    await guest.page.goto(at('/app/inbox'));
+    await expect(list(guest.page).getByText('סוד שלי')).toHaveCount(0);
+
+    // Nor through search, which is the other way a task could leak.
+    await guest.page.goto(at('/app/today'));
+    await guest.page.keyboard.press('Control+k');
+    await guest.page.getByPlaceholder(/חיפוש/).fill('סוד');
+    await expect(guest.page.getByText('סוד שלי')).toHaveCount(0);
+
+    await guest.context.close();
+  });
+
+  test('a stranger cannot open the project by its address', async ({ browser, page }) => {
+    await register(page);
+    await addTask(page, 'לארוז #חופשה');
+    await page.getByRole('link', { name: /חופשה/ }).click();
+    await page.waitForURL('**/app/project/**');
+    const url = page.url();
+
+    // Never invited, just holding the address.
+    const stranger = await secondPerson(browser);
+    await stranger.page.goto(url);
+    await expect(stranger.page.getByText('הדף הזה לא קיים')).toBeVisible();
+    await expect(stranger.page.getByText('לארוז')).toHaveCount(0);
+
+    await stranger.context.close();
+  });
+
+  test('an expired-looking or nonsense invitation is refused', async ({ page }) => {
+    await register(page);
+    await page.goto(at('/app/join/not-a-real-token'));
+    await expect(page.getByText('ההזמנה לא נקלטה')).toBeVisible();
   });
 });
 

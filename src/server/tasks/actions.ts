@@ -9,12 +9,18 @@ import { relativeDayLabel, today, toDayStart } from '@/lib/dates';
 import { keyBeforeFirst, keyAfterLast, keyBetween } from '@/lib/ordering';
 import { titleSchema, updateTaskSchema, fieldErrors } from '@/lib/validation';
 import {
-  TASK_SELECT,
+  taskSelect,
   getLogbookPage,
   toDTO,
   type LogbookPage,
   type TaskDTO,
 } from '@/server/tasks/queries';
+import {
+  accessibleProjectIds,
+  canUseProject,
+  canUseTask,
+  visibleTasks,
+} from '@/server/access';
 import type { Priority, WhenBucket } from '@/lib/constants';
 
 export interface ActionResult {
@@ -48,8 +54,11 @@ function isoDay(date: Date): string {
 /** Resolves a `#project` or `@label` name to an id, creating it if new, so a
  *  quick-add never silently drops what was typed. */
 async function resolveProject(userId: string, name: string): Promise<string> {
+  // Matched against every project this user can reach, not only the ones they
+  // own: typing "#עבודה" when עבודה is a project someone shared with them has
+  // to file it *there*, not create a private second project with the same name.
   const existing = await db.project.findFirst({
-    where: { userId, name: { equals: name } },
+    where: { id: { in: await accessibleProjectIds(userId) }, name: { equals: name } },
     select: { id: true },
   });
   if (existing) return existing.id;
@@ -139,7 +148,12 @@ export async function quickAddAction(
   // The parser needs the existing names to match "#טיול ליוון" as one project
   // rather than stopping at the space and inventing "טיול".
   const [knownProjects, knownLabels] = await Promise.all([
-    db.project.findMany({ where: { userId: user.id }, select: { name: true } }),
+    // Shared projects included: "#עבודה" should file into the shared project
+    // by that name, not quietly create a private second one beside it.
+    db.project.findMany({
+      where: { id: { in: await accessibleProjectIds(user.id) } },
+      select: { name: true },
+    }),
     db.label.findMany({ where: { userId: user.id }, select: { name: true } }),
   ]);
 
@@ -343,10 +357,11 @@ async function completeOne(userId: string, task: Completable): Promise<Repeat | 
 export async function toggleTaskAction(id: string, done: boolean): Promise<ToggleResult> {
   const user = await requireUser();
 
-  const task = await db.task.findFirst({
-    where: { id, userId: user.id },
-    select: COMPLETE_SELECT,
-  });
+  // Anyone in the project can tick anything off. A shared list where you can
+  // see a task but not close it is not collaboration.
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
+
+  const task = await db.task.findUnique({ where: { id }, select: COMPLETE_SELECT });
   if (!task) return { ok: false, error: 'המשימה לא נמצאה' };
 
   if (!done) {
@@ -374,8 +389,10 @@ export async function undoRepeatAction(
 ): Promise<ActionResult> {
   const user = await requireUser();
 
-  const task = await db.task.findFirst({
-    where: { id, userId: user.id },
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
+
+  const task = await db.task.findUnique({
+    where: { id },
     select: { id: true, deadline: true, scheduledFor: true },
   });
   if (!task) return { ok: false, error: 'המשימה לא נמצאה' };
@@ -387,7 +404,7 @@ export async function undoRepeatAction(
       : 0;
 
   await db.task.deleteMany({
-    where: { id: snapshotId, userId: user.id, recurrenceParentId: id },
+    where: { id: snapshotId, ...(await visibleTasks(user.id)), recurrenceParentId: id },
   });
 
   await db.task.update({
@@ -412,8 +429,28 @@ export async function updateTaskAction(input: unknown): Promise<ActionResult> {
 
   const { id, labelIds, scheduledFor, deadline, ...rest } = parsed.data;
 
-  const owned = await db.task.findFirst({ where: { id, userId: user.id }, select: { id: true } });
-  if (!owned) return { ok: false, error: 'המשימה לא נמצאה' };
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
+
+  /* Reaching the task is not the same as being allowed to send it somewhere.
+     Without this, anyone who can edit a task could file it into a project they
+     cannot open — which does not grant them access, it just makes the task
+     vanish from their own account into someone else's list. */
+  if (rest.projectId && !(await canUseProject(user.id, rest.projectId))) {
+    return { ok: false, error: 'הפרויקט לא נמצא' };
+  }
+
+  /* Labels are personal, so a label id arriving from the client has to be
+     checked against the *sender's* labels — otherwise a collaborator editing a
+     shared task could attach a label belonging to somebody else. */
+  let myLabelIds: string[] | null = null;
+  if (labelIds) {
+    myLabelIds = (
+      await db.label.findMany({ where: { userId: user.id }, select: { id: true } })
+    ).map((l) => l.id);
+    if (labelIds.some((id) => !myLabelIds!.includes(id))) {
+      return { ok: false, error: 'תווית לא נמצאה' };
+    }
+  }
 
   await db.task.update({
     where: { id },
@@ -422,7 +459,15 @@ export async function updateTaskAction(input: unknown): Promise<ActionResult> {
       ...(scheduledFor !== undefined ? { scheduledFor: parseDay(scheduledFor) } : {}),
       ...(deadline !== undefined ? { deadline: parseDay(deadline) } : {}),
       ...(labelIds
-        ? { labels: { deleteMany: {}, create: labelIds.map((labelId) => ({ labelId })) } }
+        ? {
+            /* Only this user's labels are cleared. A blanket `deleteMany: {}`
+               would wipe a collaborator's labels off the shared task every time
+               anyone edited it, and they would have no idea why. */
+            labels: {
+              deleteMany: { labelId: { in: myLabelIds ?? [] } },
+              create: labelIds.map((labelId) => ({ labelId })),
+            },
+          }
         : {}),
     },
   });
@@ -437,8 +482,7 @@ export async function scheduleTaskAction(
   when: { bucket: WhenBucket; date?: string | null; time?: string | null },
 ): Promise<ActionResult> {
   const user = await requireUser();
-  const owned = await db.task.findFirst({ where: { id, userId: user.id }, select: { id: true } });
-  if (!owned) return { ok: false, error: 'המשימה לא נמצאה' };
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
 
   const scheduled = when.bucket === 'SCHEDULED';
   await db.task.update({
@@ -456,8 +500,7 @@ export async function scheduleTaskAction(
 
 export async function setDeadlineAction(id: string, date: string | null): Promise<ActionResult> {
   const user = await requireUser();
-  const owned = await db.task.findFirst({ where: { id, userId: user.id }, select: { id: true } });
-  if (!owned) return { ok: false, error: 'המשימה לא נמצאה' };
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
 
   await db.task.update({ where: { id }, data: { deadline: parseDay(date) } });
   refresh();
@@ -466,17 +509,48 @@ export async function setDeadlineAction(id: string, date: string | null): Promis
 
 export async function setPriorityAction(id: string, priority: Priority): Promise<ActionResult> {
   const user = await requireUser();
-  const owned = await db.task.findFirst({ where: { id, userId: user.id }, select: { id: true } });
-  if (!owned) return { ok: false, error: 'המשימה לא נמצאה' };
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
 
   await db.task.update({ where: { id }, data: { priority } });
   refresh();
   return { ok: true };
 }
 
+/**
+ * Hand a task to someone, or drop it back to unclaimed.
+ *
+ * One assignee, not several — the same choice Todoist makes, and for the same
+ * reason: two names on a task is how a task ends up with nobody doing it.
+ */
+export async function assignTaskAction(
+  id: string,
+  assigneeId: string | null,
+): Promise<ActionResult> {
+  const user = await requireUser();
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
+
+  const task = await db.task.findUnique({ where: { id }, select: { projectId: true } });
+  if (!task) return { ok: false, error: 'המשימה לא נמצאה' };
+
+  if (assigneeId) {
+    // Only into a project, and only to somebody actually in it. Assigning an
+    // unfiled task would hand over something the recipient cannot see: the
+    // Inbox is private, and access comes from the project.
+    if (!task.projectId) return { ok: false, error: 'אפשר להקצות רק משימות בתוך פרויקט' };
+    if (!(await canUseProject(assigneeId, task.projectId))) {
+      return { ok: false, error: 'אפשר להקצות רק למי שחבר בפרויקט' };
+    }
+  }
+
+  await db.task.update({ where: { id }, data: { assigneeId } });
+  refresh();
+  return { ok: true };
+}
+
 export async function deleteTaskAction(id: string): Promise<ActionResult> {
   const user = await requireUser();
-  const result = await db.task.deleteMany({ where: { id, userId: user.id } });
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
+  const result = await db.task.deleteMany({ where: { id } });
   if (result.count === 0) return { ok: false, error: 'המשימה לא נמצאה' };
   refresh();
   return { ok: true };
@@ -494,15 +568,20 @@ export async function reorderTaskAction(
   target?: { projectId?: string | null; sectionId?: string | null; bucket?: WhenBucket },
 ): Promise<ActionResult> {
   const user = await requireUser();
-  const owned = await db.task.findFirst({ where: { id, userId: user.id }, select: { id: true } });
-  if (!owned) return { ok: false, error: 'המשימה לא נמצאה' };
+  if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
 
   const [before, after] = await Promise.all([
     beforeId
-      ? db.task.findFirst({ where: { id: beforeId, userId: user.id }, select: { position: true } })
+      ? db.task.findFirst({
+          where: { id: beforeId, ...(await visibleTasks(user.id)) },
+          select: { position: true },
+        })
       : null,
     afterId
-      ? db.task.findFirst({ where: { id: afterId, userId: user.id }, select: { position: true } })
+      ? db.task.findFirst({
+          where: { id: afterId, ...(await visibleTasks(user.id)) },
+          select: { position: true },
+        })
       : null,
   ]);
 
@@ -527,8 +606,10 @@ export async function addSubtaskAction(parentId: string, title: string): Promise
   const check = titleSchema.safeParse(title);
   if (!check.success) return { ok: false, error: 'לכל פריט צריך שם' };
 
-  const parent = await db.task.findFirst({
-    where: { id: parentId, userId: user.id },
+  if (!(await canUseTask(user.id, parentId))) return { ok: false, error: 'המשימה לא נמצאה' };
+
+  const parent = await db.task.findUnique({
+    where: { id: parentId },
     select: { id: true, projectId: true },
   });
   if (!parent) return { ok: false, error: 'המשימה לא נמצאה' };
@@ -569,10 +650,10 @@ export async function searchTasksAction(query: string): Promise<TaskDTO[]> {
 
   const rows = await db.task.findMany({
     where: {
-      userId: user.id,
+      ...(await visibleTasks(user.id)),
       OR: [{ title: { contains: term } }, { notes: { contains: term } }],
     },
-    select: TASK_SELECT,
+    select: taskSelect(user.id),
     orderBy: [{ status: 'asc' }, { updatedAt: 'desc' }],
     take: 20,
   });
@@ -612,7 +693,7 @@ export interface BulkCompleteResult extends BulkResult {
 async function ownedIds(userId: string, ids: string[]): Promise<string[]> {
   if (!ids.length) return [];
   const rows = await db.task.findMany({
-    where: { id: { in: ids }, userId },
+    where: { id: { in: ids }, ...(await visibleTasks(userId)) },
     select: { id: true },
   });
   return rows.map((r) => r.id);
@@ -624,7 +705,7 @@ export async function bulkCompleteAction(ids: string[]): Promise<BulkCompleteRes
   if (!ids.length) return empty;
 
   const tasks = await db.task.findMany({
-    where: { id: { in: ids }, userId: user.id, status: 'TODO' },
+    where: { id: { in: ids }, ...(await visibleTasks(user.id)), status: 'TODO' },
     select: COMPLETE_SELECT,
   });
   if (!tasks.length) return empty;
@@ -658,7 +739,7 @@ export async function bulkUndoCompleteAction(
 
   if (undo.plain.length) {
     await db.task.updateMany({
-      where: { id: { in: undo.plain }, userId: user.id },
+      where: { id: { in: undo.plain }, ...(await visibleTasks(user.id)) },
       data: { status: 'TODO', completedAt: null },
     });
   }
@@ -710,12 +791,10 @@ export async function bulkMoveAction(ids: string[], projectId: string | null): P
   const owned = await ownedIds(user.id, ids);
   if (!owned.length) return { ok: true, count: 0 };
 
-  if (projectId) {
-    const project = await db.project.findFirst({
-      where: { id: projectId, userId: user.id },
-      select: { id: true },
-    });
-    if (!project) return { ok: false, count: 0, error: 'הפרויקט לא נמצא' };
+  // Moving into a project you were let into is allowed; moving into one you
+  // cannot reach is how a task would disappear from its author's own account.
+  if (projectId && !(await canUseProject(user.id, projectId))) {
+    return { ok: false, count: 0, error: 'הפרויקט לא נמצא' };
   }
 
   const result = await db.task.updateMany({
@@ -732,7 +811,9 @@ export async function bulkDeleteAction(ids: string[]): Promise<BulkResult> {
   const user = await requireUser();
   if (!ids.length) return { ok: true, count: 0 };
 
-  const result = await db.task.deleteMany({ where: { id: { in: ids }, userId: user.id } });
+  const result = await db.task.deleteMany({
+    where: { id: { in: ids }, ...(await visibleTasks(user.id)) },
+  });
   refresh();
   return { ok: true, count: result.count };
 }

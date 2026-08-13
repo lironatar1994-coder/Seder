@@ -264,6 +264,35 @@ await shoot('39-empty-composing', {
 await shoot('40-empty-mobile', { width: 390, height: 844, path: `/app/project/${blank.id}` });
 await db.project.delete({ where: { id: blank.id } });
 
+/* Collaboration only exists between two accounts, so the seed's shared project
+   is the only place it can be photographed. */
+const shared = await db.project.findFirst({
+  where: { userId: user.id, members: { some: {} } },
+  select: { id: true },
+});
+if (shared) {
+  await shoot('41-shared-project', {
+    width: 1280,
+    height: 860,
+    path: `/app/project/${shared.id}`,
+  });
+  await shoot('42-share-dialog', {
+    width: 1280,
+    height: 860,
+    path: `/app/project/${shared.id}`,
+    action: async (page) => {
+      await page.getByRole('button', { name: 'אפשרויות לפרויקט' }).click();
+      await page.getByRole('menuitem', { name: /שיתוף|האנשים בפרויקט/ }).click();
+      await page.waitForTimeout(400);
+    },
+  });
+  await shoot('43-shared-mobile', {
+    width: 390,
+    height: 844,
+    path: `/app/project/${shared.id}`,
+  });
+}
+
 await shoot('08-mobile', { width: 390, height: 844, path: '/app/today' });
 await shoot('33-mobile-dark', {
   width: 390,

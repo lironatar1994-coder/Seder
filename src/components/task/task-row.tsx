@@ -1,7 +1,15 @@
 'use client';
 
 import { memo } from 'react';
-import { Check, FolderInput, GripVertical, Inbox, MoreHorizontal, Trash2 } from 'lucide-react';
+import {
+  Check,
+  FolderInput,
+  GripVertical,
+  Inbox,
+  MoreHorizontal,
+  Trash2,
+  UserRound,
+} from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/cn';
@@ -19,6 +27,8 @@ import {
   MenuTrigger,
 } from '@/components/ui/overlays';
 import { IconButton } from '@/components/ui/button';
+import { Avatar } from '@/components/ui/avatar';
+import type { Collaborator } from '@/server/access';
 import {
   DeadlineChip,
   LabelChip,
@@ -54,6 +64,10 @@ export interface TaskRowProps {
    *  deep in the row menu rather than behind opening the task. */
   onMove: (task: TaskDTO, projectId: string | null) => void;
   projects: { id: string; name: string; color: string }[];
+  /** Everyone in this task's project. Empty unless the project is shared, in
+   *  which case the row gains an assignee. */
+  collaborators?: Collaborator[];
+  onAssign?: (task: TaskDTO, assigneeId: string | null) => void;
 }
 
 export const TaskRow = memo(function TaskRow({
@@ -72,7 +86,11 @@ export const TaskRow = memo(function TaskRow({
   onSchedule,
   onMove,
   projects,
+  collaborators = [],
+  onAssign,
 }: TaskRowProps) {
+  // Only worth showing where there is somebody to hand work to.
+  const shared = collaborators.length > 1 && Boolean(onAssign);
   const done = task.status !== 'TODO';
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -191,6 +209,14 @@ export const TaskRow = memo(function TaskRow({
       </button>
 
       <div className="flex shrink-0 items-center gap-1 pt-0.5">
+        {shared && task.assignee && (
+          <Avatar
+            name={task.assignee.name}
+            size="sm"
+            title={`מוקצה ל${task.assignee.name}`}
+            className="me-0.5"
+          />
+        )}
         <PriorityFlag priority={task.priority} />
         <Menu>
           <MenuTrigger asChild>
@@ -214,6 +240,27 @@ export const TaskRow = memo(function TaskRow({
               onSelect={(when) => onSchedule(task, when)}
               onMore={() => onOpen(task)}
             />
+            {shared && (
+              <>
+                <MenuSeparator />
+                <MenuLabel>אחראי</MenuLabel>
+                <MenuItem onSelect={() => onAssign!(task, null)}>
+                  <UserRound className="size-4 text-muted" aria-hidden />
+                  <span className="flex-1">בלי אחראי</span>
+                  {!task.assigneeId && <Check className="size-3.5 text-accent" aria-hidden />}
+                </MenuItem>
+                {collaborators.map((person) => (
+                  <MenuItem key={person.id} onSelect={() => onAssign!(task, person.id)}>
+                    <Avatar name={person.name} size="sm" decorative />
+                    <span className="flex-1 truncate">{person.name}</span>
+                    {task.assigneeId === person.id && (
+                      <Check className="size-3.5 text-accent" aria-hidden />
+                    )}
+                  </MenuItem>
+                ))}
+              </>
+            )}
+
             <MenuSeparator />
             <MenuSub>
               <MenuSubTrigger>
