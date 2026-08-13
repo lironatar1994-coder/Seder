@@ -4,6 +4,7 @@ export const SETTINGS_SECTIONS = [
   { slug: 'profile', label: 'פרופיל' },
   { slug: 'password', label: 'סיסמה' },
   { slug: 'appearance', label: 'מראה' },
+  { slug: 'whatsapp', label: 'וואטסאפ' },
   { slug: 'account', label: 'חשבון' },
 ] as const;
 

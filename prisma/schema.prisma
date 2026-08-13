@@ -31,6 +31,14 @@ model User {
   /// src/lib/constants.ts.
   defaultView String @default("today")
 
+  /// Israeli mobile in local form, "0541234567". Unique because an inbound
+  /// WhatsApp message has to resolve to exactly one account — two people
+  /// sharing a number would make "whose Inbox does this go to" unanswerable.
+  phone           String? @unique
+  /// Off until asked for. A number on file is not consent to act on messages
+  /// arriving from it, and the number is also how we reach you for reminders.
+  whatsappEnabled Boolean @default(false)
+
   sessions    Session[]
   projects    Project[]
   tasks       Task[]
@@ -40,6 +48,7 @@ model User {
   /// Projects other people have let this user into.
   memberships   ProjectMember[]
   invitesSent   ProjectInvite[] @relation("InvitesSent")
+  whatsappLogs  WhatsappLog[]
   /// Tasks in shared projects handed to this user. Separate from `tasks`,
   /// which is authorship: the person who wrote a task and the person doing it
   /// are usually the same and sometimes are not.
@@ -188,6 +197,12 @@ model Task {
 
   completedAt DateTime?
 
+  /// When a WhatsApp reminder actually went out. A timestamp rather than a
+  /// date string, because the send loop needs to answer "how late is this
+  /// one?" and refuse the ones that are hours stale — a reminder for a 09:00
+  /// task delivered at 15:00 because the worker was down is worse than none.
+  remindedAt DateTime?
+
   /// Repeat rule, serialised by lib/recurrence.ts ("weekly:1:0,3"). Null means
   /// a one-off. Completing a repeating task files a done copy in the Logbook
   /// and moves this row on to its next occurrence, so there is only ever one
@@ -231,6 +246,42 @@ model Task {
   /// "What is on my plate across every shared project" is the query the Today
   /// view runs for a collaborator.
   @@index([assigneeId, status])
+  /// The reminder sweep runs across every user at once, so it cannot use any
+  /// of the userId-prefixed indexes above.
+  @@index([status, scheduledFor, remindedAt])
+}
+
+/// Every WhatsApp message this app sent or acted on, and why it failed when it
+/// did.
+///
+/// The `error` column is the point. The system this replaces recorded a
+/// broadcast as `failed` and nothing else, so 27 of its 70 sends are
+/// unexplained and unfixable after the fact.
+model WhatsappLog {
+  id String @id @default(cuid())
+
+  /// Null for a message from a number that matches no account — worth keeping,
+  /// because "someone messaged us and we ignored them" is the thing you want
+  /// to see when a user says it did not work.
+  userId String?
+  /// Stored in local form, matching User.phone.
+  phone  String
+
+  /// IN | OUT
+  direction String
+  /// CAPTURE | REPLY | REMINDER
+  kind      String
+  body      String
+  /// sent | failed | ignored
+  status    String
+  error     String?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 model Label {

@@ -45,6 +45,7 @@ const PATHS = [
   { path: '/app/inbox' },
   { path: '/app/calendar' },
   { path: '/app/settings/profile' },
+  { path: '/app/settings/whatsapp' },
   {
     path: '/app/today',
     label: '/app/today · composer',

@@ -79,10 +79,13 @@ mv "`$release" "`$current"
 
 if ! (cd "`$current" && bash ./deploy_linux.sh); then
   pm2 delete seder-live >/dev/null 2>&1 || true
+  pm2 delete seder-whatsapp >/dev/null 2>&1 || true
   rm -rf -- "`$current"
   if [ -d "`$previous" ]; then
     mv "`$previous" "`$current"
-    (cd "`$current" && pm2 startOrReload ecosystem.config.cjs --only seder-live --update-env) || true
+    # The WhatsApp pairing lives in /var/lib/seder, so bringing the worker back
+    # on the previous release reconnects rather than asking for a new scan.
+    (cd "`$current" && pm2 startOrReload ecosystem.config.cjs --update-env) || true
   fi
   if [ "`$had_database" -eq 1 ] && [ -f "`$database_backup" ]; then
     install -m 600 "`$database_backup" "`$database"

@@ -121,9 +121,85 @@ test.describe('settings', () => {
     await openSettings(page);
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('הגדרות');
-    for (const tab of ['פרופיל', 'סיסמה', 'מראה', 'חשבון']) {
+    for (const tab of ['פרופיל', 'סיסמה', 'מראה', 'וואטסאפ', 'חשבון']) {
       await expect(page.getByRole('link', { name: tab, exact: true })).toBeVisible();
     }
+  });
+
+  /**
+   * A number no other account holds.
+   *
+   * `User.phone` is unique so that an inbound message has one owner, which
+   * means a hardcoded number in a test passes on the first run and collides
+   * with its own leftover on every run after.
+   */
+  let phoneCounter = Date.now() % 90_000_000;
+  function freshPhone() {
+    const local = `05${String((phoneCounter += 1)).padStart(8, '0').slice(-8)}`;
+    return {
+      local,
+      typed: `+972-${local.slice(1, 3)}-${local.slice(3, 6)}-${local.slice(6)}`,
+      shown: `${local.slice(0, 3)}-${local.slice(3, 6)}-${local.slice(6)}`,
+    };
+  }
+
+  test('WhatsApp needs a number before it can be switched on', async ({ page }) => {
+    await register(page);
+    await openSettings(page);
+    await page.getByRole('link', { name: 'וואטסאפ', exact: true }).click();
+
+    const toggle = page.getByRole('switch', { name: 'פתיחת משימות מוואטסאפ' });
+    // Nothing to identify an incoming message by yet, so the switch is not
+    // offered — rather than offered and then quietly doing nothing.
+    await expect(toggle).toBeDisabled();
+
+    const field = page.getByLabel('המספר שלי');
+    await field.fill('12345');
+    await page.getByRole('button', { name: 'שמירה' }).click();
+    await expect(page.getByText(/מספר נייד ישראלי/)).toBeVisible();
+
+    // Written any way people write it, stored and shown one way.
+    const phone = freshPhone();
+    await field.fill(phone.typed);
+    await page.getByRole('button', { name: 'שמירה' }).click();
+    await expect(page.getByText('נשמר')).toBeVisible();
+    await expect(field).toHaveValue(phone.shown);
+
+    await expect(toggle).toBeEnabled();
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+    await page.reload();
+    await expect(page.getByLabel('המספר שלי')).toHaveValue(phone.shown);
+    await expect(page.getByRole('switch', { name: 'פתיחת משימות מוואטסאפ' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+  });
+
+  test('the same number cannot answer for two accounts', async ({ page, browser }) => {
+    // An inbound message resolves to an account by its number alone; two
+    // owners would make "whose Inbox is this" unanswerable.
+    const phone = freshPhone();
+
+    await register(page);
+    await openSettings(page);
+    await page.getByRole('link', { name: 'וואטסאפ', exact: true }).click();
+    await page.getByLabel('המספר שלי').fill(phone.typed);
+    await page.getByRole('button', { name: 'שמירה' }).click();
+    await expect(page.getByText('נשמר')).toBeVisible();
+
+    // A second person, in their own context — registering again in this one
+    // would just be redirected back to the app by the signed-in session.
+    const other = await browser.newContext();
+    const otherPage = await other.newPage();
+    await register(otherPage);
+    await otherPage.goto(at('/app/settings/whatsapp'));
+    await otherPage.getByLabel('המספר שלי').fill(phone.typed);
+    await otherPage.getByRole('button', { name: 'שמירה' }).click();
+    await expect(otherPage.getByText('כבר משויך לחשבון אחר')).toBeVisible();
+
+    await other.close();
   });
 
   test('changes the display name', async ({ page }) => {

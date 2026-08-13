@@ -3,11 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/server/db';
 import { requireUser } from '@/server/auth/session';
-import { parseQuickAdd } from '@/lib/quick-add-parser';
 import { nextOccurrence, parseRecurrence } from '@/lib/recurrence';
 import { relativeDayLabel, today, toDayStart } from '@/lib/dates';
-import { keyBeforeFirst, keyAfterLast, keyBetween } from '@/lib/ordering';
+import { keyAfterLast, keyBetween } from '@/lib/ordering';
 import { titleSchema, updateTaskSchema, fieldErrors } from '@/lib/validation';
+import { captureTask, type ActionResult, type QuickAddContext, type QuickAddResult } from '@/server/tasks/capture';
 import {
   taskSelect,
   getLogbookPage,
@@ -15,25 +15,13 @@ import {
   type LogbookPage,
   type TaskDTO,
 } from '@/server/tasks/queries';
-import {
-  accessibleProjectIds,
-  canUseProject,
-  canUseTask,
-  visibleTasks,
-} from '@/server/access';
+import { canUseProject, canUseTask, visibleTasks } from '@/server/access';
 import type { Priority, WhenBucket } from '@/lib/constants';
 
-export interface ActionResult {
-  ok: boolean;
-  error?: string;
-  id?: string;
-}
-
-export interface QuickAddResult extends ActionResult {
-  /** Where the task actually landed, so the composer can say so — a task added
-   *  from Today but scheduled for next week otherwise vanishes with no trace. */
-  landedIn?: string;
-}
+/** The result shapes live beside `captureTask`, which the WhatsApp worker also
+ *  calls without going through any action. Re-exported here so every caller
+ *  keeps importing them from the module whose functions return them. */
+export type { ActionResult, QuickAddResult, QuickAddContext } from '@/server/tasks/capture';
 
 /** Every mutation refreshes the whole authenticated segment: the sidebar counts
  *  are as much a part of the answer as the list itself. */
@@ -51,177 +39,23 @@ function isoDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-/** Resolves a `#project` or `@label` name to an id, creating it if new, so a
- *  quick-add never silently drops what was typed. */
-async function resolveProject(userId: string, name: string): Promise<string> {
-  // Matched against every project this user can reach, not only the ones they
-  // own: typing "#עבודה" when עבודה is a project someone shared with them has
-  // to file it *there*, not create a private second project with the same name.
-  const existing = await db.project.findFirst({
-    where: { id: { in: await accessibleProjectIds(userId) }, name: { equals: name } },
-    select: { id: true },
-  });
-  if (existing) return existing.id;
-
-  const siblings = await db.project.findMany({
-    where: { userId },
-    select: { position: true },
-    orderBy: { position: 'asc' },
-  });
-  const created = await db.project.create({
-    data: { userId, name, position: keyAfterLast(siblings), color: 'teal' },
-    select: { id: true },
-  });
-  return created.id;
-}
-
-async function resolveLabels(userId: string, names: string[]): Promise<string[]> {
-  if (!names.length) return [];
-  const existing = await db.label.findMany({
-    where: { userId, name: { in: names } },
-    select: { id: true, name: true },
-  });
-  const found = new Map(existing.map((l) => [l.name, l.id]));
-  const missing = names.filter((n) => !found.has(n));
-
-  if (missing.length) {
-    const siblings = await db.label.findMany({
-      where: { userId },
-      select: { position: true },
-      orderBy: { position: 'asc' },
-    });
-    let cursor = keyAfterLast(siblings);
-    for (const name of missing) {
-      const created = await db.label.create({
-        data: { userId, name, position: cursor, color: 'slate' },
-        select: { id: true },
-      });
-      found.set(name, created.id);
-      cursor = keyBetween(cursor, null);
-    }
-  }
-
-  return names.map((n) => found.get(n)!).filter(Boolean);
-}
-
-export interface QuickAddContext {
-  /** The view the composer was opened from — decides where an undated task
-   *  lands when the text carries no scheduling of its own. */
-  view?: string;
-  projectId?: string | null;
-  sectionId?: string | null;
-  /** "YYYY-MM-DD". Set by the calendar's day panel: adding from inside a day
-   *  means that day, unless the text says otherwise. */
-  defaultDate?: string | null;
-}
 
 /**
- * Where a freshly created task will actually be found.
+ * Quick add, from the web.
  *
- * Filing and scheduling are separate axes, so an unfiled task with a date lands
- * in two places. The message names the dated view, since that is the one the
- * user was thinking about, and adds the Inbox when it applies.
+ * The work is in `captureTask`, which knows nothing about sessions or caches —
+ * so the WhatsApp worker can call the same function and file a task in exactly
+ * the same place, with exactly the same parse. All this adds is who is asking
+ * and what to revalidate afterwards.
  */
-function landingView(
-  bucket: WhenBucket,
-  scheduledFor: Date | null,
-  projectId: string | null,
-): string {
-  const unfiled = projectId === null;
-
-  if (bucket === 'SCHEDULED' && scheduledFor) {
-    const startOfToday = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
-    const when = scheduledFor.getTime() <= startOfToday.getTime() ? 'היום' : 'בקרוב';
-    return unfiled ? `${when} ולתיבה הנכנסת` : when;
-  }
-
-  if (bucket === 'SOMEDAY') return unfiled ? 'מתישהו ולתיבה הנכנסת' : 'מתישהו';
-  return unfiled ? 'תיבה נכנסת' : 'בכל עת';
-}
-
 export async function quickAddAction(
   text: string,
   context: QuickAddContext = {},
 ): Promise<QuickAddResult> {
   const user = await requireUser();
-
-  // The parser needs the existing names to match "#טיול ליוון" as one project
-  // rather than stopping at the space and inventing "טיול".
-  const [knownProjects, knownLabels] = await Promise.all([
-    // Shared projects included: "#עבודה" should file into the shared project
-    // by that name, not quietly create a private second one beside it.
-    db.project.findMany({
-      where: { id: { in: await accessibleProjectIds(user.id) } },
-      select: { name: true },
-    }),
-    db.label.findMany({ where: { userId: user.id }, select: { name: true } }),
-  ]);
-
-  const parsed = parseQuickAdd(text, new Date(), {
-    projects: knownProjects.map((p) => p.name),
-    labels: knownLabels.map((l) => l.name),
-  });
-
-  const titleCheck = titleSchema.safeParse(parsed.title);
-  if (!titleCheck.success) {
-    return { ok: false, error: fieldErrors(titleCheck.error)._ ?? 'לכל משימה צריך שם' };
-  }
-
-  // What the user typed always wins. Only when the text says nothing about
-  // timing does the view they were looking at get to decide.
-  let whenBucket: WhenBucket = parsed.whenBucket;
-  let scheduledFor = parseDay(parsed.scheduledFor);
-  const textCarriedTiming = Boolean(parsed.scheduledFor) || parsed.whenBucket !== 'ANYTIME';
-
-  if (!textCarriedTiming) {
-    if (context.defaultDate) {
-      whenBucket = 'SCHEDULED';
-      scheduledFor = parseDay(context.defaultDate);
-    } else if (context.view === 'today') {
-      whenBucket = 'SCHEDULED';
-      scheduledFor = new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00.000Z`);
-    } else if (context.view === 'someday') {
-      whenBucket = 'SOMEDAY';
-    }
-    // Everything else stays ANYTIME. Whether it shows in the Inbox or in
-    // "בכל עת" follows from having a project, not from the bucket.
-  }
-
-  const projectId = parsed.projectName
-    ? await resolveProject(user.id, parsed.projectName)
-    : context.projectId ?? null;
-
-  const labelIds = await resolveLabels(user.id, parsed.labelNames);
-
-  const siblings = await db.task.findMany({
-    where: { userId: user.id, parentId: null, status: 'TODO' },
-    select: { position: true },
-    orderBy: { position: 'asc' },
-    take: 1,
-  });
-
-  const task = await db.task.create({
-    data: {
-      userId: user.id,
-      title: titleCheck.data,
-      priority: parsed.priority,
-      whenBucket,
-      scheduledFor,
-      scheduledTime: parsed.scheduledTime,
-      deadline: parseDay(parsed.deadline),
-      recurrence: parsed.recurrence,
-      projectId,
-      sectionId: projectId === context.projectId ? context.sectionId ?? null : null,
-      // New tasks land at the top — that is where you look for what you just
-      // typed.
-      position: keyBeforeFirst(siblings),
-      labels: labelIds.length ? { create: labelIds.map((labelId) => ({ labelId })) } : undefined,
-    },
-    select: { id: true },
-  });
-
-  refresh();
-  return { ok: true, id: task.id, landedIn: landingView(whenBucket, scheduledFor, projectId) };
+  const result = await captureTask(user.id, text, context);
+  if (result.ok) refresh();
+  return result;
 }
 
 export interface ToggleResult extends ActionResult {
