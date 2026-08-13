@@ -1203,9 +1203,18 @@ test.describe('rtl', () => {
     await addTask(page, 'משימה לבדיקת פאנל היום');
     await page.getByRole('button', { name: /פתיחת משימה לבדיקת פאנל/ }).click();
 
-    // Inline-end in RTL is the left edge.
-    const panel = (await page.getByRole('dialog').boundingBox())!;
-    expect(panel.x).toBeLessThanOrEqual(1);
+    // The task editor is a centred modal, so the RTL question is not which
+    // edge it clings to but how it is built inside: content on the reading
+    // edge, the settings rail at the inline-end. Centring is checked too,
+    // because `m-auto` is what keeps it direction-agnostic — a translate would
+    // put it in the same place here and the wrong place in LTR.
+    const dialog = page.getByRole('dialog');
+    const box = (await dialog.boundingBox())!;
+    expect(Math.abs(box.x - (contentWidth - box.x - box.width))).toBeLessThanOrEqual(2);
+
+    const rail = (await dialog.locator('aside').boundingBox())!;
+    const title = (await dialog.getByLabel('שם המשימה').boundingBox())!;
+    expect(rail.x + rail.width).toBeLessThanOrEqual(title.x + 1);
   });
 
   test('a dropdown opens without overflowing the left edge', async ({ page }) => {

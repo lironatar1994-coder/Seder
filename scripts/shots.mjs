@@ -304,6 +304,17 @@ await shoot('44-rail-collapsed', {
   },
 });
 
+/** The task editor on a phone: one column, settings between notes and list. */
+await shoot('45-detail-mobile', {
+  width: 390,
+  height: 844,
+  path: '/app/today',
+  action: async (page) => {
+    await page.getByRole('button', { name: /פתיחת לסיים את המצגת/ }).click();
+    await page.waitForTimeout(350);
+  },
+});
+
 await shoot('08-mobile', { width: 390, height: 844, path: '/app/today' });
 await shoot('33-mobile-dark', {
   width: 390,

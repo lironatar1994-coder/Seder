@@ -681,6 +681,7 @@ export function TaskList({
         openId={openTaskId}
         projects={projects}
         labels={labels}
+        collaborators={collaborators}
         onClose={() => setOpenTaskId(null)}
         onDelete={handleDelete}
       />

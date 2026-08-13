@@ -27,8 +27,11 @@ import { describeStored, recurrencePresets } from '@/lib/recurrence';
 function isoDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
+import { Avatar } from '@/components/ui/avatar';
+import type { Collaborator } from '@/server/access';
 import {
   addSubtaskAction,
+  assignTaskAction,
   setDeadlineAction,
   setPriorityAction,
   scheduleTaskAction,
@@ -46,6 +49,9 @@ interface DetailProps {
   openId: string | null;
   projects: { id: string; name: string; color: string }[];
   labels: { id: string; name: string; color: string }[];
+  /** Everyone in this task's project — empty unless it is shared, in which
+   *  case the rail gains an assignee. */
+  collaborators?: Collaborator[];
   onClose: () => void;
   onDelete: (task: TaskDTO) => void;
 }
@@ -57,12 +63,19 @@ export function TaskDetail({
   openId,
   projects,
   labels,
+  collaborators = [],
   onClose,
   onDelete,
 }: DetailProps) {
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [newSubtask, setNewSubtask] = useState('');
+  /* Both pickers are controlled so they can close themselves once a date is
+     chosen. Left open, the popover sits over whatever control is beneath it —
+     and in the rail that is the very next field. Picking a date is a complete
+     act; there is nothing further to do in the panel. */
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [deadlineOpen, setDeadlineOpen] = useState(false);
   /**
    * A local copy of the task, patched the instant the user changes something.
    *
@@ -131,15 +144,306 @@ export function TaskDetail({
     run(() => updateTaskAction({ id: task.id, labelIds: next }));
   };
 
+  const project = projects.find((p) => p.id === task.projectId) ?? null;
+  const shared = collaborators.length > 1;
+  const assignee = collaborators.find((c) => c.id === task.assigneeId) ?? null;
+
+  /* Content on one side, settings on the other.
+
+     This used to be a single narrow column, which put the checklist — the
+     actual work — underneath six settings, and gave the title the same weight
+     as the label above "עדיפות". Todoist splits it the same way and for the
+     same reason: what the task *is* belongs together, and what it is *tagged
+     with* is a rail beside it.
+
+     On a phone the two stack, with the settings between the notes and the
+     checklist rather than after it. Scheduling is the most common reason to
+     open a task, and putting it below a checklist of unknown length is how it
+     becomes unreachable. */
+  const meta = (
+    <>
+      <MetaRow label="מתוזמן ל">
+        <Popover open={scheduleOpen} onOpenChange={setScheduleOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="secondary" size="sm" className="w-full justify-between">
+              {task.scheduledFor
+                ? relativeDayLabel(task.scheduledFor, today())
+                : task.whenBucket === 'ANYTIME'
+                  ? 'בכל עת'
+                  : task.whenBucket === 'SOMEDAY'
+                    ? 'מתישהו'
+                    : 'בלי תאריך'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <DatePickerPanel
+              variant="schedule"
+              value={task.scheduledFor ? isoDay(task.scheduledFor) : null}
+              bucket={task.whenBucket}
+              time={task.scheduledTime}
+              onPick={(when) => {
+                setScheduleOpen(false);
+                patch({
+                  whenBucket: when.bucket,
+                  scheduledFor: when.bucket === 'SCHEDULED' ? asDate(when.date) : null,
+                  scheduledTime: when.bucket === 'SCHEDULED' ? when.time ?? null : null,
+                });
+                run(() =>
+                  scheduleTaskAction(task.id, {
+                    bucket: when.bucket,
+                    date: when.date,
+                    time: when.time,
+                  }),
+                );
+              }}
+              onClear={() => {
+                setScheduleOpen(false);
+                patch({ whenBucket: 'ANYTIME', scheduledFor: null, scheduledTime: null });
+                run(() => scheduleTaskAction(task.id, { bucket: 'ANYTIME' }));
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </MetaRow>
+
+      {/* Two separate questions, so two separate controls: when you plan to
+          work on it, and when it is actually due. */}
+      <MetaRow label="מועד הגשה">
+        <Popover open={deadlineOpen} onOpenChange={setDeadlineOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              className={cn(
+                'w-full justify-between',
+                task.deadline && 'border-flag/40 bg-flag-soft text-flag',
+              )}
+            >
+              {task.deadline ? relativeDayLabel(task.deadline, today()) : 'ללא'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <DatePickerPanel
+              variant="deadline"
+              value={task.deadline ? isoDay(task.deadline) : null}
+              onPick={(when) => {
+                setDeadlineOpen(false);
+                patch({ deadline: asDate(when.date) });
+                run(() => setDeadlineAction(task.id, when.date ?? null));
+              }}
+              onClear={() => {
+                setDeadlineOpen(false);
+                patch({ deadline: null });
+                run(() => setDeadlineAction(task.id, null));
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </MetaRow>
+
+      {shared && (
+        <MetaRow label="אחראי">
+          <Menu>
+            <MenuTrigger asChild>
+              <Button variant="secondary" size="sm" className="w-full justify-between gap-2">
+                {assignee ? (
+                  <span className="flex min-w-0 items-center gap-2">
+                    <Avatar name={assignee.name} size="sm" decorative />
+                    <span className="truncate">{assignee.name}</span>
+                  </span>
+                ) : (
+                  <span className="text-muted">פנוי</span>
+                )}
+              </Button>
+            </MenuTrigger>
+            <MenuContent className="w-56">
+              <MenuItem
+                onSelect={() => {
+                  patch({ assigneeId: null, assignee: null });
+                  run(() => assignTaskAction(task.id, null));
+                }}
+              >
+                <span className="flex-1">בלי אחראי</span>
+                {!task.assigneeId && <Check className="size-3.5 text-accent" aria-hidden />}
+              </MenuItem>
+              {collaborators.map((person) => (
+                <MenuItem
+                  key={person.id}
+                  onSelect={() => {
+                    patch({ assigneeId: person.id, assignee: person });
+                    run(() => assignTaskAction(task.id, person.id));
+                  }}
+                >
+                  <Avatar name={person.name} size="sm" decorative />
+                  <span className="flex-1 truncate">{person.name}</span>
+                  {task.assigneeId === person.id && (
+                    <Check className="size-3.5 text-accent" aria-hidden />
+                  )}
+                </MenuItem>
+              ))}
+            </MenuContent>
+          </Menu>
+        </MetaRow>
+      )}
+
+      <MetaRow label="עדיפות">
+        {/* Two by two rather than one row: four labelled chips in a 17rem rail
+            would either wrap unevenly or have to be cut down to icons. */}
+        <div className="grid grid-cols-2 gap-1.5">
+          {PRIORITIES.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => {
+                patch({ priority: p });
+                run(() => setPriorityAction(task.id, p));
+              }}
+              aria-pressed={task.priority === p}
+              className={cn(
+                'inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold transition-colors',
+                task.priority === p
+                  ? 'border-accent bg-accent-soft text-accent'
+                  : 'border-line-strong text-muted hover:border-muted',
+              )}
+            >
+              <Flag
+                className={cn(
+                  'size-3 shrink-0',
+                  p === 1
+                    ? 'text-p1'
+                    : p === 2
+                      ? 'text-p2'
+                      : p === 3
+                        ? 'text-p3'
+                        : 'text-line-strong',
+                )}
+                aria-hidden
+              />
+              <span className="truncate">{PRIORITY_LABELS[p]}</span>
+            </button>
+          ))}
+        </div>
+      </MetaRow>
+
+      <MetaRow label="חזרה">
+        <Menu>
+          <MenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              className={cn(
+                'w-full justify-between',
+                task.recurrence && 'border-accent/40 bg-accent-soft text-accent',
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                <Repeat className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">{describeStored(task.recurrence) ?? 'לא חוזרת'}</span>
+              </span>
+            </Button>
+          </MenuTrigger>
+          <MenuContent className="w-60">
+            <MenuItem
+              onSelect={() => {
+                patch({ recurrence: null });
+                run(() => updateTaskAction({ id: task.id, recurrence: null }));
+              }}
+            >
+              <span className="flex-1">לא חוזרת</span>
+              {!task.recurrence && <Check className="size-3.5 text-accent" aria-hidden />}
+            </MenuItem>
+            <MenuSeparator />
+            {/* Anchored to the task's own date, so "כל חודש" means the day it
+                is actually scheduled for. */}
+            {recurrencePresets(task.scheduledFor ?? today()).map((preset) => (
+              <MenuItem
+                key={preset.value}
+                onSelect={() => {
+                  patch({ recurrence: preset.value });
+                  run(() => updateTaskAction({ id: task.id, recurrence: preset.value }));
+                }}
+              >
+                <span className="flex-1">{preset.label}</span>
+                {task.recurrence === preset.value && (
+                  <Check className="size-3.5 text-accent" aria-hidden />
+                )}
+              </MenuItem>
+            ))}
+          </MenuContent>
+        </Menu>
+        {task.recurrence && (
+          <p className="text-xs leading-relaxed text-muted">
+            בסימון כהושלמה, המשימה תיפתח מחדש בתאריך הבא ותירשם ביומן.
+          </p>
+        )}
+      </MetaRow>
+
+      <MetaRow label="פרויקט" htmlFor="detail-project">
+        <select
+          id="detail-project"
+          value={task.projectId ?? ''}
+          onChange={(e) =>
+            run(() => updateTaskAction({ id: task.id, projectId: e.target.value || null }))
+          }
+          className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink"
+        >
+          <option value="">בלי פרויקט</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </MetaRow>
+
+      <MetaRow label="תוויות">
+        <div className="flex flex-wrap gap-1.5">
+          {labels.length === 0 && <p className="text-sm text-muted">עוד אין תוויות.</p>}
+          {labels.map((label) => {
+            const on = task.labels.some((l) => l.id === label.id);
+            return (
+              <button
+                key={label.id}
+                type="button"
+                onClick={() => toggleLabel(label.id)}
+                aria-pressed={on}
+                className={cn(
+                  'rounded-md border px-2 py-1 text-xs font-medium transition-colors',
+                  on ? 'border-transparent' : 'border-line-strong text-muted hover:text-ink',
+                )}
+                style={
+                  on
+                    ? {
+                        color: swatchVar(label.color),
+                        backgroundColor: `color-mix(in oklab, ${swatchVar(label.color)} 14%, transparent)`,
+                      }
+                    : undefined
+                }
+              >
+                {label.name}
+              </button>
+            );
+          })}
+        </div>
+      </MetaRow>
+    </>
+  );
+
   return (
     <DialogPrimitive.Root open onOpenChange={(open) => !open && onClose()}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-scrim-soft md:bg-transparent" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-scrim data-[state=open]:animate-pop-in" />
         <DialogPrimitive.Content
           className={cn(
-            'shadow-panel-edge fixed inset-bs-0 inset-be-0 inset-e-0 z-50 flex w-[min(28rem,100vw)] flex-col',
-            'border-s border-line bg-surface',
-            'animate-fade-up',
+            // Centred with inset-0 + m-auto rather than a translate, so it
+            // behaves identically in both directions.
+            'fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100dvh-3rem)] flex-col',
+            'w-[min(58rem,calc(100vw-2rem))] overflow-hidden rounded-2xl',
+            'border border-line bg-surface shadow-pop',
+            'data-[state=open]:animate-pop-in',
+            // A phone gets the whole screen. A centred dialog with a centimetre
+            // of scrim around it is a worse full-screen view, not a smaller one.
+            'max-md:h-dvh max-md:max-h-none max-md:w-full max-md:rounded-none max-md:border-0',
           )}
         >
           <DialogPrimitive.Title className="sr-only">{task.title}</DialogPrimitive.Title>
@@ -147,31 +451,22 @@ export function TaskDetail({
             עריכת פרטי המשימה
           </DialogPrimitive.Description>
 
-          <div className="flex items-center justify-between gap-2 border-be border-line px-4 py-3">
-            <button
-              type="button"
-              role="checkbox"
-              aria-checked={task.status !== 'TODO'}
-              onClick={() => run(() => toggleTaskAction(task.id, task.status === 'TODO'))}
-              className={cn(
-                'grid size-5 shrink-0 place-items-center rounded-md border-2 transition-colors',
-                task.status !== 'TODO'
-                  ? 'border-accent bg-accent'
-                  : 'border-line-strong hover:border-accent',
+          <header className="flex shrink-0 items-center gap-2 border-be border-line px-4 py-2.5">
+            {/* Where the task lives — which the modal is covering up. */}
+            <span className="flex min-w-0 items-center gap-2 text-sm text-muted">
+              {project ? (
+                <>
+                  <span
+                    aria-hidden
+                    className="size-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: swatchVar(project.color) }}
+                  />
+                  <span className="truncate">{project.name}</span>
+                </>
+              ) : (
+                <span className="truncate">תיבה נכנסת</span>
               )}
-            >
-              <Check
-                className={cn(
-                  'size-3 text-[var(--on-accent)]',
-                  task.status !== 'TODO' ? 'opacity-100' : 'opacity-0',
-                )}
-                strokeWidth={3.5}
-                aria-hidden
-              />
-              <span className="sr-only">
-                {task.status !== 'TODO' ? 'ביטול השלמה' : 'סימון כהושלם'}
-              </span>
-            </button>
+            </span>
             <span className="flex-1" />
             <IconButton label="מחיקת המשימה" onClick={() => onDelete(task)}>
               <Trash2 className="size-4" aria-hidden />
@@ -179,20 +474,48 @@ export function TaskDetail({
             <IconButton label="סגירה" onClick={onClose}>
               <X className="size-4" aria-hidden />
             </IconButton>
-          </div>
+          </header>
 
-          <div className="scroll-quiet flex-1 space-y-6 overflow-y-auto p-4">
-            <div className="space-y-3">
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={saveTitle}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur();
-                }}
-                aria-label="שם המשימה"
-                className="border-transparent bg-transparent px-0 text-lg font-semibold"
-              />
+          <div className="scroll-quiet flex min-h-0 flex-1 flex-col overflow-y-auto md:grid md:grid-cols-[minmax(0,1fr)_17rem] md:grid-rows-[auto_1fr]">
+            <div className="order-1 min-w-0 p-5 md:col-start-1 md:row-start-1">
+              <div className="flex items-start gap-3">
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={task.status !== 'TODO'}
+                  onClick={() => run(() => toggleTaskAction(task.id, task.status === 'TODO'))}
+                  className={cn(
+                    'mt-1.5 grid size-5 shrink-0 place-items-center rounded-md border-2 transition-colors',
+                    task.status !== 'TODO'
+                      ? 'border-accent bg-accent'
+                      : 'border-line-strong hover:border-accent',
+                  )}
+                >
+                  <Check
+                    className={cn(
+                      'size-3 text-[var(--on-accent)]',
+                      task.status !== 'TODO' ? 'opacity-100' : 'opacity-0',
+                    )}
+                    strokeWidth={3.5}
+                    aria-hidden
+                  />
+                  <span className="sr-only">
+                    {task.status !== 'TODO' ? 'ביטול השלמה' : 'סימון כהושלם'}
+                  </span>
+                </button>
+
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={saveTitle}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
+                  aria-label="שם המשימה"
+                  className="border-transparent bg-transparent px-0 py-0 text-xl font-bold leading-snug"
+                />
+              </div>
+
               <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -200,234 +523,22 @@ export function TaskDetail({
                 rows={3}
                 placeholder="הערות"
                 aria-label="הערות"
-                className="resize-none border-transparent bg-transparent px-0 text-sm"
+                className="ms-8 mt-2 resize-none border-transparent bg-transparent px-0 text-sm"
               />
             </div>
 
-            {/* Two separate questions, so two separate controls: when you plan
-                to work on it, and when it is actually due. */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>מתוזמן ל</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="secondary" size="sm" className="w-full justify-between">
-                      {task.scheduledFor
-                        ? relativeDayLabel(task.scheduledFor, today())
-                        : task.whenBucket === 'ANYTIME'
-                          ? 'בכל עת'
-                          : task.whenBucket === 'SOMEDAY'
-                            ? 'מתישהו'
-                            : 'בלי תאריך'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <DatePickerPanel
-                      variant="schedule"
-                      value={task.scheduledFor ? isoDay(task.scheduledFor) : null}
-                      bucket={task.whenBucket}
-                      time={task.scheduledTime}
-                      onPick={(when) => {
-                        patch({
-                          whenBucket: when.bucket,
-                          scheduledFor: when.bucket === 'SCHEDULED' ? asDate(when.date) : null,
-                          scheduledTime: when.bucket === 'SCHEDULED' ? when.time ?? null : null,
-                        });
-                        run(() =>
-                          scheduleTaskAction(task.id, {
-                            bucket: when.bucket,
-                            date: when.date,
-                            time: when.time,
-                          }),
-                        );
-                      }}
-                      onClear={() => {
-                        patch({ whenBucket: 'ANYTIME', scheduledFor: null, scheduledTime: null });
-                        run(() => scheduleTaskAction(task.id, { bucket: 'ANYTIME' }));
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label>מועד הגשה</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className={cn(
-                        'w-full justify-between',
-                        task.deadline && 'border-flag/40 bg-flag-soft text-flag',
-                      )}
-                    >
-                      {task.deadline ? relativeDayLabel(task.deadline, today()) : 'ללא'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <DatePickerPanel
-                      variant="deadline"
-                      value={task.deadline ? isoDay(task.deadline) : null}
-                      onPick={(when) => {
-                        patch({ deadline: asDate(when.date) });
-                        run(() => setDeadlineAction(task.id, when.date ?? null));
-                      }}
-                      onClear={() => {
-                        patch({ deadline: null });
-                        run(() => setDeadlineAction(task.id, null));
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>חזרה</Label>
-              <Menu>
-                <MenuTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className={cn(
-                      'w-full justify-between',
-                      task.recurrence && 'border-accent/40 bg-accent-soft text-accent',
-                    )}
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Repeat className="size-3.5" aria-hidden />
-                      {describeStored(task.recurrence) ?? 'לא חוזרת'}
-                    </span>
-                  </Button>
-                </MenuTrigger>
-                <MenuContent className="w-60">
-                  <MenuItem
-                    onSelect={() => {
-                      patch({ recurrence: null });
-                      run(() => updateTaskAction({ id: task.id, recurrence: null }));
-                    }}
-                  >
-                    <span className="flex-1">לא חוזרת</span>
-                    {!task.recurrence && <Check className="size-3.5 text-accent" aria-hidden />}
-                  </MenuItem>
-                  <MenuSeparator />
-                  {/* Anchored to the task's own date, so "כל חודש" means the
-                      day it is actually scheduled for. */}
-                  {recurrencePresets(task.scheduledFor ?? today()).map((preset) => (
-                    <MenuItem
-                      key={preset.value}
-                      onSelect={() => {
-                        patch({ recurrence: preset.value });
-                        run(() => updateTaskAction({ id: task.id, recurrence: preset.value }));
-                      }}
-                    >
-                      <span className="flex-1">{preset.label}</span>
-                      {task.recurrence === preset.value && (
-                        <Check className="size-3.5 text-accent" aria-hidden />
-                      )}
-                    </MenuItem>
-                  ))}
-                </MenuContent>
-              </Menu>
-              {task.recurrence && (
-                <p className="text-xs text-muted">
-                  בסימון כהושלמה, המשימה תיפתח מחדש בתאריך הבא ותירשם ביומן.
-                </p>
+            <aside
+              className={cn(
+                'order-2 shrink-0 space-y-4 border-line bg-surface-2/50 p-4',
+                'border-bs md:order-none md:col-start-2 md:row-span-2 md:row-start-1',
+                'md:border-bs-0 md:border-s',
               )}
-            </div>
+            >
+              {meta}
+            </aside>
 
-            <div className="space-y-2">
-              <Label>עדיפות</Label>
-              <div className="flex gap-1.5">
-                {PRIORITIES.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => {
-                      patch({ priority: p });
-                      run(() => setPriorityAction(task.id, p));
-                    }}
-                    aria-pressed={task.priority === p}
-                    className={cn(
-                      'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold transition-colors',
-                      task.priority === p
-                        ? 'border-accent bg-accent-soft text-accent'
-                        : 'border-line-strong text-muted hover:border-muted',
-                    )}
-                  >
-                    <Flag
-                      className={cn(
-                        'size-3',
-                        p === 1
-                          ? 'text-p1'
-                          : p === 2
-                            ? 'text-p2'
-                            : p === 3
-                              ? 'text-p3'
-                              : 'text-line-strong',
-                      )}
-                      aria-hidden
-                    />
-                    {PRIORITY_LABELS[p]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="detail-project">פרויקט</Label>
-              <select
-                id="detail-project"
-                value={task.projectId ?? ''}
-                onChange={(e) =>
-                  run(() => updateTaskAction({ id: task.id, projectId: e.target.value || null }))
-                }
-                className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-ink"
-              >
-                <option value="">בלי פרויקט</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>תוויות</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {labels.length === 0 && <p className="text-sm text-muted">עוד אין תוויות.</p>}
-                {labels.map((label) => {
-                  const on = task.labels.some((l) => l.id === label.id);
-                  return (
-                    <button
-                      key={label.id}
-                      type="button"
-                      onClick={() => toggleLabel(label.id)}
-                      aria-pressed={on}
-                      className={cn(
-                        'rounded-md border px-2 py-1 text-xs font-medium transition-colors',
-                        on ? 'border-transparent' : 'border-line-strong text-muted hover:text-ink',
-                      )}
-                      style={
-                        on
-                          ? {
-                              color: swatchVar(label.color),
-                              backgroundColor: `color-mix(in oklab, ${swatchVar(label.color)} 14%, transparent)`,
-                            }
-                          : undefined
-                      }
-                    >
-                      {label.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>רשימת משנה</Label>
+            <div className="order-3 min-w-0 border-bs border-line p-5 md:order-none md:col-start-1 md:row-start-2">
+              <h3 className="mb-2 text-sm font-bold text-ink">רשימת משנה</h3>
               <ul className="space-y-1">
                 {task.subtasks.map((sub) => (
                   <li key={sub.id} className="flex items-center gap-2.5">
@@ -478,7 +589,7 @@ export function TaskDetail({
                   setNewSubtask('');
                   run(() => addSubtaskAction(task.id, value));
                 }}
-                className="flex items-center gap-2"
+                className="mt-1 flex items-center gap-2"
               >
                 <Plus className="size-4 shrink-0 text-muted" aria-hidden />
                 <input
@@ -495,5 +606,23 @@ export function TaskDetail({
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+/** One labelled control in the side rail. */
+function MetaRow({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={htmlFor}>{label}</Label>
+      {children}
+    </div>
   );
 }
