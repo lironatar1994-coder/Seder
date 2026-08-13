@@ -33,11 +33,18 @@ const PROBE = () => {
   };
 };
 
+/**
+ * No choice means light on both operating systems — that is the whole point of
+ * the default, and the case a media query would quietly get wrong. Following
+ * the OS is its own stored value now, so it gets its own two rows.
+ */
 const CASES = [
   { name: 'OS light, no choice', os: 'light', choice: null, expect: 'light' },
-  { name: 'OS dark,  no choice', os: 'dark', choice: null, expect: 'dark' },
+  { name: 'OS dark,  no choice', os: 'dark', choice: null, expect: 'light' },
   { name: 'OS light, forced dark', os: 'light', choice: 'dark', expect: 'dark' },
   { name: 'OS dark,  forced light', os: 'dark', choice: 'light', expect: 'light' },
+  { name: 'OS light, system', os: 'light', choice: 'system', expect: 'light' },
+  { name: 'OS dark,  system', os: 'dark', choice: 'system', expect: 'dark' },
 ];
 
 const browser = await chromium.launch();
@@ -88,8 +95,10 @@ for (const [name, row] of Object.entries(results)) {
 }
 
 // The accent must differ between the themes, or light-dark() silently collapsed.
+// Both "no choice" rows now render light, so the dark side has to come from a
+// row that actually asked for dark.
 const lightAccent = results['OS light, no choice'].accent;
-const darkAccent = results['OS dark,  no choice'].accent;
+const darkAccent = results['OS light, forced dark'].accent;
 if (lightAccent === darkAccent) {
   console.log(` FAIL  accent is identical in both themes: ${lightAccent}`);
   failures += 1;
