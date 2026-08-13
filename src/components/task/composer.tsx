@@ -123,17 +123,27 @@ export function Composer({
         )}
 
         <div className="mt-3 flex items-center justify-between gap-3 border-bs border-line pt-2.5">
-          {/* The full syntax list is three wrapped lines on a phone — a
-              reference card pinned over the screen you are trying to type on.
-              It stays in full where there is room, and shrinks to the two
-              tokens worth reaching for mid-sentence where there is not. */}
-          <p className="text-xs text-muted max-md:hidden">
-            אפשר לכתוב <Hint>מחר</Hint> <Hint>בשעה 14:30</Hint> <Hint>כל יום שני</Hint>{' '}
-            <Hint>#פרויקט</Hint> <Hint>@תווית</Hint> <Hint>!1</Hint>
-          </p>
-          <p className="text-xs text-muted md:hidden">
-            <Hint>מחר</Hint> <Hint>#פרויקט</Hint>
-          </p>
+          {/* The syntax list is help, and help that never leaves is furniture:
+              it was taking as much of the composer as the field itself, on
+              every task, forever. It shows while the field is empty and gets
+              out of the way the moment there is something to read instead —
+              by then the parsed chips above are saying the same thing about
+              the actual text. The buttons hold their place either way. */}
+          {text.trim() ? (
+            <span />
+          ) : (
+            <>
+              <p className="text-xs text-muted max-md:hidden">
+                אפשר לכתוב <Hint>מחר</Hint> <Hint>בשעה 14:30</Hint> <Hint>כל יום שני</Hint>{' '}
+                <Hint>#פרויקט</Hint> <Hint>@תווית</Hint> <Hint>!1</Hint>
+              </p>
+              {/* Three wrapped lines on a phone — a reference card pinned over
+                  the screen you are typing on. Two tokens there. */}
+              <p className="text-xs text-muted md:hidden">
+                <Hint>מחר</Hint> <Hint>#פרויקט</Hint>
+              </p>
+            </>
+          )}
           <div className="flex shrink-0 items-center gap-2">
             {onClose && (
               <Button variant="ghost" size="sm" onClick={onClose}>

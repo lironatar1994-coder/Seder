@@ -244,6 +244,26 @@ await shoot('32-bulk-bar-mobile', {
   action: selectTwo,
 });
 
+/* An empty view is a state the app spends real time in — a new account starts
+   in one — and the seed never shows it, so it gets a fixture of its own that
+   cleans itself up. */
+const blank = await db.project.create({
+  data: { userId: user.id, name: 'רשימה ריקה', color: 'slate', position: 'zz' },
+  select: { id: true },
+});
+await shoot('38-empty', { width: 1280, height: 860, path: `/app/project/${blank.id}` });
+await shoot('39-empty-composing', {
+  width: 1280,
+  height: 860,
+  path: `/app/project/${blank.id}`,
+  action: async (page) => {
+    await page.getByRole('button', { name: 'משימה חדשה' }).click();
+    await page.waitForTimeout(250);
+  },
+});
+await shoot('40-empty-mobile', { width: 390, height: 844, path: `/app/project/${blank.id}` });
+await db.project.delete({ where: { id: blank.id } });
+
 await shoot('08-mobile', { width: 390, height: 844, path: '/app/today' });
 await shoot('33-mobile-dark', {
   width: 390,

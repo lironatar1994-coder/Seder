@@ -41,7 +41,16 @@ export default async function ProjectPage({
       <ViewHeader
         title={data.project.name}
         accent={swatchVar(data.project.color)}
-        subtitle={remaining === 0 ? 'הכול סגור בפרויקט הזה.' : `${remaining} משימות פתוחות`}
+        /* "Everything is closed" is only true if something was ever open. A
+           project with no tasks at all had said it too, congratulating the user
+           for finishing a list they had just created. */
+        subtitle={
+          data.progress.total === 0
+            ? null
+            : remaining === 0
+              ? 'הכול סגור בפרויקט הזה.'
+              : `${remaining} משימות פתוחות`
+        }
         progress={data.progress}
         action={<ProjectMenu project={data.project} />}
       />

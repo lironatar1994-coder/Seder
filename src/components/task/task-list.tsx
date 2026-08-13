@@ -572,20 +572,29 @@ export function TaskList({
           <button
             type="button"
             onClick={() => setComposerOpen(true)}
+            // Hugs its content rather than spanning the column. Full width, it
+            // was a 640px band with three small things at one end and a hover
+            // state that lit up the whole empty stretch; the shortcut hint sat
+            // 478px from the label it belongs to.
+            //
             // Hidden on the phone: the tab bar owns capture there, and a second
             // add button would spend the fold repeating it.
-            className="mb-2 hidden w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-start text-muted transition-colors hover:bg-surface hover:text-ink md:flex"
+            className="mb-2 hidden items-center gap-2.5 rounded-lg px-2 py-2.5 text-start text-muted transition-colors hover:bg-surface hover:text-ink md:inline-flex"
           >
             <Plus className="size-5 shrink-0" aria-hidden />
             <span className="text-base">משימה חדשה</span>
-            <kbd className="num ms-auto rounded border border-line px-1.5 text-xs text-muted">
-              N
-            </kbd>
+            <kbd className="num rounded border border-line px-1.5 text-xs text-muted">N</kbd>
           </button>
         ))}
 
       {isEmpty ? (
-        <EmptyState {...empty} onAdd={() => setComposerOpen(true)} showAdd={showComposer} />
+        <EmptyState
+          {...empty}
+          onAdd={() => setComposerOpen(true)}
+          // Not while the composer is already open: two buttons offering the
+          // same thing, one of them under a field waiting for the answer.
+          showAdd={showComposer && !composerOpen}
+        />
       ) : (
         <DndContext
           // Stable id: dnd-kit's generated aria-describedby is otherwise
@@ -779,14 +788,26 @@ function EmptyState({
   showAdd?: boolean;
 }) {
   return (
-    <div className={cn('rounded-xl border border-dashed border-line px-6 py-14 text-center')}>
-      <h2 className="display text-xl text-ink">{title}</h2>
-      <p className="mx-auto mt-1.5 max-w-xs text-sm text-muted">{body}</p>
-      {showAdd && (
-        <Button variant="secondary" size="sm" className="mt-5" onClick={onAdd}>
-          הוספת משימה
-        </Button>
-      )}
+    // No box. An empty view is the page at that moment, not a missing widget,
+    // and a dashed rectangle around it says the opposite — it reads as a slot
+    // waiting to be filled by something that failed to load.
+    //
+    // It also sits on the page's own axis. The header, the group rules and
+    // every task start at the inline edge; a centred block floats off that
+    // spine and is the reason the screen looked unfinished rather than clear.
+    <div className="py-2">
+      {/* The same hairline that heads a group of tasks, so the empty view is
+          built from the list's vocabulary rather than its own. */}
+      <div className="border-be border-line" />
+      <div className="max-w-sm py-10">
+        <h2 className="display text-2xl leading-tight text-ink">{title}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
+        {showAdd && (
+          <Button variant="secondary" size="sm" className="mt-6" onClick={onAdd}>
+            הוספת משימה
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

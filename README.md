@@ -393,6 +393,16 @@ the light theme, which is the safe degradation.
 `light-dark()` resolves a `<color>`, not an arbitrary value, so shadows keep their tint in a token
 (`--shadow-tint-1`) and write the geometry around it once. No component branches on theme.
 
+### The parts the browser draws
+
+A caret, a checkbox tick, a scrollbar thumb and a link underline all ship with
+defaults that belong to no design system, and they are the cheapest tell that a
+theme is only skin deep — a system-blue caret in the green accent gives the
+whole thing away. `caret-color` and `accent-color` come from `--accent`;
+`.scroll-quiet` themes the scrollbar twice, once with `scrollbar-color` and once
+with `::-webkit-scrollbar`, because Safari ignores the first and would otherwise
+run a light-grey system bar down the edge of the dark theme.
+
 ### Accent themes
 
 Seven of them — indigo, violet, blue, teal, green, pink, graphite — and each is **one hue number**,

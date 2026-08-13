@@ -211,11 +211,16 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-ink">{user.name}</span>
-                {/* An email is an LTR island; bdi keeps it from reordering the
-                    Hebrew around it. */}
-                <bdi className="block truncate text-xs text-muted" dir="ltr">
-                  {user.email}
-                </bdi>
+                {/* An email is an LTR island inside an RTL block, and those are
+                    two separate jobs. `dir="ltr"` on the block did both: it
+                    fixed the character order and also moved the whole line to
+                    the left edge, so the address sat under the name but flush
+                    to the opposite side. The block stays RTL and aligns with
+                    the name; the isolation happens on an inline `bdi` inside
+                    it. */}
+                <span className="block truncate text-xs text-muted">
+                  <bdi dir="ltr">{user.email}</bdi>
+                </span>
               </span>
             </MenuTrigger>
             <MenuContent align="start" side="top" className="w-56">
@@ -282,8 +287,12 @@ function NavLink({
       aria-current={active ? 'page' : undefined}
       className={cn(
         'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-120',
+        // The whole row takes the accent, not just the label. The icon and the
+        // count used to stay grey on the selected row, which read as a label
+        // that had been highlighted rather than a row that was current.
+        // The descendant selectors outrank the `text-muted` the icons set.
         active
-          ? 'bg-accent-soft font-semibold text-accent'
+          ? 'bg-accent-soft font-semibold text-accent [&_[data-count]]:text-accent [&_svg]:text-accent'
           : 'text-ink-2 hover:bg-surface-2 hover:text-ink',
       )}
     >
@@ -293,13 +302,19 @@ function NavLink({
 }
 
 function Count({ value }: { value: number }) {
-  return <span className="num shrink-0 text-xs text-muted">{value}</span>;
+  return (
+    <span data-count className="num shrink-0 text-xs text-muted">
+      {value}
+    </span>
+  );
 }
 
 function Section({ title, action }: { title: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between px-3 pb-1 pt-6">
-      <h2 className="text-xs font-bold uppercase tracking-normal text-muted">{title}</h2>
+      {/* No `uppercase`: Hebrew has no case, so it does nothing here and shouts
+          at any project or label someone names in Latin. */}
+      <h2 className="text-xs font-bold text-muted">{title}</h2>
       {action}
     </div>
   );

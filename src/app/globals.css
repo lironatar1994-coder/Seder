@@ -354,6 +354,28 @@
     color: var(--muted);
     opacity: 1;
   }
+
+  /* The surfaces the browser draws.
+     A caret, a checkbox tick, a scrollbar and a link underline all ship with
+     defaults that belong to no design system — and in an app where the accent
+     is a user setting, a system-blue caret in a green theme is the detail that
+     gives away that the theme is only skin deep. */
+  input,
+  textarea,
+  [contenteditable] {
+    caret-color: var(--accent);
+  }
+
+  /* Native controls that still appear: the date and time inputs in the picker,
+     and any checkbox not drawn by hand. */
+  :root {
+    accent-color: var(--accent);
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: from-font;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -567,4 +589,28 @@
 .scroll-quiet {
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
+}
+
+/* Safari and older Chromium ignore `scrollbar-color`, so the same scrollbar is
+   themed twice. Without this the app column carries a light-grey system bar
+   down the inline-start edge in dark mode. */
+.scroll-quiet::-webkit-scrollbar {
+  inline-size: 10px;
+  block-size: 10px;
+}
+
+.scroll-quiet::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-quiet::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+
+.scroll-quiet::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+  background-clip: content-box;
 }

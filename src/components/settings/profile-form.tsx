@@ -60,12 +60,13 @@ export function ProfileForm({ name, email }: { name: string; email: string }) {
           {/* An email is an LTR island; bdi keeps it from reordering the Hebrew
               around it. Read-only rather than a disabled input, which would
               look like a control that is temporarily unavailable. */}
-          <bdi
-            dir="ltr"
-            className="block truncate rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-ink-2"
-          >
-            {email}
-          </bdi>
+          {/* The box stays RTL so the address starts on the same edge as every
+              other value in the form; only the address itself is isolated as
+              LTR. `dir="ltr"` on the box would have flushed it left, alone
+              among the fields. */}
+          <p className="block truncate rounded-lg border border-line bg-surface-2 px-3 py-2 text-sm text-ink-2">
+            <bdi dir="ltr">{email}</bdi>
+          </p>
         </SettingRow>
       </SettingsSection>
     </form>
