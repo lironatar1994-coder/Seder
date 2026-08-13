@@ -529,6 +529,29 @@ test.describe('tasks', () => {
     await expect(list(page).getByText('עבודה')).toBeVisible();
   });
 
+  test('the syntax strip writes a token in and takes it back out', async ({ page }) => {
+    await register(page);
+    await page.getByRole('button', { name: 'משימה חדשה' }).click();
+    const input = page.getByLabel('משימה חדשה');
+    await input.fill('לקנות חלב');
+
+    // The strip used to be a printed cheat sheet sitting where every other task
+    // app puts controls. Pressing one has to actually write the token.
+    await page.getByRole('button', { name: 'תזמון למחר' }).click();
+    await expect(input).toHaveValue('לקנות חלב מחר ');
+    await expect(page.getByTestId('composer-chips')).toContainText('מחר');
+
+    // A date is set, so it stops offering a second one that would contradict it.
+    await expect(page.getByRole('button', { name: 'תזמון למחר' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'תזמון להיום' })).toHaveCount(0);
+
+    // And the chip is the way back out — the only one, now that the token has
+    // been eaten out of the visible text.
+    await page.getByRole('button', { name: 'הסרת מחר' }).click();
+    await expect(input).toHaveValue('לקנות חלב');
+    await expect(page.getByRole('button', { name: 'תזמון למחר' })).toBeVisible();
+  });
+
   test('a dated but unfiled task stays in the Inbox', async ({ page }) => {
     await register(page);
     // The Inbox is a place, not a date. Scheduling something must not file it.

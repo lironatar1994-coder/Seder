@@ -596,6 +596,7 @@ export function TaskList({
             <Composer
               context={context}
               vocabulary={vocabulary}
+              variant={isPhone ? 'sheet' : 'inline'}
               onClose={() => setComposerOpen(false)}
             />
           </ComposerSlot>
@@ -765,14 +766,10 @@ function ComposerSlot({
         onClick={onClose}
         className="fixed inset-0 z-40 bg-scrim-soft md:hidden"
       />
-      <div
-        className={cn(
-          'animate-fade-up fixed inset-be-0 inset-s-0 inset-e-0 z-50 p-2 md:hidden',
-          // Above the keyboard, which the layout viewport shrinks for, and
-          // clear of the home indicator when it does not.
-          'pb-[max(0.5rem,env(safe-area-inset-bottom))]',
-        )}
-      >
+      {/* No padding: the sheet goes flush to the three edges and carries the
+          safe-area inset itself, so its own background covers the home
+          indicator rather than leaving a strip of the dimmed page under it. */}
+      <div className="animate-fade-up fixed inset-be-0 inset-s-0 inset-e-0 z-50 md:hidden">
         {children}
       </div>
     </>,
