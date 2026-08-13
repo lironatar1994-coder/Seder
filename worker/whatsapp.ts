@@ -52,6 +52,8 @@ import {
 import { toQuickAddLine } from './rewrite';
 import { decideTimed, morningInstant, morningIsDue } from './schedule';
 import { DailyCapReached, SendQueue } from './queue';
+import { Alerts } from './alerts';
+import { sendMail, appUrl } from '@/server/mail';
 
 const AUTH_DIR = process.env.WHATSAPP_AUTH_DIR ?? '/var/lib/seder/whatsapp-auth';
 const STATUS_FILE = process.env.WHATSAPP_STATUS_FILE ?? '/var/lib/seder/whatsapp-status.json';
@@ -94,6 +96,26 @@ const MAX_PER_HOUR = 30;
 
 const logger = pino({ level: 'silent' });
 const queue = new SendQueue({ dailyCap: DAILY_CAP });
+
+/** Where operational alerts go. Without it, they are logged and nothing else. */
+const ADMIN_EMAIL = process.env.SEDER_ADMIN_EMAIL?.trim();
+/** How long the socket may be down before it stops being ordinary churn.
+ *  It reconnects within seconds several times an hour; only a real outage
+ *  should reach anybody's inbox. */
+const OUTAGE_MINUTES = Number(process.env.WHATSAPP_OUTAGE_MINUTES ?? 10);
+
+const alerts = new Alerts(async ({ subject, text }) => {
+  console.log(`[whatsapp] ALERT ${subject}`);
+  if (!ADMIN_EMAIL) return;
+  await sendMail({
+    to: ADMIN_EMAIL,
+    subject,
+    text: `${text}\n\n${appUrl()}/app/settings/whatsapp`,
+  });
+});
+
+/** When the socket last went down, or null while it is up. */
+let downSince: number | null = null;
 
 let sock: WASocket | null = null;
 let connected = false;
@@ -297,7 +319,17 @@ function isNoteToSelf(jid: string): boolean {
  * into a sentence.
  */
 async function handleMessage(raw: any): Promise<string | null> {
-  if (!raw?.message) return 'no message content';
+  if (!raw?.message) {
+    // WhatsApp sometimes hands over an envelope with nothing decrypted in it.
+    // Naming what *did* arrive is the difference between another round trip
+    // and knowing which case this is.
+    return (
+      `no message content (fields=${Object.keys(raw ?? {}).join('|')}` +
+      ` stub=${raw?.messageStubType ?? 'none'}` +
+      ` params=${JSON.stringify(raw?.messageStubParameters ?? [])}` +
+      ` fromMe=${raw?.key?.fromMe} jid=${raw?.key?.remoteJid})`
+    );
+  }
 
   const jid: string | undefined = raw.key?.remoteJid;
   // Groups, status posts and newsletters are not one person's inbox.
@@ -607,7 +639,16 @@ async function connect(): Promise<void> {
       if (connection === 'open') {
         connected = true;
         reconnectAttempt = 0;
+        downSince = null;
         setStatus('READY');
+        void alerts.resolve('offline', {
+          subject: 'סדר · וואטסאפ חזר',
+          text: 'החיבור לוואטסאפ פעיל שוב. משימות שנשלחו בזמן הנתק לא נקלטו.',
+        });
+        void alerts.resolve('logged-out', {
+          subject: 'סדר · וואטסאפ חובר מחדש',
+          text: 'המכשיר חובר מחדש והשירות פעיל.',
+        });
         if (DEBUG) {
           // Which identities count as "me" — the comparison the self-chat
           // depends on, and the one thing that cannot be checked from outside.
@@ -625,10 +666,17 @@ async function connect(): Promise<void> {
 
         if (code === DisconnectReason.loggedOut) {
           setStatus('LOGGED_OUT', null, reason);
+          // The one failure nobody notices: capture simply stops, and no
+          // amount of retrying fixes it. Straight out, no waiting period.
+          void alerts.raise('logged-out', {
+            subject: 'סדר · וואטסאפ נותק וצריך סריקה מחדש',
+            text: `החיבור לוואטסאפ נותק (${reason}). עד לסריקת קוד חדש בהגדרות, הודעות נכנסות לא ייקלטו ותזכורות לא יישלחו.`,
+          });
           return; // Only a fresh scan fixes this; retrying cannot.
         }
 
         setStatus('DISCONNECTED', null, reason);
+        downSince ??= Date.now();
         scheduleReconnect();
       }
     });
@@ -692,4 +740,15 @@ setStatus('INITIALIZING');
 setInterval(() => void sweep(), SWEEP_MS);
 // Proof of life, whatever the state. A stale file now means a stopped process.
 setInterval(writeStatus, HEARTBEAT_MS);
+
+// A drop that lasts is an outage; a drop that heals in four seconds is Tuesday.
+setInterval(() => {
+  if (downSince === null || connected) return;
+  if (Date.now() - downSince < OUTAGE_MINUTES * 60_000) return;
+
+  void alerts.raise('offline', {
+    subject: 'סדר · וואטסאפ מנותק',
+    text: `החיבור מנותק כבר יותר מ־${OUTAGE_MINUTES} דקות והניסיונות להתחבר מחדש נכשלים. הודעות נכנסות לא נקלטות בינתיים.`,
+  });
+}, HEARTBEAT_MS);
 void connect();
