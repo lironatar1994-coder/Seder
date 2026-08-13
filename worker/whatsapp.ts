@@ -64,6 +64,19 @@ const MORNING_HOUR = Number(process.env.WHATSAPP_MORNING_HOUR ?? 8);
 const MORNING_GRACE_MINUTES = Number(process.env.WHATSAPP_MORNING_GRACE ?? 180);
 const DAILY_CAP = Number(process.env.WHATSAPP_DAILY_CAP ?? 200);
 
+const DEBUG = process.env.WHATSAPP_DEBUG === '1';
+
+/**
+ * How recent an `append` message must be to be acted on.
+ *
+ * `notify` is WhatsApp telling us something just happened. `append` is the
+ * same channel history sync arrives on, so acting on it unconditionally risks
+ * replaying an old conversation into somebody's Inbox as tasks. A message the
+ * operator typed on their phone a moment ago is well inside this; a chat from
+ * last March is not.
+ */
+const APPEND_FRESHNESS_MS = 15 * 60_000;
+
 const SWEEP_MS = 60_000;
 /**
  * How often the status file is rewritten with no change to report.
@@ -275,13 +288,21 @@ function isNoteToSelf(jid: string): boolean {
   return normalized === me || (lid !== null && normalized === lid);
 }
 
-async function handleMessage(raw: any): Promise<void> {
-  if (!raw?.message) return;
+/**
+ * Returns why the message was not acted on, or null when it was.
+ *
+ * Every one of these paths used to be a bare `return`, which is why the first
+ * failed attempt at this feature left no trace anywhere: no log row, no output,
+ * nothing to look at. A reason string costs nothing and turns "it didn't work"
+ * into a sentence.
+ */
+async function handleMessage(raw: any): Promise<string | null> {
+  if (!raw?.message) return 'no message content';
 
   const jid: string | undefined = raw.key?.remoteJid;
   // Groups, status posts and newsletters are not one person's inbox.
   if (!jid || jid.endsWith('@g.us') || jid.endsWith('@newsletter') || jid === 'status@broadcast') {
-    return;
+    return `not a personal chat (${jid ?? 'no jid'})`;
   }
 
   /**
@@ -293,14 +314,14 @@ async function handleMessage(raw: any): Promise<void> {
    * the self-chat" — and separately, ignore anything we sent ourselves, which
    * in that chat comes straight back looking like a fresh message.
    */
-  if (raw.key?.fromMe && !isNoteToSelf(jid)) return;
-  if (sentIds.has(String(raw.key?.id))) return;
+  if (raw.key?.fromMe && !isNoteToSelf(jid)) return `sent by me to someone else (${jid})`;
+  if (sentIds.has(String(raw.key?.id))) return 'our own reply, coming back';
 
   const text = textOf(raw.message);
-  if (!text) return;
+  if (!text) return `no text (${Object.keys(raw.message).join(',')})`;
 
   const phone = fromInternational(jid.split('@')[0]);
-  if (!phone) return;
+  if (!phone) return `not an Israeli mobile (${jid})`;
 
   const user = await db.user.findFirst({
     where: { phone, whatsappEnabled: true },
@@ -311,12 +332,12 @@ async function handleMessage(raw: any): Promise<void> {
   // anyone who guessed the number that an account exists behind it.
   if (!user) {
     await record({ phone, direction: 'IN', kind: 'CAPTURE', body: text, status: 'ignored', error: 'no account with this number' });
-    return;
+    return `no account for ${phone}`;
   }
 
   if (overRate(phone)) {
     await record({ userId: user.id, phone, direction: 'IN', kind: 'CAPTURE', body: text, status: 'ignored', error: 'rate limit' });
-    return;
+    return 'rate limited';
   }
 
   await record({ userId: user.id, phone, direction: 'IN', kind: 'CAPTURE', body: text, status: 'sent' });
@@ -324,13 +345,14 @@ async function handleMessage(raw: any): Promise<void> {
   switch (readCommand(text)) {
     case 'help':
       await send(phone, helpMessage(), { userId: user.id, kind: 'REPLY' });
-      return;
+      return null;
     case 'undo':
       await undo(user.id, phone);
-      return;
+      return null;
   }
 
   await capture(user.id, phone, text);
+  return null;
 }
 
 async function capture(userId: string, phone: string, text: string): Promise<void> {
@@ -586,6 +608,11 @@ async function connect(): Promise<void> {
         connected = true;
         reconnectAttempt = 0;
         setStatus('READY');
+        if (DEBUG) {
+          // Which identities count as "me" — the comparison the self-chat
+          // depends on, and the one thing that cannot be checked from outside.
+          console.log(`[whatsapp] id=${sock?.user?.id} lid=${sock?.user?.lid ?? 'none'}`);
+        }
         return;
       }
 
@@ -607,11 +634,32 @@ async function connect(): Promise<void> {
     });
 
     sock.ev.on('messages.upsert', async ({ type, messages }) => {
-      if (type !== 'notify') return;
       for (const message of messages) {
-        await handleMessage(message).catch((error) =>
-          console.error('[whatsapp] message handler failed:', error),
-        );
+        /* `notify` is WhatsApp saying this just happened. A message the
+           operator types on their own phone reaches us as `append` instead —
+           it is a sync from another of their linked devices, not a
+           notification — and dropping every `append` is what made the first
+           self-chat test vanish without a trace.
+
+           `append` is also the channel history sync arrives on, so it is
+           accepted only while it is fresh. An old conversation replaying into
+           somebody's Inbox as tasks is a much worse failure than a missed
+           message. */
+        if (type !== 'notify') {
+          const sentAt = Number(message.messageTimestamp ?? 0) * 1000;
+          const age = Date.now() - sentAt;
+          if (!sentAt || age > APPEND_FRESHNESS_MS) {
+            if (DEBUG) console.log(`[whatsapp] skip ${type}: ${Math.round(age / 1000)}s old`);
+            continue;
+          }
+        }
+
+        const skipped = await handleMessage(message).catch((error) => {
+          console.error('[whatsapp] message handler failed:', error);
+          return 'handler threw';
+        });
+
+        if (skipped && DEBUG) console.log(`[whatsapp] skip (${type}): ${skipped}`);
       }
     });
   } catch (error) {
