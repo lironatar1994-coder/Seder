@@ -25,6 +25,7 @@ import { cn } from '@/lib/cn';
 import { VIEWS, swatchVar, type ViewSlug } from '@/lib/constants';
 import type { SidebarData } from '@/server/tasks/queries';
 import { IconButton } from '@/components/ui/button';
+import { BrandMark } from '@/components/brand/brand-mark';
 import {
   Menu,
   MenuContent,
@@ -106,8 +107,9 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
         <div className="rail-header flex items-center justify-between gap-1 px-4 pb-2 pt-4">
           <Link
             href="/app"
-            className="rail-label display truncate text-2xl font-bold text-[var(--rail-ink)]"
+            className="rail-label display flex min-w-0 items-center gap-2 truncate text-2xl font-bold text-[var(--rail-ink)]"
           >
+            <BrandMark size={30} priority />
             סדר
           </Link>
           <div className="flex items-center gap-1">

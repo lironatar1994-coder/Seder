@@ -28,6 +28,7 @@ import { getCurrentUser } from '@/server/auth/session';
 import { VIEWS } from '@/lib/constants';
 import { ParseDemo } from '@/components/landing/parse-demo';
 import { MonthPreview } from '@/components/landing/month-preview';
+import { BrandMark } from '@/components/brand/brand-mark';
 
 export const metadata: Metadata = {
   title: 'סדר — מנהל משימות בעברית',
@@ -43,7 +44,10 @@ export default async function LandingPage() {
     <div className="min-h-dvh bg-paper">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-          <span className="display text-xl font-bold text-ink">סדר</span>
+          <span className="display inline-flex items-center gap-2 text-xl font-bold text-ink">
+            <BrandMark size={28} priority />
+            סדר
+          </span>
           <Link
             href="/login"
             className="text-sm font-semibold text-ink-2 underline-offset-4 transition-colors hover:text-ink hover:underline"
@@ -160,7 +164,10 @@ export default async function LandingPage() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-sm text-muted">
-          <span className="display font-bold text-ink-2">סדר</span>
+          <span className="display inline-flex items-center gap-2 font-bold text-ink-2">
+            <BrandMark size={24} />
+            סדר
+          </span>
           <Link
             href="/login"
             className="underline-offset-4 transition-colors hover:text-ink hover:underline"
