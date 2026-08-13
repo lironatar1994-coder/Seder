@@ -1,0 +1,489 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { Plus } from 'lucide-react';
+import { cn } from '@/lib/cn';
+import type { TaskDTO, TaskGroup } from '@/server/tasks/queries';
+import type { Priority } from '@/lib/constants';
+import { addDays, relativeDayLabel, today, weekdayName, formatShortDate } from '@/lib/dates';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
+import { TaskRow } from './task-row';
+import { TaskDetail } from './task-detail';
+import { Composer } from './composer';
+import {
+  deleteTaskAction,
+  reorderTaskAction,
+  scheduleTaskAction,
+  setPriorityAction,
+  toggleTaskAction,
+  undoRepeatAction,
+  updateTaskAction,
+  type QuickAddContext,
+} from '@/server/tasks/actions';
+
+/** How long the completion animation runs before the row is actually removed
+ *  and the write is sent. Matches .strike-line + .row-collapse in globals.css. */
+const COMPLETE_ANIMATION_MS = 440;
+
+export interface TaskListProps {
+  groups: TaskGroup[];
+  context: QuickAddContext;
+  projects: { id: string; name: string; color: string }[];
+  labels: { id: string; name: string; color: string }[];
+  hideProject?: boolean;
+  /** Group titles are ISO days in the upcoming view and want a date heading. */
+  dayHeadings?: boolean;
+  empty: { title: string; body: string };
+  reorderable?: boolean;
+  /** The Logbook is a record, not a place to add work. */
+  showComposer?: boolean;
+  /** Rendered under the last group — the Logbook's "load more" lives here. */
+  footer?: React.ReactNode;
+}
+
+export function TaskList({
+  groups,
+  context,
+  projects,
+  labels,
+  hideProject = false,
+  dayHeadings = false,
+  empty,
+  reorderable = true,
+  showComposer = true,
+  footer,
+}: TaskListProps) {
+  const [completing, setCompleting] = useState<Set<string>>(new Set());
+  const [removed, setRemoved] = useState<Set<string>>(new Set());
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [, startTransition] = useTransition();
+  const { toast } = useToast();
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+
+  useEffect(() => {
+    const set = timers.current;
+    return () => {
+      set.forEach(clearTimeout);
+      set.clear();
+    };
+  }, []);
+
+  // Server data is the source of truth; `removed` only bridges the gap between
+  // the animation finishing and revalidation arriving.
+  const visibleGroups = useMemo(
+    () =>
+      groups.map((group) => ({
+        ...group,
+        tasks: group.tasks.filter((t) => !removed.has(t.id)),
+      })),
+    [groups, removed],
+  );
+
+  const vocabulary = useMemo(
+    () => ({ projects: projects.map((p) => p.name), labels: labels.map((l) => l.name) }),
+    [projects, labels],
+  );
+
+  const flat = useMemo(() => visibleGroups.flatMap((g) => g.tasks), [visibleGroups]);
+  const isEmpty = flat.length === 0;
+  const openTask = flat.find((t) => t.id === openTaskId) ?? null;
+
+  // Drop ids that the server has since removed, so the sets cannot grow
+  // unbounded across a long session.
+  useEffect(() => {
+    const live = new Set(groups.flatMap((g) => g.tasks.map((t) => t.id)));
+    setRemoved((prev) => {
+      const next = new Set([...prev].filter((id) => live.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [groups]);
+
+  const run = useCallback(
+    (fn: () => Promise<{ ok: boolean; error?: string }>) =>
+      startTransition(async () => {
+        const result = await fn();
+        if (!result.ok) toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+      }),
+    [toast],
+  );
+
+  const handleToggle = useCallback(
+    (task: TaskDTO, done: boolean) => {
+      if (!done) {
+        run(() => toggleTaskAction(task.id, false));
+        return;
+      }
+
+      // Play the strike, then remove the row and write — the animation is the
+      // acknowledgement, so it must not be cut short by revalidation.
+      setCompleting((prev) => new Set(prev).add(task.id));
+      const timer = setTimeout(() => {
+        setCompleting((prev) => {
+          const next = new Set(prev);
+          next.delete(task.id);
+          return next;
+        });
+        setRemoved((prev) => new Set(prev).add(task.id));
+
+        const restore = () =>
+          setRemoved((prev) => {
+            const next = new Set(prev);
+            next.delete(task.id);
+            return next;
+          });
+
+        startTransition(async () => {
+          const result = await toggleTaskAction(task.id, true);
+          if (!result.ok) {
+            restore();
+            toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+            return;
+          }
+
+          // A repeating task did not finish — it moved on. Say where to, and
+          // make undo roll back both the move and the logged copy.
+          const repeat = result.repeat;
+          toast({
+            message: repeat ? `הושלם — חוזר ב${repeat.nextLabel}` : `הושלם: ${task.title}`,
+            action: {
+              label: 'ביטול',
+              onClick: () => {
+                restore();
+                run(() =>
+                  repeat
+                    ? undoRepeatAction(task.id, repeat.snapshotId, repeat.previousDate)
+                    : toggleTaskAction(task.id, false),
+                );
+              },
+            },
+          });
+        });
+      }, COMPLETE_ANIMATION_MS);
+      timers.current.add(timer);
+    },
+    [run, toast],
+  );
+
+  const handleDelete = useCallback(
+    (task: TaskDTO) => {
+      setRemoved((prev) => new Set(prev).add(task.id));
+      setOpenTaskId((current) => (current === task.id ? null : current));
+      run(() => deleteTaskAction(task.id));
+      toast({ message: `נמחק: ${task.title}` });
+    },
+    [run, toast],
+  );
+
+  const handlePriority = useCallback(
+    (task: TaskDTO, priority: Priority) => run(() => setPriorityAction(task.id, priority)),
+    [run],
+  );
+
+  const handleMove = useCallback(
+    (task: TaskDTO, projectId: string | null) => {
+      run(() => updateTaskAction({ id: task.id, projectId }));
+      const target = projectId ? projects.find((p) => p.id === projectId)?.name : 'תיבה נכנסת';
+      if (target) toast({ message: `הועבר ל${target}` });
+    },
+    [run, projects, toast],
+  );
+
+  const handleSchedule = useCallback(
+    (task: TaskDTO, when: { bucket: string; date?: string | null }) =>
+      run(() => scheduleTaskAction(task.id, { bucket: when.bucket as never, date: when.date })),
+    [run],
+  );
+
+  /** Nudge a task's schedule by whole days. */
+  const shiftSchedule = useCallback(
+    (task: TaskDTO, days: number) => {
+      const from = task.scheduledFor ?? today();
+      const next = addDays(from, days);
+      run(() =>
+        scheduleTaskAction(task.id, {
+          bucket: 'SCHEDULED',
+          date: next.toISOString().slice(0, 10),
+          time: task.scheduledTime,
+        }),
+      );
+    },
+    [run],
+  );
+
+  /* ---------------------------------------------------------- keyboard */
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable);
+      if (typing || event.metaKey || event.ctrlKey || event.altKey) return;
+
+      const index = selectedId ? flat.findIndex((t) => t.id === selectedId) : -1;
+      const current = index >= 0 ? flat[index] : null;
+
+      switch (event.key) {
+        case 'n':
+        case 'N':
+          event.preventDefault();
+          setComposerOpen(true);
+          break;
+        case 'ArrowDown':
+        case 'j':
+          if (!flat.length) return;
+          event.preventDefault();
+          setSelectedId(flat[Math.min(index + 1, flat.length - 1)]?.id ?? flat[0].id);
+          break;
+        case 'ArrowUp':
+        case 'k':
+          if (!flat.length) return;
+          event.preventDefault();
+          setSelectedId(flat[Math.max(index - 1, 0)]?.id ?? flat[0].id);
+          break;
+        case 'ArrowLeft':
+        case 'ArrowRight': {
+          if (!current) return;
+          event.preventDefault();
+          // Horizontal arrows mean "earlier / later", and forward-in-time
+          // follows the reading direction: left is forward in Hebrew.
+          const rtl = document.documentElement.dir !== 'ltr';
+          const forward = rtl ? event.key === 'ArrowLeft' : event.key === 'ArrowRight';
+          shiftSchedule(current, forward ? 1 : -1);
+          break;
+        }
+        case ' ':
+          if (!current) return;
+          event.preventDefault();
+          handleToggle(current, current.status === 'TODO');
+          break;
+        case 'Enter':
+          if (!current) return;
+          event.preventDefault();
+          setOpenTaskId(current.id);
+          break;
+        case 'Backspace':
+        case 'Delete':
+          if (!current) return;
+          event.preventDefault();
+          handleDelete(current);
+          break;
+        case 'Escape':
+          setSelectedId(null);
+          setComposerOpen(false);
+          break;
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [flat, selectedId, handleToggle, handleDelete, shiftSchedule]);
+
+  /* --------------------------------------------------------------- dnd */
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const ids = flat.map((t) => t.id);
+    const from = ids.indexOf(String(active.id));
+    const to = ids.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+
+    const reordered = [...flat];
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+    const at = reordered.findIndex((t) => t.id === moved.id);
+
+    // Send neighbour ids rather than an index: the server recomputes the key
+    // from whatever those rows hold now, so a stale client cannot corrupt order.
+    run(() =>
+      reorderTaskAction(
+        moved.id,
+        reordered[at - 1]?.id ?? null,
+        reordered[at + 1]?.id ?? null,
+      ),
+    );
+  }
+
+  return (
+    <div className="pb-24" data-testid="task-list">
+      {showComposer &&
+        (composerOpen ? (
+          <div className="mb-4 animate-fade-up">
+            <Composer
+              context={context}
+              vocabulary={vocabulary}
+              onClose={() => setComposerOpen(false)}
+            />
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setComposerOpen(true)}
+            className="mb-2 flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-start text-muted transition-colors hover:bg-surface hover:text-ink"
+          >
+            <Plus className="size-5 shrink-0" aria-hidden />
+            <span className="text-base">משימה חדשה</span>
+            <kbd className="num ms-auto rounded border border-line px-1.5 text-xs text-muted">
+              N
+            </kbd>
+          </button>
+        ))}
+
+      {isEmpty ? (
+        <EmptyState {...empty} onAdd={() => setComposerOpen(true)} showAdd={showComposer} />
+      ) : (
+        <DndContext
+          // Stable id: dnd-kit's generated aria-describedby is otherwise
+          // numbered from a module counter that differs between the server and
+          // the client, which breaks hydration.
+          id="seder-tasks"
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis]}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={flat.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+            {visibleGroups.map((group) =>
+              group.tasks.length === 0 && group.key === 'loose' ? null : (
+                <section key={group.key} className="mb-6">
+                  {group.title && (
+                    <GroupHeading
+                      title={group.title}
+                      subtitle={group.subtitle}
+                      isDay={dayHeadings}
+                      count={group.tasks.length}
+                    />
+                  )}
+                  {group.tasks.length === 0 ? (
+                    <p className="px-2 py-3 text-sm text-muted">אין כאן משימות.</p>
+                  ) : (
+                    <ul className="space-y-0.5">
+                      {group.tasks.map((task) => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          completing={completing.has(task.id)}
+                          selected={selectedId === task.id}
+                          hideProject={hideProject}
+                          draggable={reorderable}
+                          onToggle={handleToggle}
+                          onOpen={(t) => {
+                            setSelectedId(t.id);
+                            setOpenTaskId(t.id);
+                          }}
+                          onDelete={handleDelete}
+                          onPriority={handlePriority}
+                          onSchedule={handleSchedule}
+                          onMove={handleMove}
+                          projects={projects}
+                        />
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ),
+            )}
+          </SortableContext>
+        </DndContext>
+      )}
+
+      {footer}
+
+      <TaskDetail
+        task={openTask}
+        openId={openTaskId}
+        projects={projects}
+        labels={labels}
+        onClose={() => setOpenTaskId(null)}
+        onDelete={handleDelete}
+      />
+    </div>
+  );
+}
+
+function GroupHeading({
+  title,
+  subtitle,
+  isDay,
+  count,
+}: {
+  title: string;
+  subtitle?: string | null;
+  isDay: boolean;
+  count: number;
+}) {
+  let primary = title;
+  let secondary: string | null = subtitle ?? null;
+
+  if (isDay) {
+    const date = new Date(`${title}T00:00:00.000Z`);
+    const relative = relativeDayLabel(date, today());
+    const weekday = weekdayName(date);
+    const short = formatShortDate(date);
+
+    // Beyond a week `relativeDayLabel` already returns the numeric date, and
+    // using it as the heading would print the date twice.
+    primary = relative === short ? weekday : relative;
+    secondary = primary === weekday ? short : `${weekday} · ${short}`;
+  }
+
+  return (
+    <div className="mb-1 flex items-baseline gap-2.5 border-be border-line px-2 pb-1.5">
+      <h2 className="display text-base font-bold text-ink">{primary}</h2>
+      {secondary && <span className="num text-xs text-muted">{secondary}</span>}
+      <span className="num ms-auto text-xs text-muted">{count}</span>
+    </div>
+  );
+}
+
+function EmptyState({
+  title,
+  body,
+  onAdd,
+  showAdd = true,
+}: {
+  title: string;
+  body: string;
+  onAdd: () => void;
+  showAdd?: boolean;
+}) {
+  return (
+    <div className={cn('rounded-xl border border-dashed border-line px-6 py-14 text-center')}>
+      <h2 className="display text-xl text-ink">{title}</h2>
+      <p className="mx-auto mt-1.5 max-w-xs text-sm text-muted">{body}</p>
+      {showAdd && (
+        <Button variant="secondary" size="sm" className="mt-5" onClick={onAdd}>
+          הוספת משימה
+        </Button>
+      )}
+    </div>
+  );
+}

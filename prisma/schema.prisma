@@ -1,0 +1,189 @@
+// Todoist's projects / priorities / labels merged with Things' when-buckets and
+// its separate deadline concept.
+//
+// Switching to Postgres for production is a two-line change: set provider to
+// "postgresql" and point DATABASE_URL at the server. String-typed enums are
+// deliberate — SQLite has no native enum, and keeping them as strings means the
+// same schema runs on both engines. The allowed values live in
+// src/lib/constants.ts and are enforced by Zod at every write.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  // Login throttling. Reset on any successful sign-in.
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+
+  /// Which view opens when the app is launched. One of VIEWS in
+  /// src/lib/constants.ts.
+  defaultView String @default("today")
+
+  sessions    Session[]
+  projects    Project[]
+  tasks       Task[]
+  labels      Label[]
+  resetTokens PasswordResetToken[]
+}
+
+/// Same shape as Session: the emailed link carries a random token, only its
+/// SHA-256 lands here, and it is deleted the moment it is used.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Session {
+  // The cookie holds a random 32-byte token; only its SHA-256 is stored here,
+  // so a database leak does not hand over live sessions.
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// The Inbox is not a project. A task is "in the Inbox" when it has no project
+/// at all — the same definition Todoist and Things use. Modelling it as a
+/// project (or as a scheduling bucket) makes filing and scheduling fight each
+/// other: giving an unfiled task a date would move it out of the Inbox.
+model Project {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  color      String    @default("teal")
+  position   String
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sections Section[]
+  tasks    Task[]
+
+  @@index([userId, position])
+}
+
+/// Things calls these "headings" — a titled break inside a project.
+model Section {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  position  String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  @@index([projectId, position])
+}
+
+model Task {
+  id        String  @id @default(cuid())
+  userId    String
+  projectId String?
+  sectionId String?
+  /// Set on checklist items; a subtask is just a Task with a parent.
+  parentId  String?
+
+  title String
+  notes String?
+
+  /// 1 = highest … 4 = none.
+  priority Int    @default(4)
+  /// TODO | DONE | CANCELED
+  status   String @default("TODO")
+
+  /// SCHEDULED | ANYTIME | SOMEDAY — *when*, and nothing to do with *where*.
+  /// Whether a task is in the Inbox is decided by projectId being null.
+  whenBucket    String    @default("ANYTIME")
+  /// UTC midnight of the intended calendar day — never a local timestamp.
+  scheduledFor  DateTime?
+  /// "HH:mm", 24-hour. Israeli UIs do not use AM/PM.
+  scheduledTime String?
+  /// Things' real differentiator: "do it whenever, but it is due Thursday".
+  deadline      DateTime?
+
+  completedAt DateTime?
+
+  /// Repeat rule, serialised by lib/recurrence.ts ("weekly:1:0,3"). Null means
+  /// a one-off. Completing a repeating task files a done copy in the Logbook
+  /// and moves this row on to its next occurrence, so there is only ever one
+  /// live instance.
+  recurrence String?
+  /// Set on the Logbook copies, pointing back at the live task.
+  recurrenceParentId String?
+
+  /// Fractional index (see lib/ordering.ts) — reordering writes one row.
+  position    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project  Project?    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  section  Section?    @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  parent   Task?       @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks Task[]      @relation("Subtasks")
+  labels   TaskLabel[]
+
+  @@index([userId, status, scheduledFor])
+  @@index([userId, status, whenBucket])
+  @@index([userId, status, deadline])
+  @@index([projectId, position])
+  @@index([parentId])
+  /// The Inbox is "projectId is null", so that lookup gets its own index.
+  @@index([userId, status, projectId])
+  @@index([recurrenceParentId])
+}
+
+model Label {
+  id       String   @id @default(cuid())
+  userId   String
+  name     String
+  color    String   @default("slate")
+  position String
+  createdAt DateTime @default(now())
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks TaskLabel[]
+
+  @@unique([userId, name])
+  @@index([userId, position])
+}
+
+model TaskLabel {
+  taskId  String
+  labelId String
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, labelId])
+  @@index([labelId])
+}

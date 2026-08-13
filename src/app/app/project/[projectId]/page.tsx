@@ -1,0 +1,61 @@
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { getCurrentUser } from '@/server/auth/session';
+import { getProjectView, getSidebarData } from '@/server/tasks/queries';
+import { swatchVar } from '@/lib/constants';
+import { ViewHeader } from '@/components/nav/view-header';
+import { TaskList } from '@/components/task/task-list';
+import { ProjectMenu } from '@/components/nav/project-menu';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}): Promise<Metadata> {
+  const user = await getCurrentUser();
+  if (!user) return { title: 'סדר' };
+  const { projectId } = await params;
+  const data = await getProjectView(user.id, projectId);
+  return { title: data ? `${data.project.name} · סדר` : 'סדר' };
+}
+
+export default async function ProjectPage({
+  params,
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const user = await getCurrentUser();
+  if (!user) notFound();
+
+  const { projectId } = await params;
+  const [data, sidebar] = await Promise.all([
+    getProjectView(user.id, projectId),
+    getSidebarData(user.id),
+  ]);
+  if (!data) notFound();
+
+  const remaining = data.progress.total - data.progress.done;
+
+  return (
+    <>
+      <ViewHeader
+        title={data.project.name}
+        accent={swatchVar(data.project.color)}
+        subtitle={remaining === 0 ? 'הכול סגור בפרויקט הזה.' : `${remaining} משימות פתוחות`}
+        progress={data.progress}
+        action={<ProjectMenu project={data.project} />}
+      />
+      <TaskList
+        groups={data.groups}
+        context={{ view: 'project', projectId: data.project.id }}
+        projects={sidebar.projects}
+        labels={sidebar.labels}
+        hideProject
+        empty={{
+          title: 'הפרויקט ריק',
+          body: `אין עדיין משימות ב״${data.project.name}״. הוסיפו את הצעד הראשון.`,
+        }}
+      />
+    </>
+  );
+}

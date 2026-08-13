@@ -1,0 +1,20 @@
+node_modules/
+# The glob, not just `.next/`: a build that goes stale gets renamed aside rather
+# than deleted, and `.next.stale-*` is still 300+ files of build output.
+.next*/
+out/
+build/
+.env
+.env*.local
+*.db
+*.db-journal
+prisma/dev.db*
+.DS_Store
+next-env.d.ts
+tsconfig.tsbuildinfo
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/screenshots/
+e2e-mail.log
