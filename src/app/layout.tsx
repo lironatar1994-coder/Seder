@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Assistant, Frank_Ruhl_Libre, Inter } from 'next/font/google';
 import { DirectionProvider } from '@radix-ui/react-direction';
 import { ToastProvider } from '@/components/ui/toast';
+import { VisitorSignal } from '@/components/analytics/visitor-signal';
 import './globals.css';
 
 /* Three roles, three faces.
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body>
+        <VisitorSignal />
         {/* Radix portals mount at document.body and would otherwise assume LTR,
             opening every menu and popover on the wrong side. */}
         <DirectionProvider dir="rtl">

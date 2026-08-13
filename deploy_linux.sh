@@ -11,6 +11,9 @@ DATABASE_FILE="$DATA_DIR/seder.db"
 BACKUP_DIR='/root/deployment-backups/seder'
 NGINX_AVAILABLE='/etc/nginx/sites-available/lawebs.co.il.conf'
 NGINX_ENABLED='/etc/nginx/sites-enabled/lawebs.co.il.conf'
+VISITOR_SIGNAL_KEY_FILE="${VISITOR_SIGNAL_KEY_FILE:-/root/.visitor-signal-key}"
+VISITOR_SIGNAL_SNIPPET='/etc/nginx/snippets/visitor-signal-seder.conf'
+MONITOR_SIGNAL_URL="${SERVER_MONITOR_SIGNAL_URL:-http://127.0.0.1:4010/serve-monitor/api/browser-signals/site}"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo '[ERROR] Run deploy_linux.sh as root.' >&2
@@ -56,6 +59,26 @@ for attempt in $(seq 1 30); do
 done
 
 echo '[INFO] Configuring the domain...'
+SIGNAL_KEY="$(tr -d '\r\n' < "$VISITOR_SIGNAL_KEY_FILE")"
+if ! printf '%s' "$SIGNAL_KEY" | grep -Eq '^[[:xdigit:]]{64}$'; then
+  echo "[ERROR] $VISITOR_SIGNAL_KEY_FILE must contain one 64-character hexadecimal key." >&2
+  exit 1
+fi
+cat > "$VISITOR_SIGNAL_SNIPPET" <<NGINX
+location = $BASE_PATH/.well-known/vee-visitor-signal {
+    limit_except POST { deny all; }
+    client_max_body_size 16k;
+    proxy_pass $MONITOR_SIGNAL_URL;
+    proxy_http_version 1.1;
+    proxy_set_header Content-Type application/json;
+    proxy_set_header X-Visitor-Signal-Key "$SIGNAL_KEY";
+    proxy_set_header X-Visitor-Site-Url "https://$DOMAIN$BASE_PATH";
+    proxy_set_header X-Visitor-IP \$remote_addr;
+    proxy_set_header X-Visitor-User-Agent \$http_user_agent;
+}
+NGINX
+chmod 600 "$VISITOR_SIGNAL_SNIPPET"
+
 if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
   cat > "$NGINX_AVAILABLE" <<NGINX
 server {
@@ -82,6 +105,7 @@ server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name $DOMAIN;
+    include $VISITOR_SIGNAL_SNIPPET;
 
     ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
@@ -120,6 +144,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name $DOMAIN www.$DOMAIN;
+    include $VISITOR_SIGNAL_SNIPPET;
 
     location ~ ^$BASE_PATH(?:/|\$) {
         proxy_pass http://127.0.0.1:$APP_PORT;
