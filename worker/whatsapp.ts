@@ -53,20 +53,21 @@ import { toQuickAddLine } from './rewrite';
 import { decideTimed, morningInstant, morningIsDue } from './schedule';
 import { DailyCapReached, SendQueue } from './queue';
 import { Alerts } from './alerts';
+import { envFlag, envNumber, envText } from '@/lib/env';
 import { sendMail, appUrl } from '@/server/mail';
 
 const AUTH_DIR = process.env.WHATSAPP_AUTH_DIR ?? '/var/lib/seder/whatsapp-auth';
 const STATUS_FILE = process.env.WHATSAPP_STATUS_FILE ?? '/var/lib/seder/whatsapp-status.json';
-const LEAD_MINUTES = Number(process.env.WHATSAPP_REMINDER_LEAD ?? 15);
-const STALE_MINUTES = Number(process.env.WHATSAPP_REMINDER_STALE ?? 90);
+const LEAD_MINUTES = envNumber(process.env.WHATSAPP_REMINDER_LEAD, 15);
+const STALE_MINUTES = envNumber(process.env.WHATSAPP_REMINDER_STALE, 90);
 /** When a task has a date but no time, this is the hour it is worth a nudge. */
-const MORNING_HOUR = Number(process.env.WHATSAPP_MORNING_HOUR ?? 8);
+const MORNING_HOUR = envNumber(process.env.WHATSAPP_MORNING_HOUR, 8);
 /** How long after that hour the morning note may still go out, so a worker
  *  that was down at 08:00 still sends it rather than skipping the day. */
-const MORNING_GRACE_MINUTES = Number(process.env.WHATSAPP_MORNING_GRACE ?? 180);
-const DAILY_CAP = Number(process.env.WHATSAPP_DAILY_CAP ?? 200);
+const MORNING_GRACE_MINUTES = envNumber(process.env.WHATSAPP_MORNING_GRACE, 180);
+const DAILY_CAP = envNumber(process.env.WHATSAPP_DAILY_CAP, 200);
 
-const DEBUG = process.env.WHATSAPP_DEBUG === '1';
+const DEBUG = envFlag(process.env.WHATSAPP_DEBUG);
 
 /**
  * How recent an `append` message must be to be acted on.
@@ -98,11 +99,11 @@ const logger = pino({ level: 'silent' });
 const queue = new SendQueue({ dailyCap: DAILY_CAP });
 
 /** Where operational alerts go. Without it, they are logged and nothing else. */
-const ADMIN_EMAIL = process.env.SEDER_ADMIN_EMAIL?.trim();
+const ADMIN_EMAIL = envText(process.env.SEDER_ADMIN_EMAIL);
 /** How long the socket may be down before it stops being ordinary churn.
  *  It reconnects within seconds several times an hour; only a real outage
  *  should reach anybody's inbox. */
-const OUTAGE_MINUTES = Number(process.env.WHATSAPP_OUTAGE_MINUTES ?? 10);
+const OUTAGE_MINUTES = envNumber(process.env.WHATSAPP_OUTAGE_MINUTES, 10);
 
 const alerts = new Alerts(async ({ subject, text }) => {
   console.log(`[whatsapp] ALERT ${subject}`);

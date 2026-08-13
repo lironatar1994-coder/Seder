@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { db } from '@/server/db';
+import { envNumber } from '@/lib/env';
 
 /**
  * Cross-user WhatsApp health, for whoever runs the service.
@@ -92,7 +93,9 @@ export async function readWhatsappHealth(): Promise<WhatsappHealth> {
     remindersSent: count({ direction: 'OUT', kind: 'REMINDER', status: 'sent' }),
     outboundFailed: count({ direction: 'OUT', status: 'failed' }),
     sent: count({ direction: 'OUT', status: 'sent' }),
-    dailyCap: Number(process.env.WHATSAPP_DAILY_CAP ?? 200),
+    // Not `?? 200`: the release writes the key empty when it is unset, and
+    // `Number("")` is 0 — which would report a ceiling of zero sends.
+    dailyCap: envNumber(process.env.WHATSAPP_DAILY_CAP, 200),
     problems: problems.map((row) => ({
       id: row.id,
       at: row.createdAt,
