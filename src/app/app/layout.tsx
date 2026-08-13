@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/server/auth/session';
 import { logoutAction } from '@/server/auth/actions';
 import { getSidebarData } from '@/server/tasks/queries';
 import { Sidebar } from '@/components/nav/sidebar';
+import { TabBar } from '@/components/nav/tab-bar';
 import { CommandPalette } from '@/components/nav/command-palette';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +29,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="mx-auto w-full max-w-[44rem] px-4 has-[[data-wide]]:max-w-[82rem] md:px-8">
           {children}
         </div>
+        {/* The tab bar is fixed, so the column owes it a floor to scroll to.
+            Without this the last task sits under the bar and cannot be read,
+            which is the classic bottom-navigation bug. */}
+        <div aria-hidden className="h-[var(--tab-bar)]" />
       </main>
+      <TabBar counts={sidebar.counts} />
       <CommandPalette projects={sidebar.projects} labels={sidebar.labels} />
     </div>
   );

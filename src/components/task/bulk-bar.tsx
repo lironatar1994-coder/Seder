@@ -46,7 +46,9 @@ export function BulkBar({
 }: BulkBarProps) {
   return (
     <div
-      className="pointer-events-none fixed inset-be-0 inset-s-0 inset-e-0 z-30 flex justify-center p-4"
+      // Sits above the phone's tab bar rather than over it: the bar is how you
+      // leave the selection, and covering it would trap you in the mode.
+      className="pointer-events-none fixed inset-be-[var(--tab-bar)] inset-s-0 inset-e-0 z-30 flex justify-center p-4"
       aria-live="polite"
     >
       <div

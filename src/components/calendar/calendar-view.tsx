@@ -193,7 +193,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
               <NavArrow href={periodHref(grid.prevAnchor)} label="לתקופה הקודמת" direction="prev" />
               <Link
                 href={mode === 'week' ? '/app/calendar?v=week' : '/app/calendar'}
-                className="border-s border-e border-line-strong px-3 py-2 text-sm font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+                className="inline-flex items-center border-s border-e border-line-strong px-3 py-2 text-sm font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink [@media(pointer:coarse)]:min-h-11"
               >
                 היום
               </Link>
@@ -291,7 +291,7 @@ function NavArrow({
     <Link
       href={href}
       aria-label={label}
-      className="px-2.5 py-2 text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+      className="inline-flex items-center px-2.5 py-2 text-muted transition-colors hover:bg-surface-2 hover:text-ink [@media(pointer:coarse)]:min-h-11 [@media(pointer:coarse)]:px-4"
     >
       {/* The timeline runs along the reading direction, so in Hebrew "earlier"
           points right and "later" points left. These are already the RTL
@@ -319,7 +319,8 @@ function ModeToggle({ mode }: { mode: Mode }) {
           href={option.href}
           aria-current={mode === option.id ? 'true' : undefined}
           className={cn(
-            'px-3 py-2 text-sm font-semibold transition-colors',
+            'inline-flex items-center px-3 py-2 text-sm font-semibold transition-colors',
+            '[@media(pointer:coarse)]:min-h-11',
             mode === option.id
               ? 'bg-accent-soft text-accent'
               : 'text-muted hover:bg-surface-2 hover:text-ink',

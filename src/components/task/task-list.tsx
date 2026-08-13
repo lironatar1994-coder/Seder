@@ -44,6 +44,8 @@ import {
 } from '@/server/tasks/actions';
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/overlays';
 import { BulkBar, bulkDeleteCopy } from './bulk-bar';
+import { useIsPhone } from '@/components/ui/use-is-phone';
+import { registerComposer } from './compose-bus';
 import type { WhenSelection } from './when-menu';
 
 /** How long the completion animation runs before the row is actually removed
@@ -92,6 +94,7 @@ export function TaskList({
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [, startTransition] = useTransition();
+  const isPhone = useIsPhone();
   const { toast } = useToast();
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
 
@@ -102,6 +105,23 @@ export function TaskList({
       set.clear();
     };
   }, []);
+
+  // The phone's add button lives in the tab bar, outside this tree.
+  useEffect(() => {
+    if (!showComposer) return;
+    return registerComposer(() => setComposerOpen(true));
+  }, [showComposer]);
+
+  // Arriving from the tab bar on a route that had no list to ask.
+  useEffect(() => {
+    if (!showComposer) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('compose') !== '1') return;
+    setComposerOpen(true);
+    // Drop the parameter so a reload or a back-navigation does not reopen it.
+    url.searchParams.delete('compose');
+    window.history.replaceState(null, '', url.pathname + url.search);
+  }, [showComposer]);
 
   // Server data is the source of truth; `removed` only bridges the gap between
   // the animation finishing and revalidation arriving.
@@ -541,18 +561,20 @@ export function TaskList({
     <div className="pb-24" data-testid="task-list">
       {showComposer &&
         (composerOpen ? (
-          <div className="mb-4 animate-fade-up">
+          <ComposerSlot phone={isPhone} onClose={() => setComposerOpen(false)}>
             <Composer
               context={context}
               vocabulary={vocabulary}
               onClose={() => setComposerOpen(false)}
             />
-          </div>
+          </ComposerSlot>
         ) : (
           <button
             type="button"
             onClick={() => setComposerOpen(true)}
-            className="mb-2 flex w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-start text-muted transition-colors hover:bg-surface hover:text-ink"
+            // Hidden on the phone: the tab bar owns capture there, and a second
+            // add button would spend the fold repeating it.
+            className="mb-2 hidden w-full items-center gap-2.5 rounded-lg px-2 py-2.5 text-start text-muted transition-colors hover:bg-surface hover:text-ink md:flex"
           >
             <Plus className="size-5 shrink-0" aria-hidden />
             <span className="text-base">משימה חדשה</span>
@@ -661,6 +683,47 @@ export function TaskList({
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/**
+ * Where the composer sits.
+ *
+ * On a desktop it belongs inline at the head of the list, in the place the new
+ * task will appear. On a phone that is the wrong end of the screen twice over:
+ * the thumb that opened it is at the bottom, and so is the keyboard about to
+ * cover half the view. There it becomes a sheet on the same edge as both.
+ */
+function ComposerSlot({
+  phone,
+  onClose,
+  children,
+}: {
+  phone: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  if (!phone) return <div className="mb-4 animate-fade-up">{children}</div>;
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-label="סגירת המשימה החדשה"
+        onClick={onClose}
+        className="fixed inset-0 z-40 bg-scrim-soft md:hidden"
+      />
+      <div
+        className={cn(
+          'animate-fade-up fixed inset-be-0 inset-s-0 inset-e-0 z-50 p-2 md:hidden',
+          // Above the keyboard, which the layout viewport shrinks for, and
+          // clear of the home indicator when it does not.
+          'pb-[max(0.5rem,env(safe-area-inset-bottom))]',
+        )}
+      >
+        {children}
+      </div>
+    </>
   );
 }
 

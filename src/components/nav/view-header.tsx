@@ -28,25 +28,31 @@ export function ViewHeader({
 }) {
   const lockup = showDate ? buildLockup(today()) : null;
 
+  // The lockup is the signature and also the most expensive thing on the page.
+  // At 1280px it costs a corner; at 390px it was costing five rows of the only
+  // screen a phone has. It keeps its authority on the phone by staying the
+  // largest thing there — just not by the same absolute measure.
   return (
-    <header className="pb-5 pt-8">
+    <header className="pb-4 pt-5 md:pb-5 md:pt-8">
       <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
           {lockup ? (
             <>
-              <h1 className="display text-4xl font-bold leading-none text-ink md:text-5xl">
+              <h1 className="display text-[2rem] font-bold leading-none text-ink md:text-5xl">
                 {lockup.weekday}
               </h1>
-              <p className="mt-2 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-muted">
+              <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-muted md:mt-2">
                 {lockup.hebrew && (
-                  <span className="display text-lg text-ink-2">{lockup.hebrew}</span>
+                  <span className="display text-base text-ink-2 md:text-lg">{lockup.hebrew}</span>
                 )}
                 {lockup.hebrew && (
                   <span aria-hidden className="text-line-strong">
                     ·
                   </span>
                 )}
-                <span className="num text-lg tracking-tight text-ink-2">{lockup.gregorian}</span>
+                <span className="num text-base tracking-tight text-ink-2 md:text-lg">
+                  {lockup.gregorian}
+                </span>
               </p>
             </>
           ) : (
@@ -74,7 +80,7 @@ function DayRail({ done, total }: { done: number; total: number }) {
   const complete = done === total;
 
   return (
-    <div className="mt-5">
+    <div className="mt-3.5 md:mt-5">
       <div
         className="relative h-0.5 w-full rounded-full bg-line-strong"
         role="progressbar"
@@ -97,7 +103,7 @@ function DayRail({ done, total }: { done: number; total: number }) {
           />
         )}
       </div>
-      <p className="mt-2 text-xs text-muted">
+      <p className="mt-1.5 text-xs text-muted md:mt-2">
         {complete ? (
           <span className="font-semibold text-accent">הכול סגור להיום.</span>
         ) : (

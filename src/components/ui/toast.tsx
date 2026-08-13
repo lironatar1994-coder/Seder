@@ -89,7 +89,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         data-testid="toasts"
         aria-live="polite"
         aria-atomic="false"
-        className="pointer-events-none fixed inset-be-4 inset-e-4 z-[80] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2"
+        // Lifted clear of the phone's tab bar. Undo lives in a toast, so a
+        // toast half-under the bar costs the one action that reverses a
+        // mistake — the worst thing to put out of reach.
+        className="pointer-events-none fixed inset-be-[calc(1rem+var(--tab-bar))] inset-e-4 z-[80] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2"
       >
         {toasts.map((t) => (
           <div

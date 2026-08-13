@@ -78,12 +78,46 @@ function DayCell({
   const visible = entries.slice(0, MAX_CHIPS);
   const hidden = entries.length - visible.length;
 
+  const dayLabel = `${day.weekdayLong} ${day.dayOfMonth}, ${entries.length} פריטים`;
+
+  /* Shared by both, so the two layouts cannot drift into showing different
+     dates. The Hebrew month is named once, on Rosh Chodesh, rather than
+     repeated in all thirty cells. */
+  const dateLine = (
+    <>
+      <span className="flex items-baseline gap-1.5">
+        <span
+          className={cn(
+            'num text-sm leading-none',
+            day.isToday
+              ? 'grid size-6 place-items-center rounded-full bg-accent font-bold text-[var(--on-accent)]'
+              : day.inMonth
+                ? 'font-semibold text-ink'
+                : 'text-muted',
+          )}
+        >
+          {day.dayOfMonth}
+        </span>
+        <span className="text-[0.7rem] leading-none text-muted">{day.hebrewDay}</span>
+      </span>
+
+      {day.hebrewMonthLabel && (
+        <span className="truncate text-[0.7rem] font-semibold leading-none text-accent">
+          {day.hebrewMonthLabel}
+        </span>
+      )}
+    </>
+  );
+
   return (
     <div
       ref={setNodeRef}
       data-day={day.iso}
       className={cn(
-        'relative flex min-h-16 flex-col gap-1 border-be border-s border-line p-1 md:min-h-28 md:p-1.5',
+        // No horizontal padding on the phone: at seven columns every pixel of
+        // it comes off the tap target, and the cell border already separates
+        // one day from the next.
+        'relative flex min-h-16 flex-col gap-1 border-be border-s border-line px-px py-1 md:min-h-28 md:p-1.5',
         // Friday and Saturday are the Israeli weekend — a quieter ground, not a
         // different colour.
         day.isWeekend ? 'bg-surface-sunk' : 'bg-surface',
@@ -92,63 +126,46 @@ function DayCell({
         isOver && 'bg-accent-soft',
       )}
     >
+      {/* Phone: the whole cell is one control.
+          A seven-column grid gives each day about 50px, which is not enough for
+          a title — a truncated "ל…" is noise, not information — so the day
+          shows dots and opens the day sheet for the rest. That was two buttons
+          tiling the cell, one of them `aria-hidden` purely to be a bigger
+          target, and neither of them tall enough to hit reliably. One button
+          the size of the cell says the same thing and is 44px. */}
       <button
         type="button"
         onClick={() => onSelectDay(day.iso)}
-        aria-label={`${day.weekdayLong} ${day.dayOfMonth}, ${entries.length} פריטים`}
-        className="flex items-baseline justify-between gap-1 rounded-sm text-start"
+        aria-label={dayLabel}
+        className="flex flex-1 flex-col gap-1 rounded-sm text-start md:hidden"
       >
-        <span className="flex items-baseline gap-1.5">
-          <span
-            className={cn(
-              'num text-sm leading-none',
-              day.isToday
-                ? 'grid size-6 place-items-center rounded-full bg-accent text-[var(--on-accent)] font-bold'
-                : day.inMonth
-                  ? 'font-semibold text-ink'
-                  : 'text-muted',
-            )}
-          >
-            {day.dayOfMonth}
-          </span>
-          <span className="text-[0.7rem] leading-none text-muted">{day.hebrewDay}</span>
+        {dateLine}
+        <span className="flex flex-1 items-start justify-center gap-1 pt-0.5">
+          {entries.slice(0, 3).map((entry) => (
+            <span
+              key={entry.key}
+              className={cn('size-1.5 rounded-full', entry.task.status !== 'TODO' && 'opacity-40')}
+              style={{
+                backgroundColor:
+                  entry.kind === 'deadline'
+                    ? 'var(--flag)'
+                    : swatchVar(entry.task.project?.color ?? 'slate'),
+              }}
+            />
+          ))}
+          {entries.length > 3 && <span className="text-[0.6rem] leading-none text-muted">+</span>}
         </span>
-
-        {/* The Hebrew month is named once, on Rosh Chodesh, rather than
-            repeated in all thirty cells. */}
-        {day.hebrewMonthLabel && (
-          <span className="truncate text-[0.7rem] font-semibold leading-none text-accent">
-            {day.hebrewMonthLabel}
-          </span>
-        )}
       </button>
 
-      {/* Phone: a seven-column grid gives each day about 50px, which is not
-          enough for a title — a truncated "ל…" is noise, not information. Dots
-          say how much is on the day; tapping opens the day sheet for the rest. */}
+      {/* Desktop: the date opens the day, and each entry below is its own
+          control, so the cell cannot be one button. */}
       <button
         type="button"
         onClick={() => onSelectDay(day.iso)}
-        aria-hidden
-        tabIndex={-1}
-        className="flex flex-1 items-start justify-center gap-1 pt-0.5 md:hidden"
+        aria-label={dayLabel}
+        className="hidden items-baseline justify-between gap-1 rounded-sm text-start md:flex"
       >
-        {entries.slice(0, 3).map((entry) => (
-          <span
-            key={entry.key}
-            className={cn(
-              'size-1.5 rounded-full',
-              entry.task.status !== 'TODO' && 'opacity-40',
-            )}
-            style={{
-              backgroundColor:
-                entry.kind === 'deadline'
-                  ? 'var(--flag)'
-                  : swatchVar(entry.task.project?.color ?? 'slate'),
-            }}
-          />
-        ))}
-        {entries.length > 3 && <span className="text-[0.6rem] leading-none text-muted">+</span>}
+        {dateLine}
       </button>
 
       <div className="hidden min-h-0 flex-1 flex-col gap-0.5 md:flex">

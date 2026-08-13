@@ -35,19 +35,35 @@ export const metadata: Metadata = {
   description: 'מנהל משימות בעברית. היום, בקרוב, מתישהו — הכול במקום אחד.',
 };
 
+/* One colour, not a media-query pair: the page no longer resolves against the
+   OS, so keying the browser chrome to `prefers-color-scheme` would paint a dark
+   bar above a light page on every dark-set device — the common case now. This
+   matches --paper in the default theme. Someone who has chosen dark keeps a
+   light bar, which is the smaller wrong of the two and the only one a static
+   meta tag can avoid. */
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f8fa' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b0d12' },
-  ],
+  themeColor: '#f7f8fa',
+  /* Lets the page use the full screen behind the notch and the home indicator,
+     and — the reason it is here — makes `env(safe-area-inset-*)` report real
+     numbers. Without it those insets are zero everywhere, so the tab bar would
+     sit under the home indicator on every iPhone while testing clean in a
+     desktop browser. */
+  viewportFit: 'cover',
+  /* The on-screen keyboard shrinks the layout viewport instead of sliding over
+     it, so anything pinned to the bottom edge — the composer sheet, the tab
+     bar — comes to rest above the keys rather than behind them. The default
+     (`overlays-content`) is why bottom-anchored input is a familiar mess on
+     mobile web. */
+  interactiveWidget: 'resizes-content',
 };
 
 /* Applies the stored appearance before first paint so the page never flashes
    the wrong theme and then corrects itself. Runs ahead of hydration, hence the
    inline script. Both axes are absent-means-default, so nothing is written for
-   "system" or for the default accent. */
+   the default brightness (light) or the default accent — and "system", which
+   used to be that absence, now stamps an attribute of its own. */
 const themeBootstrap = `
-(function(){try{var d=document.documentElement;var t=localStorage.getItem('seder-theme');if(t==='dark'||t==='light'){d.dataset.theme=t}var a=localStorage.getItem('seder-accent');if(a&&/^[a-z]+$/.test(a)){d.dataset.accent=a}}catch(e){}})();
+(function(){try{var d=document.documentElement;var t=localStorage.getItem('seder-theme');if(t==='dark'||t==='light'||t==='system'){d.dataset.theme=t}var a=localStorage.getItem('seder-accent');if(a&&/^[a-z]+$/.test(a)){d.dataset.accent=a}}catch(e){}})();
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

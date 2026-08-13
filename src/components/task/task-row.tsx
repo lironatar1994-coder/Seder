@@ -133,7 +133,14 @@ export const TaskRow = memo(function TaskRow({
           }
           onOpen(task);
         }}
-        className="min-w-0 flex-1 text-start"
+        // A one-line task gives this button 31px of height. Rather than pad the
+        // row — which would cost a visible task on every screen — the target
+        // grows over the row's own padding, which is dead space anyway.
+        className={cn(
+          'relative min-w-0 flex-1 text-start',
+          "before:absolute before:inset-x-0 before:content-['']",
+          '[@media(pointer:coarse)]:before:-inset-y-2',
+        )}
         aria-label={`פתיחת ${task.title}`}
       >
         <span className="relative inline-block max-w-full align-top">
@@ -189,7 +196,14 @@ export const TaskRow = memo(function TaskRow({
           <MenuTrigger asChild>
             <IconButton
               label="אפשרויות למשימה"
-              className="opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100 focus-visible:opacity-100"
+              // Revealed on hover only where hover exists. On a touch screen
+              // there is no hover, so this used to be a permanently invisible
+              // button — and it is the only way to schedule, move, prioritise
+              // or delete a task from the list.
+              className={cn(
+                'transition-opacity data-[state=open]:opacity-100 focus-visible:opacity-100',
+                '[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100',
+              )}
             >
               <MoreHorizontal className="size-4" aria-hidden />
             </IconButton>
@@ -276,9 +290,10 @@ function SelectBox({
       aria-label={`בחירת ${task.title}`}
       onClick={(event) => onSelect(task, event.shiftKey ? 'range' : 'toggle')}
       className={cn(
-        'mt-1 inline-flex size-4 shrink-0 items-center justify-center rounded-full border',
+        'relative mt-1 inline-flex size-4 shrink-0 items-center justify-center rounded-full border',
         'transition-colors duration-150',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+        "before:absolute before:content-[''] [@media(pointer:coarse)]:before:-inset-3.5",
         checked
           ? 'border-accent bg-accent text-on-accent'
           : 'border-line-strong hover:border-accent',
@@ -337,8 +352,12 @@ function Checkbox({
       aria-label={filled ? `ביטול השלמה: ${task.title}` : `סימון כהושלם: ${task.title}`}
       onClick={() => onToggle(task, !done)}
       className={cn(
-        'relative mt-0.5 grid size-5 shrink-0 place-items-center overflow-hidden rounded-md border-2',
+        'relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border-2',
         'transition-colors duration-120',
+        // A 20px box is right for the row's density and wrong for a thumb. The
+        // target extends past it on touch only; completing the wrong task is
+        // the most annoying mistake this list can produce.
+        "before:absolute before:content-[''] [@media(pointer:coarse)]:before:-inset-3",
         filled ? 'border-accent bg-accent' : `${ring} hover:border-accent`,
       )}
     >

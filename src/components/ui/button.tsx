@@ -12,8 +12,10 @@ const VARIANTS: Record<Variant, string> = {
 };
 
 const SIZES: Record<Size, string> = {
-  // 44px minimum touch target on the two sizes used on mobile.
-  sm: 'h-9 px-3 text-sm gap-1.5',
+  // `sm` is a 36px control, which is right beside dense content and wrong under
+  // a thumb. It grows to the touch floor only where the pointer is coarse, so
+  // desktop toolbars keep their density.
+  sm: 'h-9 px-3 text-sm gap-1.5 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:px-4',
   md: 'h-11 px-4 text-base gap-2',
   lg: 'h-12 px-6 text-base gap-2',
 };
@@ -58,9 +60,14 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         aria-label={label}
         title={label}
         className={cn(
-          'inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted',
+          'relative inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted',
           'transition-colors duration-120 hover:bg-surface-2 hover:text-ink',
           'disabled:pointer-events-none disabled:opacity-40',
+          // 32px is a comfortable pointer target and a poor thumb one. Rather
+          // than grow the glyph — which would coarsen every toolbar in the app —
+          // the target grows past the box on touch devices only. The visual
+          // size, and so the layout, is unchanged.
+          "before:absolute before:content-[''] [@media(pointer:coarse)]:before:-inset-1.5",
           className,
         )}
         {...props}

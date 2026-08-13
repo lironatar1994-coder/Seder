@@ -25,7 +25,8 @@ export function SettingsNav({
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'inline-block whitespace-nowrap border-be-2 px-3 py-2.5 text-sm transition-colors duration-150',
+                  'inline-flex items-center whitespace-nowrap border-be-2 px-3 py-2.5 text-sm transition-colors duration-150',
+                  '[@media(pointer:coarse)]:min-h-11',
                   active
                     ? 'border-accent font-semibold text-ink'
                     : 'border-transparent text-muted hover:border-line-strong hover:text-ink',

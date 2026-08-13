@@ -60,6 +60,7 @@ Prefer npm directly? `npm install && npm run setup && npm run dev` does the same
 | `node scripts/console-check.mjs [path…]` | Loads pages as the demo user and reports console/hydration errors |
 | `node scripts/contrast-check.mjs` | WCAG audit of the colour tokens in both themes |
 | `node scripts/theme-matrix.mjs` | Renders every OS-preference × choice combination and checks what resolved |
+| `node scripts/mobile-audit.mjs` | Overflow and touch-target sweep at 320 / 390 / 430px, in a real touch context |
 | `node scripts/zoom.mjs <path> <selector> <name>` | Crops one element for close inspection |
 
 The three scripts above sign in by minting a session row directly, so no password is typed
@@ -261,7 +262,65 @@ nowhere in the visible row.
 | `←` `→` | Move the schedule a day later / earlier — **left is forward**, following the reading direction |
 | `Ctrl/⌘ K` | Search tasks, or jump to a view |
 | `Ctrl/⌘ 1…6` | Jump to a standing view |
+| `x` | Add the selected task to the multi-select |
+| `Ctrl/⌘ A` | Select every task in the view |
 | `Delete` | Delete the selected task |
+
+## On a phone
+
+The phone is not the desk with less room. It is for capture, a glance at what
+is due, and ticking things off; planning happens sitting down. The layout says
+so:
+
+**A tab bar, not a hamburger.** Four destinations — היום, בקרוב, תיבה נכנסת,
+לוח שנה — sit permanently in the thumb arc with their counts. The drawer keeps
+what a phone reaches for rarely: projects, labels, settings, sign-out.
+
+**Capture is a slot of its own**, because it is the one thing a phone does
+better than a desk — the task occurs to you while you are standing somewhere.
+It opens the composer as a sheet on the bottom edge, next to the thumb that
+asked for it and above the keyboard about to appear. On a route with no list to
+open — the calendar, settings — it navigates to Today and opens there rather
+than dropping the tap. The desktop's inline "משימה חדשה" button, and its `N`
+badge, are hidden: the tab bar owns capture, and a second one would spend the
+fold repeating it.
+
+**The lockup shrinks.** At 1280px the dual-calendar header costs a corner; at
+390px it was costing five of the seven rows on screen. It stays the largest
+thing on the phone, just not by the same absolute measure, and the sticky top
+bar carries the current view so context survives scrolling.
+
+**Touch targets grow, glyphs do not.** Controls keep their density under a
+pointer and extend their hit area past their box under a thumb, via a
+`::before` under `@media (pointer: coarse)`. Layout is unchanged either way.
+
+**The row menu is visible on touch.** It was `opacity-0 group-hover:opacity-100`,
+and a touch screen has no hover — so schedule, move, prioritise and delete were
+invisible on every phone since the row was written. The reveal is now gated on
+`@media (hover: hover)`.
+
+### Verifying it
+
+```bash
+node scripts/mobile-audit.mjs
+```
+
+Sweeps five routes at 320 / 390 / 430px for horizontal overflow and for
+interactive elements under 44×44, in a context with `hasTouch` set — without
+which the page reports `hover: hover` and every touch-only rule quietly keeps
+its desktop branch, which is exactly the bug being looked for.
+
+It measures the `::before` hit areas, not just the boxes, and it treats
+`visibility: hidden` or `inert` as permission to sit off-screen — which is why
+a closed drawer passes and why anything else off-screen does not. It found two
+real defects on its first run: the closed drawer kept eleven links in the tab
+order, and the month grid's day cell was two buttons tiling one action, neither
+tall enough to hit.
+
+One declared exception, named in the script with its reasoning: seven 44px
+columns need 308px and a 320px screen has 288, so the month grid cannot meet
+the floor there. The fix is an agenda view rather than a size tweak. The script
+prints the exception rather than hiding it.
 
 ## Architecture
 

@@ -56,12 +56,20 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
   return (
     <>
       {/* Mobile trigger — sits at the inline-start, the same edge the drawer
-          enters from. */}
-      <div className="sticky inset-bs-0 z-30 flex items-center gap-2 border-be border-line bg-paper/90 px-3 py-2 backdrop-blur md:hidden">
+          enters from.
+
+          It carries the current view rather than the wordmark. The wordmark is
+          already on the drawer it opens, and a phone screen is too short to
+          spend a line telling you which app you are in; where you are inside it
+          is the thing that stops being obvious once the header scrolls away. */}
+      <div className="sticky inset-bs-0 z-30 flex items-center gap-1 border-be border-line bg-paper/90 px-2 py-1.5 backdrop-blur md:hidden">
         <IconButton label="תפריט" onClick={() => setOpen(true)}>
           <MenuIcon className="size-5" aria-hidden />
         </IconButton>
-        <span className="display text-lg font-bold">סדר</span>
+        <span className="min-w-0 flex-1 truncate px-1 text-sm font-semibold text-ink-2">
+          {currentPlace(pathname, data)}
+        </span>
+        <ThemeToggle />
       </div>
 
       {open && (
@@ -75,6 +83,10 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
 
       <aside
         data-open={open}
+        // Closed, this is hidden from the tab order and the accessibility tree
+        // by `.drawer[data-open='false']` in globals.css — in CSS rather than
+        // here, because the rule is already scoped to phone widths and an
+        // attribute would have to wait for an effect to learn the same thing.
         className={cn(
           'drawer z-50 flex w-64 shrink-0 flex-col border-e border-line bg-surface-sunk',
           // Desktop: a static column at the inline-start edge (the right in
@@ -230,6 +242,29 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
       </aside>
     </>
   );
+}
+
+/**
+ * Where you are, from the URL alone.
+ *
+ * Read off the pathname rather than threaded down from the page, because the
+ * bar is a sibling of the page and every alternative — context, a store, a
+ * prop drilled through the layout — would make every view responsible for
+ * announcing itself to chrome it does not know about.
+ */
+function currentPlace(pathname: string, data: SidebarData): string {
+  const view = VIEWS.find((v) => pathname === `/app/${v.slug}`);
+  if (view) return view.label;
+  if (pathname.startsWith('/app/calendar')) return 'לוח שנה';
+  if (pathname.startsWith('/app/settings')) return 'הגדרות';
+
+  const projectId = pathname.match(/^\/app\/project\/([^/]+)/)?.[1];
+  if (projectId) return data.projects.find((p) => p.id === projectId)?.name ?? 'פרויקט';
+
+  const labelId = pathname.match(/^\/app\/label\/([^/]+)/)?.[1];
+  if (labelId) return data.labels.find((l) => l.id === labelId)?.name ?? 'תווית';
+
+  return 'סדר';
 }
 
 function NavLink({

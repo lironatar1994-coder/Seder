@@ -35,17 +35,36 @@ await db.session.create({
 const browser = await chromium.launch();
 
 async function shoot(name, { width, height, theme, path, action }) {
+  // A narrow viewport is not a phone. Without `hasTouch` the context still
+  // reports `hover: hover` and `pointer: fine`, so every touch-only rule — the
+  // always-visible row menu, the enlarged hit areas — silently keeps its
+  // desktop branch and the screenshot shows something no phone renders.
+  const phone = width < 768;
+
   const context = await browser.newContext({
     viewport: { width, height },
     locale: 'he-IL',
     timezoneId: 'Asia/Jerusalem',
     colorScheme: theme === 'dark' ? 'dark' : 'light',
     deviceScaleFactor: 2,
+    hasTouch: phone,
+    isMobile: phone,
   });
   await context.addCookies([
     { name: 'seder_session', value: token, domain: 'localhost', path: '/', httpOnly: true },
   ]);
+
+  // Light is the default now, and the OS preference only applies to someone who
+  // has chosen "system" — so `colorScheme` alone renders every "dark" shot
+  // light. Store the choice the way the app stores it.
   const page = await context.newPage();
+  if (theme === 'dark' || theme === 'light') {
+    await page.addInitScript((value) => {
+      try {
+        localStorage.setItem('seder-theme', value);
+      } catch {}
+    }, theme);
+  }
   // Not `networkidle`: it waits for 500ms of silence that a page holding any
   // long-lived connection never gives, and hangs the whole run on one route.
   // Fonts are the only thing worth waiting for here, and `document.fonts`
@@ -226,6 +245,33 @@ await shoot('32-bulk-bar-mobile', {
 });
 
 await shoot('08-mobile', { width: 390, height: 844, path: '/app/today' });
+await shoot('33-mobile-dark', {
+  width: 390,
+  height: 844,
+  theme: 'dark',
+  path: '/app/today',
+});
+await shoot('34-mobile-capture', {
+  width: 390,
+  height: 844,
+  path: '/app/today',
+  action: async (page) => {
+    await page.getByRole('button', { name: 'חדשה' }).click();
+    await page.waitForTimeout(300);
+  },
+});
+await shoot('35-mobile-inbox', { width: 390, height: 844, path: '/app/inbox' });
+await shoot('36-mobile-drawer', {
+  width: 390,
+  height: 844,
+  path: '/app/today',
+  action: async (page) => {
+    await page.getByRole('button', { name: 'תפריט' }).click();
+    await page.waitForTimeout(300);
+  },
+});
+/** The narrowest phone still in use. If the tab bar survives 320px it survives. */
+await shoot('37-mobile-320', { width: 320, height: 720, path: '/app/today' });
 await shoot('09-landing', { width: 1280, height: 900, path: '/' });
 await shoot('10-login', { width: 1280, height: 700, path: '/login' });
 

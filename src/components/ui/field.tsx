@@ -16,7 +16,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(function Inp
       dir={props.dir ?? 'auto'}
       className={cn(
         'block w-full rounded-lg border border-line-strong bg-surface',
-        'px-3 py-2.5 text-base text-ink',
+        // 40px is a fine click target and a poor tap one. A form is where the
+        // cost of a miss is highest — the wrong field takes the wrong value.
+        'px-3 py-2.5 text-base text-ink [@media(pointer:coarse)]:min-h-11',
         'transition-colors duration-120',
         'hover:border-muted focus:border-accent',
         'aria-[invalid=true]:border-p1',

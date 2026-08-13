@@ -1,7 +1,11 @@
 @import 'tailwindcss';
 
 /* Appearance is two axes, both absent-means-default: `data-theme` on <html>
-   (missing = follow the OS) and `data-accent` (missing = indigo).
+   (missing = light) and `data-accent` (missing = indigo).
+
+   The product's default brightness is light on every device, not "whatever the
+   OS is set to". Following the OS is still available, but it is now an explicit
+   choice — `data-theme='system'` — rather than the resting state.
 
    Components never reference a raw colour, only the token names below, so a
    theme is a value swap with no component branching anywhere. */
@@ -67,8 +71,8 @@
 
    One declaration per token, both themes inside it. `light-dark()` picks by the
    element's `color-scheme`, so the three tiers this used to need — light,
-   dark-by-media-query, dark-by-attribute — collapse into the two selectors at
-   the bottom that do nothing but set `color-scheme`.
+   dark-by-media-query, dark-by-attribute — collapse into the selectors at the
+   bottom that do nothing but set `color-scheme`.
 
    Each token is declared twice: a bare hex first, for engines without
    `light-dark()`, then the real pair. Those engines get the light theme, which
@@ -77,9 +81,10 @@
    Adding a token is one line. Changing a colour is one edit.
 --------------------------------------------------------------------------- */
 :root {
-  /* Both keywords: with no explicit choice the OS decides, and `light-dark()`
-     plus every native control — scrollbars, date pickers — follows it. */
-  color-scheme: light dark;
+  /* One keyword: with no explicit choice the page is light, whatever the device
+     prefers. `light-dark()` and every native control — scrollbars, date
+     pickers — follow this, so nothing is left resolving against the OS. */
+  color-scheme: light;
 
   /* surfaces — cool near-neutrals, not warm greys. A blue-cast ground is what
      makes the accent read as deliberate rather than as a stray colour. Dark is
@@ -179,14 +184,24 @@
   --shadow-panel: -18px 0 40px -28px var(--shadow-tint-4);
 }
 
-/* The explicit choice, and the only thing either tier has to say. Everything
-   above follows from `color-scheme`. */
+/* The explicit choice, and the only thing any tier has to say. Everything above
+   follows from `color-scheme`.
+
+   `light` is written out even though the bare `:root` already says it: a value
+   stored before light became the default still stamps the attribute, and it has
+   to keep meaning what it said. */
 :root[data-theme='light'] {
   color-scheme: light;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
+}
+
+/* Following the device is now opt-in, so it carries an attribute like any other
+   choice. Both keywords hand the decision back to `prefers-color-scheme`. */
+:root[data-theme='system'] {
+  color-scheme: light dark;
 }
 
 
@@ -252,6 +267,21 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+  }
+
+  /* How much of the bottom of a phone screen the tab bar owns, including the
+     home indicator. Anything else that pins itself to that edge — the bulk
+     bar, the toasts — clears it by this much rather than by its own guess, so
+     the three cannot drift apart. Zero from `md` up, where there is no tab
+     bar, which is what lets those components use it unconditionally. */
+  :root {
+    --tab-bar: calc(3.25rem + env(safe-area-inset-bottom));
+  }
+
+  @media (width >= 48rem) {
+    :root {
+      --tab-bar: 0px;
+    }
   }
 
   /* The authenticated shell scrolls its own content column rather than the
@@ -497,12 +527,24 @@
    Hence one rule per direction. */
 @media (max-width: 767px) {
   .drawer {
-    transition: transform 200ms var(--ease-out-soft);
+    transition:
+      transform 200ms var(--ease-out-soft),
+      visibility 0s;
   }
 
   .drawer[data-open='false'] {
     transform: translateX(100%);
     pointer-events: none;
+    /* `pointer-events` stops the mouse and nothing else: a closed drawer sat
+       off-screen with all eleven of its links still in the tab order and still
+       in the accessibility tree, so tabbing from the top bar walked through
+       navigation nobody could see. `visibility` is what removes it from both.
+       Delayed by the length of the slide so the drawer is still visible on the
+       way out. */
+    visibility: hidden;
+    transition:
+      transform 200ms var(--ease-out-soft),
+      visibility 0s linear 200ms;
   }
 
   :dir(ltr) .drawer[data-open='false'] {
