@@ -2,7 +2,9 @@ import { notFound } from 'next/navigation';
 import { db } from '@/server/db';
 import { getCurrentUser } from '@/server/auth/session';
 import { readWhatsappState } from '@/server/whatsapp/status';
+import { readWhatsappHealth } from '@/server/whatsapp/health';
 import { WhatsappForm } from '@/components/settings/whatsapp-form';
+import { WhatsappHealthPanel } from '@/components/settings/whatsapp-health';
 
 /** The connection is one paired number for the whole app, so pairing it is an
  *  operator job rather than a per-account one. Unset in development, which
@@ -24,6 +26,8 @@ export default async function WhatsappSettingsPage() {
   const user = await getCurrentUser();
   if (!user) notFound();
 
+  const operator = isAdmin(user.email);
+
   const [row, state, recent] = await Promise.all([
     db.user.findUnique({
       where: { id: user.id },
@@ -38,16 +42,23 @@ export default async function WhatsappSettingsPage() {
     }),
   ]);
 
+  // Only queried for the operator: it reads across every account, and a page
+  // that runs the query and then hides the result has still run the query.
+  const health = operator ? await readWhatsappHealth() : null;
+
   return (
-    <WhatsappForm
-      phone={row?.phone ?? null}
-      enabled={row?.whatsappEnabled ?? false}
-      state={state}
-      isAdmin={isAdmin(user.email)}
-      recent={recent.map((log) => ({
-        ...log,
-        createdAt: TIME.format(log.createdAt),
-      }))}
-    />
+    <>
+      <WhatsappForm
+        phone={row?.phone ?? null}
+        enabled={row?.whatsappEnabled ?? false}
+        state={state}
+        isAdmin={operator}
+        recent={recent.map((log) => ({
+          ...log,
+          createdAt: TIME.format(log.createdAt),
+        }))}
+      />
+      {health && <WhatsappHealthPanel health={health} />}
+    </>
   );
 }

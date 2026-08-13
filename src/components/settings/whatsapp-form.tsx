@@ -218,15 +218,15 @@ export function WhatsappForm({
                 <span dir="auto" className="min-w-0 flex-1 truncate text-sm text-ink-2">
                   {row.body}
                 </span>
-                <span
-                  className={
-                    row.status === 'sent'
-                      ? 'shrink-0 text-xs text-muted'
-                      : 'shrink-0 text-xs font-semibold text-p2'
-                  }
-                >
-                  {row.status === 'sent' ? row.createdAt : row.status === 'failed' ? 'נכשלה' : 'לא טופלה'}
-                </span>
+                {/* The time always, and the outcome as well when it was not
+                    "sent" — showing one or the other dropped the timestamp
+                    from exactly the rows worth timestamping. */}
+                <span className="num shrink-0 text-xs text-muted">{row.createdAt}</span>
+                {row.status !== 'sent' && (
+                  <span className="shrink-0 text-xs font-semibold text-p2">
+                    {row.status === 'failed' ? 'נכשלה' : 'לא טופלה'}
+                  </span>
+                )}
               </li>
             ))}
           </ul>

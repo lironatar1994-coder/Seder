@@ -177,6 +177,19 @@ test.describe('settings', () => {
     );
   });
 
+  test('an ordinary account sees nothing about anybody else', async ({ page }) => {
+    await register(page);
+    await page.goto(at('/app/settings/whatsapp'));
+
+    // Their own section is there…
+    await expect(page.getByRole('heading', { name: 'הודעות אחרונות' })).toBeVisible();
+    // …and the operator's cross-account view is not. This is the assertion
+    // worth having: the panel reports on every account in the system, and it
+    // is one env-var comparison away from everyone.
+    await expect(page.getByRole('heading', { name: 'מצב כללי' })).toHaveCount(0);
+    await expect(page.getByText('חשבונות מחוברים')).toHaveCount(0);
+  });
+
   test('the same number cannot answer for two accounts', async ({ page, browser }) => {
     // An inbound message resolves to an account by its number alone; two
     // owners would make "whose Inbox is this" unanswerable.
