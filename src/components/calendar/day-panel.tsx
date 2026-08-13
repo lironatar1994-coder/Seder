@@ -1,17 +1,14 @@
 'use client';
 
-import { useTransition } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Check, Flag, X } from 'lucide-react';
+import { Flag, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { swatchVar } from '@/lib/constants';
 import { buildLockup } from '@/lib/hebrew-date';
 import { parseISODay } from '@/lib/calendar';
 import { relativeDayLabel, today, weekdayName } from '@/lib/dates';
 import type { CalendarEntry } from '@/server/tasks/queries';
-import { toggleTaskAction } from '@/server/tasks/actions';
-import { useToast } from '@/components/ui/toast';
 import { Composer } from '@/components/task/composer';
+import { EntryRow } from './entry-row';
 
 /**
  * One day, opened from the grid.
@@ -34,9 +31,6 @@ export function DayPanel({
   onClose: () => void;
   onOpenTask: (taskId: string) => void;
 }) {
-  const [, startTransition] = useTransition();
-  const { toast } = useToast();
-
   const date = parseISODay(iso);
   const lockup = buildLockup(date);
   const relative = relativeDayLabel(date, today());
@@ -44,12 +38,6 @@ export function DayPanel({
 
   const scheduled = entries.filter((e) => e.kind === 'scheduled');
   const deadlines = entries.filter((e) => e.kind === 'deadline');
-
-  const toggle = (entry: CalendarEntry) =>
-    startTransition(async () => {
-      const result = await toggleTaskAction(entry.taskId, entry.task.status === 'TODO');
-      if (!result.ok) toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
-    });
 
   return (
     <DialogPrimitive.Root open onOpenChange={(open) => !open && onClose()}>
@@ -107,64 +95,8 @@ export function DayPanel({
             {scheduled.length > 0 && (
               <ul className="space-y-0.5">
                 {scheduled.map((entry) => (
-                  <li key={entry.key} className="flex items-start gap-2.5 rounded-lg px-1 py-1.5 hover:bg-surface-2">
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={entry.task.status !== 'TODO'}
-                      aria-label={
-                        entry.task.status !== 'TODO'
-                          ? `ביטול השלמה: ${entry.task.title}`
-                          : `סימון כהושלם: ${entry.task.title}`
-                      }
-                      onClick={() => toggle(entry)}
-                      className={cn(
-                        'mt-0.5 grid size-4.5 shrink-0 place-items-center rounded-md border-2 transition-colors',
-                        entry.task.status !== 'TODO'
-                          ? 'border-accent bg-accent'
-                          : 'border-line-strong hover:border-accent',
-                      )}
-                    >
-                      <Check
-                        className={cn(
-                          'size-2.5 text-[var(--on-accent)]',
-                          entry.task.status !== 'TODO' ? 'opacity-100' : 'opacity-0',
-                        )}
-                        strokeWidth={4}
-                        aria-hidden
-                      />
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => onOpenTask(entry.taskId)}
-                      className="min-w-0 flex-1 text-start"
-                    >
-                      <span
-                        dir="auto"
-                        className={cn(
-                          'block text-sm leading-snug',
-                          entry.task.status !== 'TODO'
-                            ? 'text-muted line-through'
-                            : 'text-ink',
-                        )}
-                      >
-                        {entry.task.title}
-                      </span>
-                      <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
-                        {entry.time && <span className="num font-semibold">{entry.time}</span>}
-                        {entry.task.project && (
-                          <span className="inline-flex items-center gap-1">
-                            <span
-                              aria-hidden
-                              className="size-1.5 rounded-full"
-                              style={{ backgroundColor: swatchVar(entry.task.project.color) }}
-                            />
-                            {entry.task.project.name}
-                          </span>
-                        )}
-                      </span>
-                    </button>
+                  <li key={entry.key}>
+                    <EntryRow entry={entry} onOpen={onOpenTask} />
                   </li>
                 ))}
               </ul>
@@ -179,18 +111,7 @@ export function DayPanel({
                 <ul className="space-y-0.5">
                   {deadlines.map((entry) => (
                     <li key={entry.key}>
-                      <button
-                        type="button"
-                        onClick={() => onOpenTask(entry.taskId)}
-                        className="w-full rounded-lg px-1 py-1.5 text-start text-sm text-ink hover:bg-surface-2"
-                      >
-                        <span dir="auto">{entry.task.title}</span>
-                        {entry.task.scheduledFor && (
-                          <span className="mt-0.5 block text-xs text-muted">
-                            מתוזמן ל{relativeDayLabel(entry.task.scheduledFor, today())}
-                          </span>
-                        )}
-                      </button>
+                      <EntryRow entry={entry} onOpen={onOpenTask} />
                     </li>
                   ))}
                 </ul>

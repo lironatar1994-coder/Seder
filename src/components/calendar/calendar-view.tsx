@@ -15,7 +15,12 @@ import {
 } from '@dnd-kit/core';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import type { MonthGrid as MonthGridData, WeekGrid as WeekGridData } from '@/lib/calendar';
+import {
+  parseISODay,
+  shiftWeek,
+  type MonthGrid as MonthGridData,
+  type WeekGrid as WeekGridData,
+} from '@/lib/calendar';
 import type { CalendarData, CalendarEntry, TaskDTO } from '@/server/tasks/queries';
 import { scheduleTaskAction, setDeadlineAction } from '@/server/tasks/actions';
 import { useToast } from '@/components/ui/toast';
@@ -24,6 +29,7 @@ import { deleteTaskAction } from '@/server/tasks/actions';
 import { MonthGrid } from './month-grid';
 import { WeekGrid } from './week-grid';
 import { DayPanel } from './day-panel';
+import { Agenda } from './agenda';
 import { ChipPreview } from './entry-chip';
 
 type Mode = 'month' | 'week';
@@ -46,7 +52,13 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
   const { toast } = useToast();
   const [, startTransition] = useTransition();
 
-  const [day, setDay] = useState<string | null>(selectedDay);
+  /* Two different ideas of "the selected day", deliberately not one.
+     `panelDay` opens the desktop drawer, and is set only by the grids — which
+     are `display:none` on a phone, so it can never be raised there. The agenda
+     keeps its own focus. Seeding this from `?d=` instead would pop the drawer
+     over the agenda every time the strip navigated across a month boundary,
+     because the panel is portaled to the body and no wrapper can hide it. */
+  const [panelDay, setPanelDay] = useState<string | null>(null);
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const [dragging, setDragging] = useState<CalendarEntry | null>(null);
   /** entry key → the day it was just dropped on, until the server catches up. */
@@ -72,6 +84,24 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
   const allEntries = useMemo(() => Object.values(entriesByDay).flat(), [entriesByDay]);
   const openTask: TaskDTO | null =
     allEntries.find((e) => e.taskId === openTaskId)?.task ?? null;
+
+  /* Day-ordered task ids for the editor's j/k stepping. Deduped: a task with
+     both a schedule and a deadline yields two entries, and stepping over the
+     pair would appear to stick on the same task. */
+  const stepOrder = useMemo(() => {
+    const seen = new Set<string>();
+    const ids: string[] = [];
+    for (const day of grid.days) {
+      for (const entry of entriesByDay[day.iso] ?? []) {
+        if (seen.has(entry.taskId)) continue;
+        seen.add(entry.taskId);
+        ids.push(entry.taskId);
+      }
+    }
+    return ids;
+  }, [grid, entriesByDay]);
+
+  const stepIndex = openTaskId ? stepOrder.indexOf(openTaskId) : -1;
 
   const periodHref = useCallback(
     (anchor: string, nextMode: Mode = mode) =>
@@ -152,7 +182,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
           router.push('/app/calendar?v=week');
           break;
         case 'Escape':
-          setDay(null);
+          setPanelDay(null);
           break;
       }
     }
@@ -170,22 +200,32 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
     // A month grid is not prose — it wants the full width, not the 44rem
     // reading column the list views use.
     <div data-wide className="pb-16">
-      <header className="pb-5 pt-8">
+      {/* Tighter on a phone: the strip below is the working control, and every
+          pixel this header spends is one the first day of the agenda does not
+          get. The month name stays — it is what tells you which weeks the
+          strip is showing. */}
+      <header className="pb-3 pt-5 md:pb-5 md:pt-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="display flex items-baseline gap-2.5 text-4xl font-bold leading-none text-ink">
+            <h1 className="display flex items-baseline gap-2.5 text-2xl font-bold leading-none text-ink md:text-4xl">
               {title}
-              {subtitle && <span className="num text-2xl font-normal text-muted">{subtitle}</span>}
+              {subtitle && (
+                <span className="num text-lg font-normal text-muted md:text-2xl">{subtitle}</span>
+              )}
             </h1>
             {/* The Hebrew months the period spans — a Gregorian month almost
                 always straddles two. */}
             {grid.hebrewRange && (
-              <p className="display mt-2 text-lg text-ink-2">{grid.hebrewRange}</p>
+              <p className="display mt-1 text-sm text-ink-2 md:mt-2 md:text-lg">
+                {grid.hebrewRange}
+              </p>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <ModeToggle mode={mode} />
+            <span className="max-md:hidden">
+              <ModeToggle mode={mode} />
+            </span>
 
             <div className="flex items-center overflow-hidden rounded-lg border border-line-strong">
               {/* "Previous" points toward the start of the line — right, in
@@ -203,6 +243,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
         </div>
       </header>
 
+      <div className="max-md:hidden">
       <DndContext
         // Without an explicit id, dnd-kit numbers its accessibility
         // description element from a module counter that starts at a different
@@ -221,16 +262,16 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
           <MonthGrid
             weeks={grid.weeks}
             entriesByDay={entriesByDay}
-            selectedDay={day}
-            onSelectDay={setDay}
+            selectedDay={panelDay}
+            onSelectDay={setPanelDay}
             onOpenTask={setOpenTaskId}
           />
         ) : (
           <WeekGrid
             days={grid.days}
             entriesByDay={entriesByDay}
-            selectedDay={day}
-            onSelectDay={setDay}
+            selectedDay={panelDay}
+            onSelectDay={setPanelDay}
             onOpenTask={setOpenTaskId}
           />
         )}
@@ -240,20 +281,43 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
         </DragOverlay>
       </DndContext>
 
+      {/* Drag and keyboard are both pointer affordances; on a phone this
+          paragraph would describe gestures that do not exist. */}
       <p className="mt-4 text-xs text-muted">
         גוררים משימה ליום אחר כדי לתזמן מחדש. <Kbd>←</Kbd> <Kbd>→</Kbd> לתקופה, <Kbd>T</Kbd> להיום,{' '}
         <Kbd>M</Kbd> חודש, <Kbd>W</Kbd> שבוע.
       </p>
+      </div>
 
-      {day && (
+      <Agenda
+        days={grid.days}
+        weeks={isMonth(grid) ? grid.weeks.map((week) => week.days) : [grid.days]}
+        entriesByDay={entriesByDay}
+        projects={projects}
+        labels={labels}
+        initialDay={selectedDay}
+        boundaryHref={(direction, sundayIso) => {
+          /* Out of loaded weeks: fetch the neighbouring period and land on the
+             adjacent Sunday, which `?d=` carries so the strip opens there
+             rather than snapping back to today. */
+          const target = shiftWeek(parseISODay(sundayIso), direction);
+          const anchor = direction === -1 ? grid.prevAnchor : grid.nextAnchor;
+          const base =
+            mode === 'week' ? `/app/calendar?v=week&w=${anchor}` : `/app/calendar?m=${anchor}`;
+          return `${base}&d=${target}`;
+        }}
+        onOpenTask={setOpenTaskId}
+      />
+
+      {panelDay && (
         <DayPanel
-          iso={day}
-          entries={entriesByDay[day] ?? []}
+          iso={panelDay}
+          entries={entriesByDay[panelDay] ?? []}
           projects={projects}
           labels={labels}
-          onClose={() => setDay(null)}
+          onClose={() => setPanelDay(null)}
           onOpenTask={(taskId) => {
-            setDay(null);
+            setPanelDay(null);
             setOpenTaskId(taskId);
           }}
         />
@@ -264,6 +328,14 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
         openId={openTaskId}
         projects={projects}
         labels={labels}
+        onStep={(direction) => {
+          const next = stepOrder[stepIndex + direction];
+          if (next) setOpenTaskId(next);
+        }}
+        canStep={{
+          prev: stepIndex > 0,
+          next: stepIndex >= 0 && stepIndex < stepOrder.length - 1,
+        }}
         onClose={() => setOpenTaskId(null)}
         onDelete={(task) => {
           setOpenTaskId(null);

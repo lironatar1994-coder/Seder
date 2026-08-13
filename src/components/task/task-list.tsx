@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DndContext,
   KeyboardSensor,
@@ -749,7 +750,14 @@ function ComposerSlot({
 }) {
   if (!phone) return <div className="mb-4 animate-fade-up">{children}</div>;
 
-  return (
+  /* Portalled to the body, not merely `fixed`.
+     `main` carries `view-transition-name`, which creates a stacking context —
+     so a `z-50` sheet inside it is only z-50 *within main*, and the tab bar
+     (a sibling of main, z-30) paints over the sheet's submit button. Escaping
+     to the body is what the task editor and the day panel already do, for the
+     same reason. Safe to reach for `document` here: this branch only renders
+     once `useIsPhone` has resolved, which is after hydration. */
+  return createPortal(
     <>
       <button
         type="button"
@@ -767,7 +775,8 @@ function ComposerSlot({
       >
         {children}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
 

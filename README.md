@@ -119,6 +119,36 @@ thirty cells.
 
 Keyboard: `←` `→` move a period (left is forward), `T` today, `M` month, `W` week.
 
+### On a phone it is not a grid
+
+Seven columns of a 390px screen give each day about 50px, which is not enough
+for a title — so the phone used to show coloured dots and hide the work behind
+a tap. Neither reference ships a month grid on a phone:
+[Todoist](https://www.todoist.com/inspiration/todoist-upcoming-view) puts a week
+strip over a day-grouped agenda, and
+[Things](https://culturedcode.com/things/support/articles/4001304/) drops the
+grid entirely and lists days in order.
+
+So the phone gets a **week strip over an agenda**: seven day cells, Sunday on
+the right, each with the day number and up to three dots, sticky at the top;
+below it one section per day with **full task titles**, times and project
+chips, a per-day `+` that composes onto that date, and a tap that opens the
+same task editor the rest of the app uses. Both trees are in the DOM and chosen
+by CSS, so neither waits for hydration to appear.
+
+The strip is full-bleed on purpose. The column pads 16px a side, which at 320px
+would leave 41px per cell — under the touch floor. Bleeding into that padding
+buys back the 45px seven cells need, which is also why the chevrons sit on
+their own row: 7×44 + 2×44 does not fit in 320.
+
+Stepping past the loaded weeks navigates and carries `?d=`, so the strip opens
+on the day the chevron aimed at instead of snapping back to today.
+
+**The audit exception is gone.** `scripts/mobile-audit.mjs` used to carry a
+declared exception for this route, saying in its own comment that the honest
+fix was an agenda view rather than a size tweak. The calendar now passes clean
+at 320 / 390 / 430 with no exceptions in the file.
+
 The date picker — reachable from the detail panel and from a row's `⋯ → תאריך אחר…` — puts the
 common answers on top and a mini month below, with the selected day's Hebrew date in the footer.
 Schedule and deadline get their own picker; the deadline one drops the "anytime/someday" rows,

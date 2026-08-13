@@ -34,7 +34,20 @@ for (const target of targets) {
   });
   page.on('pageerror', (e) => found.push(`[pageerror] ${e.message}`));
 
-  await page.goto(`${BASE}${target}`, { waitUntil: 'networkidle' });
+  /* The console's own message for a bad response is "Failed to load resource"
+     with no URL, which tells you something is broken and nothing about what.
+     The response event has the URL, so name it. */
+  page.on('response', (response) => {
+    if (response.status() < 400) return;
+    found.push(`[${response.status()}] ${new URL(response.url()).pathname}`);
+  });
+
+  /* Not `networkidle`: it waits for 500ms of silence that a page holding any
+     long-lived connection never gives, and hangs the whole run on one route.
+     The fixed settle below is what this actually needs — hydration errors
+     surface within it. */
+  await page.goto(`${BASE}${target}`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(1200);
 
   console.log(`\n=== ${target} ===`);

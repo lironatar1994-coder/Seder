@@ -31,22 +31,6 @@ const MIN_TARGET = 44;
 const SLACK = 1;
 
 const WIDTHS = [320, 390, 430];
-
-/**
- * Declared, reasoned exceptions — not a way to quiet the audit.
- *
- * A month grid is seven columns wide. At 320px the content box is 288px, so the
- * widest a day can be is 41px and no amount of padding work reaches 44: seven
- * 44px columns need 308px that do not exist. The honest fix is not to show a
- * month grid on a 320px screen at all, which is a different piece of work
- * (an agenda view) rather than a size tweak. Every other check still applies
- * here, and every width above this one is held to the floor.
- */
-const NARROW_MONTH_GRID = {
-  width: 320,
-  path: '/app/calendar',
-  allow: /^target \d+×\d+: button "(יום|שבת)/,
-};
 const PATHS = ['/app/today', '/app/upcoming', '/app/inbox', '/app/calendar', '/app/settings/profile'];
 
 const user = await db.user.findUnique({ where: { email: 'demo@seder.app' } });
@@ -161,19 +145,10 @@ for (const width of WIDTHS) {
     await page.evaluate(() => document.fonts.ready);
     const result = await page.evaluate(AUDIT, MIN_TARGET);
 
-    let problems = [];
+    const problems = [];
     for (const row of result.overflow) problems.push(`scrolls sideways: ${row.tag} by ${row.by}px`);
     for (const row of result.wide) problems.push(`outside the viewport: ${row.label} (${row.left}…${row.right})`);
     for (const row of result.small) problems.push(`target ${row.size}: ${row.label}`);
-
-    if (width === NARROW_MONTH_GRID.width && path === NARROW_MONTH_GRID.path) {
-      const before = problems.length;
-      problems = problems.filter((p) => !NARROW_MONTH_GRID.allow.test(p));
-      const allowed = before - problems.length;
-      // Announced, not swallowed: a suppressed check that says nothing reads as
-      // a passing one.
-      if (allowed) console.log(`  --   ${width}px ${path}: ${allowed} day cells below the floor (declared)`);
-    }
 
     if (problems.length) {
       failures += problems.length;

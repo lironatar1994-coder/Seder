@@ -1086,6 +1086,142 @@ test.describe('repeating tasks', () => {
   });
 });
 
+test.describe('calendar on a phone', () => {
+  /**
+   * The phone calendar is a different shape, not a narrower one — a week strip
+   * over a day-grouped agenda, which is what Todoist and Things both ship and
+   * what a 390px screen can actually carry. The grid is still there for
+   * pointers, so these run in their own touch context; the desktop `calendar`
+   * describe below is the regression tripwire for that half.
+   */
+  async function phone(browser: Browser) {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      locale: 'he-IL',
+      timezoneId: 'Asia/Jerusalem',
+      hasTouch: true,
+      isMobile: true,
+    });
+    return { context, page: await context.newPage() };
+  }
+
+  /**
+   * Adding a task the way a phone actually does it.
+   *
+   * `addTask` clicks the inline composer trigger, which is `hidden` below md —
+   * the tab bar owns capture there. Reaching for the desktop control on a
+   * phone is precisely the mistake this whole rework is about.
+   */
+  async function addOnPhone(page: Page, text: string) {
+    await page.getByRole('button', { name: 'חדשה' }).click();
+    const input = page.getByLabel('משימה חדשה');
+    await input.fill(text);
+    await page.getByRole('button', { name: 'הוספה' }).click();
+    await expect(input).toHaveValue('');
+  }
+
+  /** The app stores days as Israeli calendar days; so must the test. */
+  const isoDay = (offset: number) => {
+    const now = new Date();
+    const local = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(now);
+    const date = new Date(`${local}T00:00:00.000Z`);
+    date.setUTCDate(date.getUTCDate() + offset);
+    return date.toISOString().slice(0, 10);
+  };
+
+  test('the week strip is seven reachable days, Sunday on the right', async ({ browser }) => {
+    const { context, page } = await phone(browser);
+    await register(page);
+    await page.goto(at('/app/calendar'));
+
+    const cells = page.locator('[data-strip-day]');
+    await expect(cells).toHaveCount(7);
+
+    // Every cell clears the touch floor — the whole reason the month grid
+    // could not stay: seven columns of a 390px screen cannot.
+    for (let i = 0; i < 7; i++) {
+      const box = (await cells.nth(i).boundingBox())!;
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.width).toBeGreaterThanOrEqual(44);
+    }
+
+    // Sunday is the first cell and sits at the right in Hebrew.
+    const sunday = (await cells.nth(0).boundingBox())!;
+    const saturday = (await cells.nth(6).boundingBox())!;
+    expect(sunday.x).toBeGreaterThan(saturday.x);
+
+    await context.close();
+  });
+
+  test('a scheduled task shows its title, not a coloured dot', async ({ browser }) => {
+    const { context, page } = await phone(browser);
+    await register(page);
+    await addOnPhone(page, 'להגיש דוח מחר');
+
+    await page.goto(at('/app/calendar'));
+    const tomorrow = page.locator(`[data-agenda-day="${isoDay(1)}"]`);
+    await expect(tomorrow).toContainText('להגיש דוח');
+
+    await context.close();
+  });
+
+  test('adds a task onto a specific day from its own section', async ({ browser }) => {
+    const { context, page } = await phone(browser);
+    await register(page);
+    await page.goto(at('/app/calendar'));
+
+    const target = page.locator(`[data-agenda-day="${isoDay(2)}"]`);
+    await target.getByRole('button', { name: /^הוספת משימה ל/ }).click();
+
+    const input = target.getByLabel('משימה חדשה');
+    await input.fill('לאסוף חבילה');
+    await target.getByRole('button', { name: 'הוספה' }).click();
+    await expect(input).toHaveValue('');
+
+    // It lands on the day whose section was used, not on today.
+    await expect(target).toContainText('לאסוף חבילה');
+    await expect(page.locator(`[data-agenda-day="${isoDay(0)}"]`)).not.toContainText('לאסוף חבילה');
+
+    await context.close();
+  });
+
+  test('tapping an entry opens the task editor', async ({ browser }) => {
+    const { context, page } = await phone(browser);
+    await register(page);
+    await addOnPhone(page, 'לבדוק חשבונית היום');
+
+    await page.goto(at('/app/calendar'));
+    // The title button, not the checkbox beside it — that one is named
+    // "סימון כהושלם: …".
+    await page
+      .locator(`[data-agenda-day="${isoDay(0)}"]`)
+      .getByRole('button', { name: 'לבדוק חשבונית', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toContainText('לבדוק חשבונית');
+
+    await context.close();
+  });
+
+  test('stepping past the loaded weeks navigates and keeps the day', async ({ browser }) => {
+    const { context, page } = await phone(browser);
+    await register(page);
+    // Week mode holds exactly one week, so one tap is already the boundary.
+    await page.goto(at('/app/calendar?v=week'));
+
+    await page.getByRole('link', { name: 'השבוע הבא' }).click();
+    await page.waitForURL(/[?&]d=\d{4}-\d{2}-\d{2}/);
+
+    // The day the chevron aimed at is the one the strip opens on.
+    const target = new URL(page.url()).searchParams.get('d')!;
+    await expect(page.locator(`[data-strip-day="${target}"]`)).toHaveAttribute(
+      'aria-current',
+      'date',
+    );
+
+    await context.close();
+  });
+});
+
 test.describe('calendar', () => {
   const cell = (page: Page, iso: string) => page.locator(`[data-day="${iso}"]`);
 
