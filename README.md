@@ -488,6 +488,50 @@ live at the inline-start, so the icons are what survives — and the header
 reverses while collapsed, or the button that reopens the rail would be the first
 thing to disappear behind it.
 
+### Moving between views
+
+Navigation runs through `document.startViewTransition`. Next's
+`experimental.viewTransition` needs React's `unstable_ViewTransition`, which the
+stable React 19.2 here does not export — enabling it would mean running an
+experimental React for one animation — so `ViewTransitions` calls the platform
+API itself. Stable in Chromium and Safari 18; everywhere else the navigation is
+simply instant.
+
+It brackets the click rather than taking it over. `preventDefault` would stop
+the same click reaching the handlers above it — the one that closes the mobile
+drawer among them — so the transition is *opened* on the way down and `<Link>`
+navigates as it always did. The listener is on capture for the same reason: by
+the bubble phase Link has already called `preventDefault`, and a guard that
+respects that would refuse to act.
+
+Naming is what makes it read as one surface. An unnamed transition snapshots
+the whole page and crossfades it, rail included, which makes the furniture
+flicker on every navigation and is worse than no animation. So the rail, the
+tab bar and the toast stack are named and hold still, the content is named and
+moves, and the current-page marker is named so it **travels** from the row you
+left to the row you arrived at. Names must be unique per document, which is why
+the rail's marker and the settings column's are named separately — on a
+settings page both exist at once, and two elements sharing a name makes the
+browser skip the entire transition, silently.
+
+Three e2e tests cover it, because none of this is visible in a screenshot: that
+a navigation went through a transition at all, that no name is used twice, and
+that the persistent chrome is named.
+
+### Counts that move, rows that lift
+
+A count changing is the app reporting something that happened somewhere else —
+finish a task in Today and the Inbox badge drops. Snapped, that is a pixel you
+were not looking at. `RollingNumber` renders both values during the swap so one
+leaves as the other arrives, and the direction carries meaning: a count going
+*down* rolls down, because down is the good direction in a to-do list.
+
+A dragged row used to fade to 60%, which reads as "becoming unavailable" — the
+opposite of what is happening. It now lifts: its own surface so the text stays
+legible, a shadow onto the list it is crossing, and a 1.2% scale composed into
+dnd-kit's transform. Composed, not declared in CSS: the inline transform beats
+any class, so a `.row-lift { transform: scale() }` would have done nothing.
+
 ### The parts the browser draws
 
 A caret, a checkbox tick, a scrollbar thumb and a link underline all ship with

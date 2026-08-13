@@ -600,6 +600,46 @@
   animation: seder-pop-in 140ms var(--ease-out-soft) both;
 }
 
+/* A count changing. `--roll` is +1 when the number went up and -1 when it went
+   down, so the arriving digit always enters from the side the departing one
+   left towards. 0.9em rather than 100%: the pair should look like one strip
+   moving past a window, and the window is a line box, not the glyph. */
+.animate-roll-in {
+  animation: seder-roll-in 240ms var(--ease-out-soft) both;
+}
+
+.animate-roll-out {
+  animation: seder-roll-out 240ms var(--ease-out-soft) both;
+}
+
+@keyframes seder-roll-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--roll, 1) * 0.9em));
+  }
+}
+
+@keyframes seder-roll-out {
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--roll, 1) * -0.9em));
+  }
+}
+
+/* Picked up, not faded out.
+   Dragging used to drop the row to 60% opacity, which reads as "this is
+   becoming unavailable" — the opposite of what is happening. A row under the
+   cursor is the most present thing on screen: it keeps its own surface so the
+   text stays legible, and casts a shadow onto the list it is travelling over.
+
+   The scale that completes the effect lives in the component, composed into
+   dnd-kit's transform — an inline `transform` beats any class, so declaring it
+   here would do nothing at all. */
+.row-lift {
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+
 :dir(rtl) .animate-toast-in {
   animation: seder-toast-in-rtl 220ms var(--ease-out-soft) both;
 }
@@ -634,6 +674,14 @@
     scroll-behavior: auto !important;
   }
 
+  /* `*` does not match view-transition pseudo-elements, so the browser's own
+     cross-fade would keep running for someone who asked for no motion. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
   /* Keep the end state readable rather than mid-animation. */
   .strike-line {
     transform: scaleX(1);
@@ -642,6 +690,82 @@
   .row-collapse {
     animation: none;
     opacity: 0.55;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Moving between views.
+
+   Without names, a view transition snapshots the entire page as one image and
+   cross-fades it — the rail included, which makes the furniture flicker every
+   time you change view and is worse than no animation at all. Naming a thing
+   opts it out of that root snapshot and gives it its own before/after pair.
+
+   So: the rail and the tab bar are named and therefore hold still, the content
+   is named and moves, and the current-page marker is named so it *travels*
+   from the row you left to the row you arrived at instead of blinking out and
+   in. That last one is the whole effect — it is what makes the rail read as
+   one surface you are moving around inside, rather than a picture that gets
+   replaced.
+
+   `view-transition-name` must be unique per document, which is why the rail's
+   marker and the settings column's marker are named separately: on a settings
+   page both exist at once.
+--------------------------------------------------------------------------- */
+@view-transition {
+  navigation: auto;
+}
+
+.view-surface {
+  view-transition-name: view;
+}
+
+.rail {
+  view-transition-name: rail;
+}
+
+.tab-bar {
+  view-transition-name: tab-bar;
+}
+
+/* The toast stack is fixed and outlives a navigation; without a name it would
+   be captured into the outgoing snapshot and appear to fly away. */
+.toast-stack {
+  view-transition-name: toasts;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(view) {
+    animation: 130ms both seder-view-out;
+  }
+
+  ::view-transition-new(view) {
+    /* Starts after the outgoing frame has cleared, so the two never overlap as
+       a double-exposure of two different lists. */
+    animation: 220ms 70ms both seder-view-in;
+  }
+
+  /* The marker slides. `--ease-slide` is the spring the rail uses, so the two
+     motions in this corner of the screen belong to the same object. */
+  ::view-transition-group(nav-current),
+  ::view-transition-group(section-current),
+  ::view-transition-group(tab-current) {
+    animation-duration: var(--duration-slide);
+    animation-timing-function: var(--ease-slide);
+  }
+}
+
+@keyframes seder-view-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes seder-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
 }
 

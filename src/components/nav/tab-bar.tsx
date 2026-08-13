@@ -6,6 +6,7 @@ import { CalendarDays, CalendarRange, Inbox, Plus, Sun } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { SidebarData } from '@/server/tasks/queries';
 import { requestCompose } from '@/components/task/compose-bus';
+import { RollingNumber } from '@/components/ui/rolling-number';
 
 /**
  * Phone navigation, in the thumb arc.
@@ -45,7 +46,7 @@ export function TabBar({ counts }: { counts: SidebarData['counts'] }) {
     <nav
       aria-label="ניווט מהיר"
       className={cn(
-        'fixed inset-be-0 inset-s-0 inset-e-0 z-30 md:hidden',
+        'tab-bar fixed inset-be-0 inset-s-0 inset-e-0 z-30 md:hidden',
         'border-bs border-line bg-paper/95 backdrop-blur',
         // Clears the home indicator. `max()` so a device without one still gets
         // real padding rather than collapsing to the inset's zero.
@@ -106,6 +107,7 @@ function Tab({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
+      style={active ? { viewTransitionName: 'tab-current' } : undefined}
       className={cn(
         // 44px of height before padding — the whole cell is the target, not the
         // glyph inside it.
@@ -132,7 +134,7 @@ function Tab({
               active ? 'bg-accent text-on-accent' : 'bg-surface-2 text-ink-2',
             )}
           >
-            {count > 99 ? '99+' : count}
+            {count > 99 ? '99+' : <RollingNumber value={count} />}
           </span>
         )}
       </span>

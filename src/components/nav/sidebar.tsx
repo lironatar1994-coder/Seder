@@ -32,6 +32,7 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from '@/components/ui/overlays';
+import { RollingNumber } from '@/components/ui/rolling-number';
 import { useRail } from './use-rail';
 import { ThemeToggle } from './theme-toggle';
 import { NewProjectDialog } from './new-project-dialog';
@@ -322,6 +323,9 @@ function NavLink({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
+      /* Named only while current, so exactly one element carries it and the
+         browser has an old and a new box to interpolate between. */
+      style={active ? { viewTransitionName: 'nav-current' } : undefined}
       className={cn(
         'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-120',
         // The whole row lights up, not just the label — the icon and the count
@@ -340,8 +344,8 @@ function NavLink({
 
 function Count({ value }: { value: number }) {
   return (
-    <span data-count className="rail-label num shrink-0 text-xs text-[var(--rail-muted)]">
-      {value}
+    <span data-count className="rail-label shrink-0 text-xs text-[var(--rail-muted)]">
+      <RollingNumber value={value} />
     </span>
   );
 }

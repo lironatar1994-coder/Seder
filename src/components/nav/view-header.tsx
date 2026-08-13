@@ -1,6 +1,7 @@
 import { buildLockup } from '@/lib/hebrew-date';
 import { today } from '@/lib/dates';
 import { cn } from '@/lib/cn';
+import { RollingNumber } from '@/components/ui/rolling-number';
 
 /**
  * The signature element.
@@ -108,7 +109,7 @@ function DayRail({ done, total }: { done: number; total: number }) {
           <span className="font-semibold text-accent">הכול סגור להיום.</span>
         ) : (
           <>
-            <span className="num">{done}</span>
+            <RollingNumber value={done} />
             {' מתוך '}
             <span className="num">{total}</span>
             {' הושלמו'}

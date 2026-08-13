@@ -676,6 +676,81 @@ test.describe('organising', () => {
   });
 });
 
+test.describe('view transitions', () => {
+  /**
+   * Records every `startViewTransition` call before the app loads.
+   *
+   * The animation itself cannot be asserted — it is 300ms of compositor work
+   * with no DOM to inspect. What *can* be asserted is the thing that actually
+   * breaks: that a navigation went through the transition at all. A link that
+   * slips past the interceptor still works, so nothing fails; it just jumps,
+   * and nobody notices until the whole app is inconsistent.
+   */
+  async function countTransitions(page: Page) {
+    await page.addInitScript(() => {
+      const original = document.startViewTransition?.bind(document);
+      (window as unknown as { __vt: number }).__vt = 0;
+      if (!original) return;
+      document.startViewTransition = ((callback: () => unknown) => {
+        (window as unknown as { __vt: number }).__vt += 1;
+        return original(callback as never);
+      }) as typeof document.startViewTransition;
+    });
+  }
+
+  const transitions = (page: Page) =>
+    page.evaluate(() => (window as unknown as { __vt: number }).__vt);
+
+  test('navigating between views goes through a transition', async ({ page }) => {
+    await countTransitions(page);
+    await register(page);
+
+    expect(await transitions(page)).toBe(0);
+
+    await page.getByRole('link', { name: /בקרוב/ }).first().click();
+    await page.waitForURL('**/app/upcoming');
+    expect(await transitions(page)).toBe(1);
+
+    // And the destination really rendered, rather than being left under a
+    // snapshot by a transition whose promise never resolved.
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  });
+
+  test('every transition name is used by exactly one element', async ({ page }) => {
+    await register(page);
+
+    // Two elements sharing a name makes the browser skip the whole
+    // transition — silently, and only on the pages where both are mounted.
+    const duplicates = await page.evaluate(() => {
+      const seen = new Map<string, number>();
+      for (const el of document.querySelectorAll<HTMLElement>('*')) {
+        const name = getComputedStyle(el).viewTransitionName;
+        if (!name || name === 'none') continue;
+        seen.set(name, (seen.get(name) ?? 0) + 1);
+      }
+      return [...seen.entries()].filter(([, n]) => n > 1);
+    });
+
+    expect(duplicates).toEqual([]);
+  });
+
+  test('the persistent chrome is named, so it holds still', async ({ page }) => {
+    await register(page);
+
+    // The rail and the content are what make it read as one surface: name the
+    // furniture and it stays put while only the view crossfades.
+    const named = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('*')]
+        .map((el) => getComputedStyle(el).viewTransitionName)
+        .filter((n) => n && n !== 'none'),
+    );
+
+    expect(named).toContain('rail');
+    expect(named).toContain('view');
+    expect(named).toContain('nav-current');
+  });
+});
+
 test.describe('working together', () => {
   /** Opens the share dialog on a project and returns the invitation link. */
   async function inviteLink(page: Page, projectName: string): Promise<string> {

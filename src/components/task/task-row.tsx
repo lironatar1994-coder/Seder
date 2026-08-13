@@ -102,7 +102,16 @@ export const TaskRow = memo(function TaskRow({
   return (
     <li
       ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
+      style={{
+        /* The lift has to be composed into dnd-kit's own transform, not
+           declared in CSS: this inline `transform` would win over any class
+           and the scale would silently never apply. */
+        transform:
+          isDragging && transform
+            ? CSS.Transform.toString({ ...transform, scaleX: 1.012, scaleY: 1.012 })
+            : CSS.Translate.toString(transform),
+        transition,
+      }}
       data-task-id={task.id}
       data-checked={checked || undefined}
       className={cn(
@@ -113,7 +122,7 @@ export const TaskRow = memo(function TaskRow({
           : selected
             ? 'border-line bg-surface'
             : 'hover:bg-surface',
-        isDragging && 'z-10 opacity-60 shadow-pop',
+        isDragging && 'row-lift z-10',
         completing && 'row-collapse',
       )}
     >

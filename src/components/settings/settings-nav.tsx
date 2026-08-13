@@ -36,6 +36,7 @@ export function SettingsNav({
               <Link
                 href={href}
                 aria-current={active ? 'page' : undefined}
+                style={active ? { viewTransitionName: 'section-current' } : undefined}
                 className={cn(
                   'inline-flex items-center whitespace-nowrap text-sm transition-colors duration-150',
                   '[@media(pointer:coarse)]:min-h-11',
