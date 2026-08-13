@@ -46,7 +46,12 @@ async function shoot(name, { width, height, theme, path, action }) {
     { name: 'seder_session', value: token, domain: 'localhost', path: '/', httpOnly: true },
   ]);
   const page = await context.newPage();
-  await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle' });
+  // Not `networkidle`: it waits for 500ms of silence that a page holding any
+  // long-lived connection never gives, and hangs the whole run on one route.
+  // Fonts are the only thing worth waiting for here, and `document.fonts`
+  // answers that directly.
+  await page.goto(`${BASE}${path}`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => document.fonts.ready);
   if (action) await action(page);
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${OUT}/${name}.png` });
@@ -190,6 +195,34 @@ await shoot('29-accent-pink-dark', {
     await page.goto(BASE + '/app/today');
     await page.waitForTimeout(400);
   },
+});
+
+/** Two rows selected, so the bulk bar is on screen with something to act on. */
+const selectTwo = async (page) => {
+  const rows = page.getByRole('button', { name: /^פתיחת / });
+  await rows.nth(0).click({ modifiers: ['Control'] });
+  await rows.nth(1).click({ modifiers: ['Control'] });
+  await page.waitForTimeout(300);
+};
+
+await shoot('30-bulk-bar', {
+  width: 1280,
+  height: 860,
+  path: '/app/today',
+  action: selectTwo,
+});
+await shoot('31-bulk-bar-dark', {
+  width: 1280,
+  height: 860,
+  theme: 'dark',
+  path: '/app/today',
+  action: selectTwo,
+});
+await shoot('32-bulk-bar-mobile', {
+  width: 390,
+  height: 844,
+  path: '/app/today',
+  action: selectTwo,
 });
 
 await shoot('08-mobile', { width: 390, height: 844, path: '/app/today' });

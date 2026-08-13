@@ -1,0 +1,16 @@
+# The repo is authored on Windows and CI runs on Linux. Normalise to LF in the
+# index so a checkout on either platform produces the same blobs, and a diff
+# never turns into "every line changed".
+* text=auto eol=lf
+
+# Windows entry points must keep CRLF on disk: cmd.exe mis-parses an LF-only
+# batch file, and PowerShell here-strings are line-ending sensitive.
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary, never touched.
+*.png binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.db binary

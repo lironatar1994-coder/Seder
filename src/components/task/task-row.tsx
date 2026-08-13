@@ -34,7 +34,14 @@ export interface TaskRowProps {
   task: TaskDTO;
   /** Mid-completion: plays the strike and collapse before the row leaves. */
   completing?: boolean;
+  /** The keyboard cursor — one row at a time, independent of the selection. */
   selected?: boolean;
+  /** A selection exists, so every row offers a way into it. */
+  selecting?: boolean;
+  /** This row is part of that selection. */
+  checked?: boolean;
+  /** `range` extends from the cursor; `toggle` flips this row alone. */
+  onSelect?: (task: TaskDTO, mode: 'toggle' | 'range') => void;
   /** Hide the project chip inside a project view — it is the same for every row. */
   hideProject?: boolean;
   draggable?: boolean;
@@ -53,6 +60,9 @@ export const TaskRow = memo(function TaskRow({
   task,
   completing = false,
   selected = false,
+  selecting = false,
+  checked = false,
+  onSelect,
   hideProject = false,
   draggable = true,
   onToggle,
@@ -76,15 +86,24 @@ export const TaskRow = memo(function TaskRow({
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       data-task-id={task.id}
+      data-checked={checked || undefined}
       className={cn(
         'group relative flex items-start gap-3 rounded-lg border border-transparent px-2 py-2.5',
         'transition-colors duration-120',
-        selected ? 'border-line bg-surface' : 'hover:bg-surface',
+        checked
+          ? 'border-accent/40 bg-accent-soft'
+          : selected
+            ? 'border-line bg-surface'
+            : 'hover:bg-surface',
         isDragging && 'z-10 opacity-60 shadow-pop',
         completing && 'row-collapse',
       )}
     >
-      {draggable && (
+      {selecting && onSelect && (
+        <SelectBox task={task} checked={checked} onSelect={onSelect} />
+      )}
+
+      {draggable && !selecting && (
         <button
           type="button"
           aria-label="גרירה לסידור מחדש"
@@ -100,7 +119,20 @@ export const TaskRow = memo(function TaskRow({
 
       <button
         type="button"
-        onClick={() => onOpen(task)}
+        onClick={(event) => {
+          // Modifier-click selects instead of opening. This is how the
+          // selection is *started* — the visible checkboxes only appear once
+          // one exists, so there has to be a way in from a plain list.
+          if (onSelect && (event.metaKey || event.ctrlKey)) {
+            onSelect(task, 'toggle');
+            return;
+          }
+          if (onSelect && event.shiftKey) {
+            onSelect(task, 'range');
+            return;
+          }
+          onOpen(task);
+        }}
         className="min-w-0 flex-1 text-start"
         aria-label={`פתיחת ${task.title}`}
       >
@@ -218,6 +250,44 @@ export const TaskRow = memo(function TaskRow({
     </li>
   );
 });
+
+/**
+ * The multi-select control, shown on every row once a selection exists.
+ *
+ * A circle, deliberately: completion is a rounded square of the same size, and
+ * it sits immediately next to this one. Marking a row for a batch and finishing
+ * it are not recoverable from one another, so the two controls differ in shape
+ * and size rather than only in colour.
+ */
+function SelectBox({
+  task,
+  checked,
+  onSelect,
+}: {
+  task: TaskDTO;
+  checked: boolean;
+  onSelect: (task: TaskDTO, mode: 'toggle' | 'range') => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      aria-label={`בחירת ${task.title}`}
+      onClick={(event) => onSelect(task, event.shiftKey ? 'range' : 'toggle')}
+      className={cn(
+        'mt-1 inline-flex size-4 shrink-0 items-center justify-center rounded-full border',
+        'transition-colors duration-150',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+        checked
+          ? 'border-accent bg-accent text-on-accent'
+          : 'border-line-strong hover:border-accent',
+      )}
+    >
+      {checked && <Check className="size-3" strokeWidth={3} aria-hidden />}
+    </button>
+  );
+}
 
 function PriorityDot({ priority }: { priority: Priority }) {
   const color =

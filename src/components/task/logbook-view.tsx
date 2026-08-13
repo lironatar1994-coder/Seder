@@ -79,6 +79,7 @@ export function LogbookView({
       reorderable={false}
       // A record of what was done is not somewhere you add work.
       showComposer={false}
+      selectable={false}
       empty={{
         title: 'עוד לא נסגרה משימה',
         body: 'כל מה שתשלימו יופיע כאן, מהחדש לישן.',

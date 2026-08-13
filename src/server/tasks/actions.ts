@@ -224,29 +224,49 @@ export interface ToggleResult extends ActionResult {
   };
 }
 
-export async function toggleTaskAction(id: string, done: boolean): Promise<ToggleResult> {
-  const user = await requireUser();
+/** Everything completing one task correctly needs to know about it. */
+const COMPLETE_SELECT = {
+  id: true,
+  title: true,
+  notes: true,
+  priority: true,
+  projectId: true,
+  sectionId: true,
+  recurrence: true,
+  scheduledFor: true,
+  scheduledTime: true,
+  deadline: true,
+  position: true,
+  labels: { select: { labelId: true } },
+} as const;
 
-  const task = await db.task.findFirst({
-    where: { id, userId: user.id },
-    select: {
-      id: true,
-      title: true,
-      notes: true,
-      priority: true,
-      projectId: true,
-      sectionId: true,
-      recurrence: true,
-      scheduledFor: true,
-      scheduledTime: true,
-      deadline: true,
-      position: true,
-      labels: { select: { labelId: true } },
-    },
-  });
-  if (!task) return { ok: false, error: 'המשימה לא נמצאה' };
+type Completable = {
+  id: string;
+  title: string;
+  notes: string | null;
+  priority: number;
+  projectId: string | null;
+  sectionId: string | null;
+  recurrence: string | null;
+  scheduledFor: Date | null;
+  scheduledTime: string | null;
+  deadline: Date | null;
+  position: string;
+  labels: { labelId: string }[];
+};
 
-  const rule = done ? parseRecurrence(task.recurrence) : null;
+type Repeat = NonNullable<ToggleResult['repeat']>;
+
+/**
+ * Completes one task, advancing it instead if it repeats. Shared by the single
+ * toggle and the bulk bar: a repeating task must behave identically whether it
+ * was ticked on its own or as one of twelve, and a bulk `updateMany` would
+ * quietly finish it dead and leave its checklist open.
+ *
+ * Returns the repeat details when the task moved rather than finished.
+ */
+async function completeOne(userId: string, task: Completable): Promise<Repeat | null> {
+  const rule = parseRecurrence(task.recurrence);
 
   if (rule) {
     // A repeating task is never "finished" — this occurrence is. Log a copy so
@@ -262,7 +282,7 @@ export async function toggleTaskAction(id: string, done: boolean): Promise<Toggl
 
     const snapshot = await db.task.create({
       data: {
-        userId: user.id,
+        userId,
         title: task.title,
         notes: task.notes,
         priority: task.priority,
@@ -284,7 +304,7 @@ export async function toggleTaskAction(id: string, done: boolean): Promise<Toggl
     });
 
     await db.task.update({
-      where: { id },
+      where: { id: task.id },
       data: {
         whenBucket: 'SCHEDULED',
         scheduledFor: next,
@@ -294,41 +314,55 @@ export async function toggleTaskAction(id: string, done: boolean): Promise<Toggl
 
     // The checklist starts over with the new occurrence.
     await db.task.updateMany({
-      where: { parentId: id },
+      where: { parentId: task.id },
       data: { status: 'TODO', completedAt: null },
     });
 
-    refresh();
     return {
-      ok: true,
-      repeat: {
-        snapshotId: snapshot.id,
-        previousDate: task.scheduledFor ? isoDay(task.scheduledFor) : null,
-        nextDate: isoDay(next),
-        nextLabel: relativeDayLabel(next, today()),
-      },
+      snapshotId: snapshot.id,
+      previousDate: task.scheduledFor ? isoDay(task.scheduledFor) : null,
+      nextDate: isoDay(next),
+      nextLabel: relativeDayLabel(next, today()),
     };
   }
 
   await db.task.update({
-    where: { id },
-    data: {
-      status: done ? 'DONE' : 'TODO',
-      completedAt: done ? new Date() : null,
-    },
+    where: { id: task.id },
+    data: { status: 'DONE', completedAt: new Date() },
   });
 
-  // Completing a parent closes its checklist too; reopening leaves the
-  // checklist alone, since the user may only want the parent back.
-  if (done) {
-    await db.task.updateMany({
-      where: { parentId: id, status: 'TODO' },
-      data: { status: 'DONE', completedAt: new Date() },
+  // Completing a parent closes its checklist too.
+  await db.task.updateMany({
+    where: { parentId: task.id, status: 'TODO' },
+    data: { status: 'DONE', completedAt: new Date() },
+  });
+
+  return null;
+}
+
+export async function toggleTaskAction(id: string, done: boolean): Promise<ToggleResult> {
+  const user = await requireUser();
+
+  const task = await db.task.findFirst({
+    where: { id, userId: user.id },
+    select: COMPLETE_SELECT,
+  });
+  if (!task) return { ok: false, error: 'המשימה לא נמצאה' };
+
+  if (!done) {
+    // Reopening leaves the checklist alone — the user may only want the parent
+    // back, and re-ticking the parent would close it again anyway.
+    await db.task.update({
+      where: { id },
+      data: { status: 'TODO', completedAt: null },
     });
+    refresh();
+    return { ok: true };
   }
 
+  const repeat = await completeOne(user.id, task);
   refresh();
-  return { ok: true };
+  return { ok: true, repeat: repeat ?? undefined };
 }
 
 /** Reverses a repeat completion: bins the logged copy and rolls the live task
@@ -553,24 +587,152 @@ export async function loadMoreLogbookAction(cursor: string): Promise<LogbookPage
   return getLogbookPage(user.id, cursor);
 }
 
-export async function bulkCompleteAction(ids: string[]): Promise<ActionResult> {
-  const user = await requireUser();
-  if (!ids.length) return { ok: true };
+/* ------------------------------------------------------------------- bulk */
 
-  await db.task.updateMany({
-    where: { id: { in: ids }, userId: user.id },
-    data: { status: 'DONE', completedAt: new Date() },
+/**
+ * Every bulk action reports how many rows it actually touched, and `count` is
+ * the number the server changed — not the number the client asked for. A
+ * selection can go stale, and a toast that says "7 completed" when four of them
+ * were already gone is a lie the user has no way to catch.
+ */
+export interface BulkResult extends ActionResult {
+  count: number;
+}
+
+/** Enough to reverse a bulk completion: plain rows reopen, repeats roll back. */
+export interface BulkCompleteResult extends BulkResult {
+  undo: {
+    plain: string[];
+    repeats: { id: string; snapshotId: string; previousDate: string | null }[];
+  };
+}
+
+/** Narrows a selection to rows this user actually owns. Every bulk write goes
+ *  through it, so ownership is enforced once rather than per action. */
+async function ownedIds(userId: string, ids: string[]): Promise<string[]> {
+  if (!ids.length) return [];
+  const rows = await db.task.findMany({
+    where: { id: { in: ids }, userId },
+    select: { id: true },
   });
+  return rows.map((r) => r.id);
+}
+
+export async function bulkCompleteAction(ids: string[]): Promise<BulkCompleteResult> {
+  const user = await requireUser();
+  const empty = { ok: true as const, count: 0, undo: { plain: [], repeats: [] } };
+  if (!ids.length) return empty;
+
+  const tasks = await db.task.findMany({
+    where: { id: { in: ids }, userId: user.id, status: 'TODO' },
+    select: COMPLETE_SELECT,
+  });
+  if (!tasks.length) return empty;
+
+  // Sequential, not `Promise.all`: a repeating task writes three rows and reads
+  // its own position, and SQLite serialises writers anyway. A hand-made
+  // selection is tens of rows, so the round trips are not worth the risk.
+  const undo: BulkCompleteResult['undo'] = { plain: [], repeats: [] };
+  for (const task of tasks) {
+    const repeat = await completeOne(user.id, task);
+    if (repeat) {
+      undo.repeats.push({
+        id: task.id,
+        snapshotId: repeat.snapshotId,
+        previousDate: repeat.previousDate,
+      });
+    } else {
+      undo.plain.push(task.id);
+    }
+  }
+
+  refresh();
+  return { ok: true, count: tasks.length, undo };
+}
+
+/** Reverses `bulkCompleteAction`, including the repeats it advanced. */
+export async function bulkUndoCompleteAction(
+  undo: BulkCompleteResult['undo'],
+): Promise<ActionResult> {
+  const user = await requireUser();
+
+  if (undo.plain.length) {
+    await db.task.updateMany({
+      where: { id: { in: undo.plain }, userId: user.id },
+      data: { status: 'TODO', completedAt: null },
+    });
+  }
+
+  for (const repeat of undo.repeats) {
+    await undoRepeatAction(repeat.id, repeat.snapshotId, repeat.previousDate);
+  }
 
   refresh();
   return { ok: true };
 }
 
-export async function bulkDeleteAction(ids: string[]): Promise<ActionResult> {
+export async function bulkScheduleAction(
+  ids: string[],
+  when: { bucket: WhenBucket; date?: string | null },
+): Promise<BulkResult> {
   const user = await requireUser();
-  if (!ids.length) return { ok: true };
+  const owned = await ownedIds(user.id, ids);
+  if (!owned.length) return { ok: true, count: 0 };
 
-  await db.task.deleteMany({ where: { id: { in: ids }, userId: user.id } });
+  const scheduled = when.bucket === 'SCHEDULED';
+  const result = await db.task.updateMany({
+    where: { id: { in: owned } },
+    data: {
+      whenBucket: when.bucket,
+      scheduledFor: scheduled ? parseDay(when.date) : null,
+      // Rescheduling a batch drops the times: they were set per task and there
+      // is no single time that is right for all of them.
+      scheduledTime: null,
+    },
+  });
+
   refresh();
-  return { ok: true };
+  return { ok: true, count: result.count };
+}
+
+export async function bulkPriorityAction(ids: string[], priority: Priority): Promise<BulkResult> {
+  const user = await requireUser();
+  const owned = await ownedIds(user.id, ids);
+  if (!owned.length) return { ok: true, count: 0 };
+
+  const result = await db.task.updateMany({ where: { id: { in: owned } }, data: { priority } });
+  refresh();
+  return { ok: true, count: result.count };
+}
+
+export async function bulkMoveAction(ids: string[], projectId: string | null): Promise<BulkResult> {
+  const user = await requireUser();
+  const owned = await ownedIds(user.id, ids);
+  if (!owned.length) return { ok: true, count: 0 };
+
+  if (projectId) {
+    const project = await db.project.findFirst({
+      where: { id: projectId, userId: user.id },
+      select: { id: true },
+    });
+    if (!project) return { ok: false, count: 0, error: 'הפרויקט לא נמצא' };
+  }
+
+  const result = await db.task.updateMany({
+    where: { id: { in: owned } },
+    // The section belongs to the old project, so it cannot survive the move.
+    data: { projectId, sectionId: null },
+  });
+
+  refresh();
+  return { ok: true, count: result.count };
+}
+
+export async function bulkDeleteAction(ids: string[]): Promise<BulkResult> {
+  const user = await requireUser();
+  if (!ids.length) return { ok: true, count: 0 };
+
+  const result = await db.task.deleteMany({ where: { id: { in: ids }, userId: user.id } });
+  refresh();
+  return { ok: true, count: result.count };
 }

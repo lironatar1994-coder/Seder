@@ -27,6 +27,12 @@ import { TaskRow } from './task-row';
 import { TaskDetail } from './task-detail';
 import { Composer } from './composer';
 import {
+  bulkCompleteAction,
+  bulkDeleteAction,
+  bulkMoveAction,
+  bulkPriorityAction,
+  bulkScheduleAction,
+  bulkUndoCompleteAction,
   deleteTaskAction,
   reorderTaskAction,
   scheduleTaskAction,
@@ -36,6 +42,9 @@ import {
   updateTaskAction,
   type QuickAddContext,
 } from '@/server/tasks/actions';
+import { Dialog, DialogContent, DialogFooter } from '@/components/ui/overlays';
+import { BulkBar, bulkDeleteCopy } from './bulk-bar';
+import type { WhenSelection } from './when-menu';
 
 /** How long the completion animation runs before the row is actually removed
  *  and the write is sent. Matches .strike-line + .row-collapse in globals.css. */
@@ -53,6 +62,9 @@ export interface TaskListProps {
   reorderable?: boolean;
   /** The Logbook is a record, not a place to add work. */
   showComposer?: boolean;
+  /** Off in the Logbook: most of the bar's verbs — complete, reschedule,
+   *  prioritise — mean nothing to a task that is already done. */
+  selectable?: boolean;
   /** Rendered under the last group — the Logbook's "load more" lives here. */
   footer?: React.ReactNode;
 }
@@ -67,11 +79,16 @@ export function TaskList({
   empty,
   reorderable = true,
   showComposer = true,
+  selectable = true,
   footer,
 }: TaskListProps) {
   const [completing, setCompleting] = useState<Set<string>>(new Set());
   const [removed, setRemoved] = useState<Set<string>>(new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  /** Where a shift-range measures from — the last row touched, not the cursor. */
+  const [anchorId, setAnchorId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [, startTransition] = useTransition();
@@ -115,6 +132,53 @@ export function TaskList({
       return next.size === prev.size ? prev : next;
     });
   }, [groups]);
+
+  /* ---------------------------------------------------------- selection */
+
+  // A selected row that the server no longer returns must leave the selection
+  // too, or a bulk action would act on ids that are not on screen.
+  useEffect(() => {
+    const live = new Set(groups.flatMap((g) => g.tasks.map((t) => t.id)));
+    setCheckedIds((prev) => {
+      const next = new Set([...prev].filter((id) => live.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [groups]);
+
+  const clearSelection = useCallback(() => {
+    setCheckedIds(new Set());
+    setAnchorId(null);
+  }, []);
+
+  const handleSelect = useCallback(
+    (task: TaskDTO, mode: 'toggle' | 'range') => {
+      if (!selectable) return;
+      const ids = flat.map((t) => t.id);
+
+      if (mode === 'range' && anchorId) {
+        const from = ids.indexOf(anchorId);
+        const to = ids.indexOf(task.id);
+        if (from >= 0 && to >= 0) {
+          // The range adds; it never subtracts. Shift-clicking to widen a
+          // selection must not silently drop what is already in it.
+          const span = ids.slice(Math.min(from, to), Math.max(from, to) + 1);
+          setCheckedIds((prev) => new Set([...prev, ...span]));
+          setSelectedId(task.id);
+          return;
+        }
+      }
+
+      setCheckedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(task.id)) next.delete(task.id);
+        else next.add(task.id);
+        return next;
+      });
+      setAnchorId(task.id);
+      setSelectedId(task.id);
+    },
+    [flat, anchorId, selectable],
+  );
 
   const run = useCallback(
     (fn: () => Promise<{ ok: boolean; error?: string }>) =>
@@ -228,6 +292,113 @@ export function TaskList({
     [run],
   );
 
+  /* --------------------------------------------------------------- bulk */
+
+  /** Every bulk action clears the selection and reports what the *server*
+   *  changed, then hides the affected rows until revalidation catches up. */
+  const runBulk = useCallback(
+    (
+      fn: (ids: string[]) => Promise<{ ok: boolean; error?: string; count: number }>,
+      message: (count: number) => string,
+      { hide = false }: { hide?: boolean } = {},
+    ) => {
+      const ids = [...checkedIds];
+      if (!ids.length) return;
+      clearSelection();
+      if (hide) setRemoved((prev) => new Set([...prev, ...ids]));
+
+      startTransition(async () => {
+        const result = await fn(ids);
+        if (!result.ok) {
+          if (hide) {
+            setRemoved((prev) => {
+              const next = new Set(prev);
+              ids.forEach((id) => next.delete(id));
+              return next;
+            });
+          }
+          toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+          return;
+        }
+        toast({ message: message(result.count) });
+      });
+    },
+    [checkedIds, clearSelection, toast],
+  );
+
+  const handleBulkComplete = useCallback(() => {
+    const ids = [...checkedIds];
+    if (!ids.length) return;
+    clearSelection();
+    setRemoved((prev) => new Set([...prev, ...ids]));
+
+    const restore = () =>
+      setRemoved((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+
+    startTransition(async () => {
+      const result = await bulkCompleteAction(ids);
+      if (!result.ok) {
+        restore();
+        toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+        return;
+      }
+
+      // Repeating tasks moved on rather than finished, and the count says so —
+      // "12 completed" would be wrong if four of them are back next Tuesday.
+      const moved = result.undo.repeats.length;
+      toast({
+        message: moved
+          ? `${result.count} הושלמו · ${moved} חוזרות בהמשך`
+          : `${result.count} משימות הושלמו`,
+        action: {
+          label: 'ביטול',
+          onClick: () => {
+            restore();
+            run(() => bulkUndoCompleteAction(result.undo));
+          },
+        },
+      });
+    });
+  }, [checkedIds, clearSelection, run, toast]);
+
+  const handleBulkSchedule = useCallback(
+    (when: WhenSelection) =>
+      runBulk(
+        (ids) => bulkScheduleAction(ids, { bucket: when.bucket as never, date: when.date }),
+        (count) => `${count} משימות תוזמנו מחדש`,
+      ),
+    [runBulk],
+  );
+
+  const handleBulkPriority = useCallback(
+    (priority: Priority) =>
+      runBulk(
+        (ids) => bulkPriorityAction(ids, priority),
+        (count) => `העדיפות עודכנה ל־${count} משימות`,
+      ),
+    [runBulk],
+  );
+
+  const handleBulkMove = useCallback(
+    (projectId: string | null) => {
+      const target = projectId ? projects.find((p) => p.id === projectId)?.name : 'תיבה נכנסת';
+      runBulk(
+        (ids) => bulkMoveAction(ids, projectId),
+        (count) => `${count} משימות הועברו ל${target}`,
+      );
+    },
+    [runBulk, projects],
+  );
+
+  const handleBulkDelete = useCallback(() => {
+    setConfirmDelete(false);
+    runBulk(bulkDeleteAction, (count) => `${count} משימות נמחקו`, { hide: true });
+  }, [runBulk]);
+
   /* ---------------------------------------------------------- keyboard */
 
   useEffect(() => {
@@ -239,7 +410,19 @@ export function TaskList({
           target.tagName === 'TEXTAREA' ||
           target.tagName === 'SELECT' ||
           target.isContentEditable);
-      if (typing || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (typing) return;
+
+      // Select-all is the one shortcut that wants the modifier, so it is
+      // handled before the modifier guard below.
+      if ((event.metaKey || event.ctrlKey) && (event.key === 'a' || event.key === 'A')) {
+        if (!flat.length || !selectable) return;
+        event.preventDefault();
+        setCheckedIds(new Set(flat.map((t) => t.id)));
+        setAnchorId(flat[0].id);
+        return;
+      }
+
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
 
       const index = selectedId ? flat.findIndex((t) => t.id === selectedId) : -1;
       const current = index >= 0 ? flat[index] : null;
@@ -289,7 +472,19 @@ export function TaskList({
           event.preventDefault();
           handleDelete(current);
           break;
+        case 'x':
+        case 'X':
+          if (!current) return;
+          event.preventDefault();
+          handleSelect(current, event.shiftKey ? 'range' : 'toggle');
+          break;
         case 'Escape':
+          // A selection is the more recent, more surprising state to be in, so
+          // Escape drops that first and leaves the cursor where it was.
+          if (checkedIds.size) {
+            clearSelection();
+            return;
+          }
           setSelectedId(null);
           setComposerOpen(false);
           break;
@@ -298,7 +493,17 @@ export function TaskList({
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [flat, selectedId, handleToggle, handleDelete, shiftSchedule]);
+  }, [
+    flat,
+    selectedId,
+    checkedIds,
+    handleToggle,
+    handleDelete,
+    handleSelect,
+    clearSelection,
+    shiftSchedule,
+    selectable,
+  ]);
 
   /* --------------------------------------------------------------- dnd */
 
@@ -392,8 +597,12 @@ export function TaskList({
                           task={task}
                           completing={completing.has(task.id)}
                           selected={selectedId === task.id}
+                          selecting={checkedIds.size > 0}
+                          checked={checkedIds.has(task.id)}
+                          onSelect={handleSelect}
                           hideProject={hideProject}
-                          draggable={reorderable}
+                          // Dragging and selecting compete for the same press.
+                          draggable={reorderable && checkedIds.size === 0}
                           onToggle={handleToggle}
                           onOpen={(t) => {
                             setSelectedId(t.id);
@@ -425,8 +634,39 @@ export function TaskList({
         onClose={() => setOpenTaskId(null)}
         onDelete={handleDelete}
       />
+
+      {checkedIds.size > 0 && (
+        <BulkBar
+          count={checkedIds.size}
+          projects={projects}
+          onComplete={handleBulkComplete}
+          onSchedule={handleBulkSchedule}
+          onPriority={handleBulkPriority}
+          onMove={handleBulkMove}
+          onDelete={() => setConfirmDelete(true)}
+          onClear={clearSelection}
+        />
+      )}
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent {...dialogCopy(checkedIds.size)}>
+          <DialogFooter>
+            <Button variant="danger" onClick={handleBulkDelete}>
+              מחיקה
+            </Button>
+            <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
+              ביטול
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+function dialogCopy(count: number) {
+  const { title, body } = bulkDeleteCopy(count);
+  return { title, description: body };
 }
 
 function GroupHeading({

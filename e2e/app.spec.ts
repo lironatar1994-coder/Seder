@@ -43,11 +43,15 @@ async function completeTask(page: Page, title: string) {
 
 async function addTask(page: Page, text: string) {
   await page.getByRole('button', { name: 'משימה חדשה' }).click();
-  await page.getByLabel('משימה חדשה').fill(text);
+  const input = page.getByLabel('משימה חדשה');
+  await input.fill(text);
   await page.getByRole('button', { name: 'הוספה' }).click();
-  // Wait for the confirmation toast, otherwise a following navigation can
-  // outrun the write.
-  await expect(page.getByTestId('toasts').getByText(/^נוספה/)).toBeVisible();
+
+  // The composer clears itself only after the server action resolves, so an
+  // empty field is proof the write landed and a following navigation cannot
+  // outrun it. The confirmation toast is not usable for this: several adds in a
+  // row stack identical messages, and they expire on a timer while you wait.
+  await expect(input).toHaveValue('');
   await page.getByRole('button', { name: 'ביטול' }).first().click();
 }
 
@@ -213,8 +217,14 @@ test.describe('settings', () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.getByRole('radio', { name: 'כהה' })).toHaveAttribute('aria-checked', 'true');
 
-    // "system" is the absence of a stored choice, so the attribute goes away.
+    // "system" is a real choice now — it defers to the device, which is not the
+    // same as making no choice — so it stamps an attribute of its own.
     await page.getByRole('radio', { name: 'מערכת' }).click();
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'system');
+
+    // "light" is the default, and the default is the absence of an attribute.
+    await page.getByRole('radio', { name: 'בהיר' }).click();
     await page.reload();
     await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.*/);
   });
@@ -663,6 +673,146 @@ test.describe('organising', () => {
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('עבודה ולימודים');
     await expect(page.getByRole('link', { name: /עבודה ולימודים/ })).toBeVisible();
+  });
+});
+
+test.describe('multi-select', () => {
+  /** Opens the selection on one row. Ctrl-click is the way in from a plain
+   *  list — the checkboxes only appear once a selection exists. */
+  async function selectFirst(page: Page, title: string) {
+    await page.getByRole('button', { name: `פתיחת ${title}` }).click({ modifiers: ['Control'] });
+    await expect(page.getByTestId('bulk-bar')).toBeVisible();
+  }
+
+  const bar = (page: Page) => page.getByTestId('bulk-bar');
+
+  test('ctrl-click opens the bar and the checkboxes appear', async ({ page }) => {
+    await register(page);
+    await addTask(page, 'אלף היום');
+    await addTask(page, 'בית היום');
+
+    // No selection, no checkboxes — the row is not in a mode it never entered.
+    await expect(page.getByRole('checkbox', { name: /^בחירת/ })).toHaveCount(0);
+    await expect(bar(page)).toBeHidden();
+
+    await selectFirst(page, 'אלף');
+    await expect(bar(page)).toContainText('1');
+    // Now every row offers a way in, not just the one that was modifier-clicked.
+    await expect(page.getByRole('checkbox', { name: /^בחירת/ })).toHaveCount(2);
+    await expect(page.getByRole('checkbox', { name: 'בחירת אלף' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+  });
+
+  test('shift-click takes the range, and only adds', async ({ page }) => {
+    await register(page);
+    for (const title of ['אלף', 'בית', 'גימל', 'דלת']) await addTask(page, `${title} היום`);
+
+    // Newest first, so the visual order is דלת, גימל, בית, אלף.
+    await selectFirst(page, 'גימל');
+    await page.getByRole('checkbox', { name: 'בחירת אלף' }).click({ modifiers: ['Shift'] });
+    await expect(bar(page)).toContainText('3');
+
+    // Shifting back over an already-selected span must not deselect it.
+    await page.getByRole('checkbox', { name: 'בחירת בית' }).click({ modifiers: ['Shift'] });
+    await expect(bar(page)).toContainText('3');
+  });
+
+  test('completes a selection, and undo brings all of it back', async ({ page }) => {
+    await register(page);
+    await addTask(page, 'אלף היום');
+    await addTask(page, 'בית היום');
+
+    await selectFirst(page, 'אלף');
+    await page.getByRole('checkbox', { name: 'בחירת בית' }).click();
+    await expect(bar(page)).toContainText('2');
+
+    await bar(page).getByRole('button', { name: 'השלמה' }).click();
+    await expect(page.getByTestId('toasts')).toContainText('2 משימות הושלמו');
+    await expect(list(page).getByText('אלף')).toHaveCount(0);
+    await expect(list(page).getByText('בית')).toHaveCount(0);
+    // The bar goes with the selection it described.
+    await expect(bar(page)).toBeHidden();
+
+    await page.getByRole('button', { name: 'ביטול' }).first().click();
+    await expect(list(page).getByText('אלף')).toBeVisible();
+    await expect(list(page).getByText('בית')).toBeVisible();
+  });
+
+  test('a repeating task in the batch advances instead of finishing', async ({ page }) => {
+    await register(page);
+    await addTask(page, 'משימה רגילה היום');
+    await addTask(page, 'לבדוק גיבויים כל יום');
+
+    await selectFirst(page, 'משימה רגילה');
+    await page.getByRole('checkbox', { name: /^בחירת לבדוק גיבויים/ }).click();
+    await bar(page).getByRole('button', { name: 'השלמה' }).click();
+
+    // The count is honest about what happened to each: one finished, one moved.
+    await expect(page.getByTestId('toasts')).toContainText('2 הושלמו · 1 חוזרות בהמשך');
+
+    // The repeat is alive on its next date, not sitting in the Logbook as dead.
+    await page.goto(at('/app/upcoming'));
+    await expect(list(page).getByText('לבדוק גיבויים')).toBeVisible();
+  });
+
+  test('reschedules and moves a selection in one go', async ({ page }) => {
+    await register(page);
+    await addTask(page, 'אלף היום');
+    await addTask(page, 'בית היום');
+
+    await selectFirst(page, 'אלף');
+    await page.getByRole('checkbox', { name: 'בחירת בית' }).click();
+    await bar(page).getByRole('button', { name: 'מתי' }).click();
+    await page.getByRole('menuitem', { name: /מחר/ }).click();
+    await expect(page.getByTestId('toasts')).toContainText('2 משימות תוזמנו מחדש');
+
+    await page.goto(at('/app/upcoming'));
+    await expect(list(page).getByText('אלף')).toBeVisible();
+
+    await page.getByRole('button', { name: 'פתיחת אלף' }).click({ modifiers: ['Control'] });
+    await bar(page).getByRole('button', { name: 'העברה לפרויקט' }).click();
+    await page.getByRole('menuitem', { name: 'עבודה' }).click();
+    await expect(page.getByTestId('toasts')).toContainText('1 משימות הועברו לעבודה');
+  });
+
+  test('bulk delete asks first, and Escape clears the selection', async ({ page }) => {
+    await register(page);
+    await addTask(page, 'אלף היום');
+    await addTask(page, 'בית היום');
+
+    await selectFirst(page, 'אלף');
+    await page.getByRole('checkbox', { name: 'בחירת בית' }).click();
+
+    // Deletion is the one bulk verb with no undo, so it earns a confirm.
+    await bar(page).getByRole('button', { name: 'מחיקה' }).click();
+    await expect(page.getByRole('dialog')).toContainText('למחוק 2 משימות?');
+    await page.getByRole('dialog').getByRole('button', { name: 'ביטול' }).click();
+    await expect(list(page).getByText('אלף')).toBeVisible();
+
+    // Escape drops the selection before it touches the keyboard cursor.
+    await page.keyboard.press('Escape');
+    await expect(bar(page)).toBeHidden();
+    await expect(page.getByRole('checkbox', { name: /^בחירת/ })).toHaveCount(0);
+
+    await selectFirst(page, 'אלף');
+    await page.getByRole('checkbox', { name: 'בחירת בית' }).click();
+    await bar(page).getByRole('button', { name: 'מחיקה' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'מחיקה' }).click();
+    await expect(page.getByTestId('toasts')).toContainText('2 משימות נמחקו');
+    await expect(list(page).getByText('אלף')).toHaveCount(0);
+  });
+
+  test('the Logbook has no selection to offer', async ({ page }) => {
+    await register(page);
+    await addTask(page, 'אלף היום');
+    await completeTask(page, 'אלף');
+
+    await page.goto(at('/app/logbook'));
+    await expect(list(page).getByText('אלף')).toBeVisible();
+    await page.getByRole('button', { name: 'פתיחת אלף' }).click({ modifiers: ['Control'] });
+    await expect(page.getByTestId('bulk-bar')).toBeHidden();
   });
 });
 
