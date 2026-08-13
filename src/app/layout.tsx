@@ -61,9 +61,12 @@ export const viewport: Viewport = {
    the wrong theme and then corrects itself. Runs ahead of hydration, hence the
    inline script. Both axes are absent-means-default, so nothing is written for
    the default brightness (light) or the default accent — and "system", which
-   used to be that absence, now stamps an attribute of its own. */
+   used to be that absence, now stamps an attribute of its own.
+
+   The collapsed sidebar rides along for the same reason: setting it in an
+   effect would open the rail, paint, and slam it shut on every load. */
 const themeBootstrap = `
-(function(){try{var d=document.documentElement;var t=localStorage.getItem('seder-theme');if(t==='dark'||t==='light'||t==='system'){d.dataset.theme=t}var a=localStorage.getItem('seder-accent');if(a&&/^[a-z]+$/.test(a)){d.dataset.accent=a}}catch(e){}})();
+(function(){try{var d=document.documentElement;var t=localStorage.getItem('seder-theme');if(t==='dark'||t==='light'||t==='system'){d.dataset.theme=t}var a=localStorage.getItem('seder-accent');if(a&&/^[a-z]+$/.test(a)){d.dataset.accent=a}if(localStorage.getItem('seder-rail')==='collapsed'){d.dataset.rail='collapsed'}}catch(e){}})();
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

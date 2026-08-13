@@ -447,6 +447,47 @@ the light theme, which is the safe degradation.
 `light-dark()` resolves a `<color>`, not an arbitrary value, so shadows keep their tint in a token
 (`--shadow-tint-1`) and write the geometry around it once. No component branches on theme.
 
+### The rail, and why the ground is not white
+
+The sidebar is a dark, low-chroma slab of the accent hue against a light content
+area. It is not decoration: a screen that is one flat light field gives the eye
+nothing to orient by, so the navigation and the work read as the same material.
+A dark rail makes the content the lit surface. Slack, Superhuman and Todoist's
+own coloured themes all do a version of this.
+
+The content ground carries the accent hue too — under 1% chroma, a whisper — so
+choosing *green* changes the mood of the whole app instead of recolouring six
+buttons. Every near-white app shares the same `#f8f9fa`; this one's ground
+belongs to whoever is using it. Pure white is also the wrong answer for a tool
+someone sits in all day, and a tinted ground makes contrast easier to pass, not
+harder.
+
+The rail has its own token family, because these invert: on a dark slab "muted"
+is a *lighter* grey, and `--accent-soft` — a pale wash meant for white — is a
+hole in it. Inside `.rail`, the neutral ramp is re-pointed at that family, so
+the shared icon button, menu trigger and section heading work on the dark ground
+with no call-site changes. Portalled menus escape the subtree, which is correct:
+a popover is a light surface wherever it was opened from.
+
+The contrast audit checks the rail pairs per accent, the same way it checks the
+light ones — a dark slab is the easiest place for secondary text to drift into
+decorative grey.
+
+### Motion with mass
+
+`--ease-slide` is a damped spring sampled into `linear()`. A `cubic-bezier` has
+two control points and can overshoot once, symmetrically; a real spring settles.
+It is used only where something behaves like an object with weight — the rail
+opening, a panel arriving — and never on colour or opacity, which have no mass
+and look broken when they overshoot.
+
+The rail collapses by springing its own width while the contents stay pinned at
+16rem and are clipped. Labels fade just ahead of the width so nothing is caught
+chopped through a letter. In RTL the clip eats the inline-end edge and the icons
+live at the inline-start, so the icons are what survives — and the header
+reverses while collapsed, or the button that reopens the rail would be the first
+thing to disappear behind it.
+
 ### The parts the browser draws
 
 A caret, a checkbox tick, a scrollbar thumb and a link underline all ship with

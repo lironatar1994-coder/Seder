@@ -15,6 +15,8 @@ import {
   Plus,
   Settings,
   Sun,
+  PanelRightClose,
+  PanelRightOpen,
   Tag,
   Users,
   X,
@@ -30,6 +32,7 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from '@/components/ui/overlays';
+import { useRail } from './use-rail';
 import { ThemeToggle } from './theme-toggle';
 import { NewProjectDialog } from './new-project-dialog';
 
@@ -53,6 +56,7 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
   const [open, setOpen] = useState(false);
   const [, startTransition] = useTransition();
   const pathname = usePathname();
+  const { collapsed, toggle } = useRail();
 
   return (
     <>
@@ -89,7 +93,8 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
         // here, because the rule is already scoped to phone widths and an
         // attribute would have to wait for an effect to learn the same thing.
         className={cn(
-          'drawer z-50 flex w-64 shrink-0 flex-col border-e border-line bg-surface-sunk',
+          'rail drawer z-50 flex shrink-0 flex-col border-e text-[var(--rail-ink)]',
+          'border-[var(--rail-line)] bg-[var(--rail)]',
           // Desktop: a static column at the inline-start edge (the right in
           // Hebrew). Mobile: a drawer sliding in from that same edge — the
           // physical direction of that slide is handled in globals.css, since
@@ -97,14 +102,33 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
           'max-md:fixed max-md:inset-bs-0 max-md:inset-be-0 max-md:inset-s-0',
         )}
       >
-        <div className="flex items-center justify-between px-4 pb-2 pt-4">
-          <Link href="/app" className="display text-2xl font-bold text-ink">
+        <div className="rail-header flex items-center justify-between gap-1 px-4 pb-2 pt-4">
+          <Link
+            href="/app"
+            className="rail-label display truncate text-2xl font-bold text-[var(--rail-ink)]"
+          >
             סדר
           </Link>
           <div className="flex items-center gap-1">
-            <ThemeToggle />
+            <span className="rail-only-open contents">
+              <ThemeToggle />
+            </span>
             <IconButton label="סגירה" className="md:hidden" onClick={() => setOpen(false)}>
               <X className="size-4" aria-hidden />
+            </IconButton>
+            {/* Desktop only: on a phone the rail is a drawer, and a drawer that
+                can also be narrow is two mental models for one panel. */}
+            <IconButton
+              label={collapsed ? 'פתיחת הסרגל' : 'צמצום הסרגל'}
+              aria-expanded={!collapsed}
+              onClick={toggle}
+              className="hidden md:inline-flex"
+            >
+              {collapsed ? (
+                <PanelRightOpen className="size-4" aria-hidden />
+              ) : (
+                <PanelRightClose className="size-4" aria-hidden />
+              )}
             </IconButton>
           </div>
         </div>
@@ -122,8 +146,8 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
               return (
                 <li key={view.slug}>
                   <NavLink href={href} active={pathname === href}>
-                    <Icon className="size-4 shrink-0 text-muted" aria-hidden />
-                    <span className="flex-1 truncate">{view.label}</span>
+                    <Icon className="size-4 shrink-0 text-[var(--rail-muted)]" aria-hidden />
+                    <span className="rail-label flex-1 truncate">{view.label}</span>
                     {count > 0 && <Count value={count} />}
                   </NavLink>
                   {/* The calendar sits directly under "בקרוב": both answer
@@ -133,8 +157,8 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
                   {view.slug === 'upcoming' && (
                     <div className="mt-0.5">
                       <NavLink href="/app/calendar" active={pathname.startsWith('/app/calendar')}>
-                        <CalendarRange className="size-4 shrink-0 text-muted" aria-hidden />
-                        <span className="flex-1 truncate">לוח שנה</span>
+                        <CalendarRange className="size-4 shrink-0 text-[var(--rail-muted)]" aria-hidden />
+                        <span className="rail-label flex-1 truncate">לוח שנה</span>
                       </NavLink>
                     </div>
                   )}
@@ -166,12 +190,12 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
                         className="size-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: swatchVar(project.color) }}
                       />
-                      <span className="min-w-0 flex-1 truncate">{project.name}</span>
+                      <span className="rail-label min-w-0 flex-1 truncate">{project.name}</span>
                       {/* A shared list is worth recognising before you open it:
                           its count is everyone's work, not just yours. */}
                       {project.memberCount > 0 && (
                         <Users
-                          className="size-3.5 shrink-0 text-muted"
+                          className="rail-label size-3.5 shrink-0 text-[var(--rail-muted)]"
                           aria-label={project.joined ? 'שותפו איתכם' : 'משותף'}
                         />
                       )}
@@ -181,7 +205,9 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
                 );
               })}
             {data.projects.length === 0 && (
-              <li className="px-3 py-1.5 text-sm text-muted">עוד אין פרויקטים.</li>
+              <li className="rail-label px-3 py-1.5 text-sm text-[var(--rail-muted)]">
+                עוד אין פרויקטים.
+              </li>
             )}
           </ul>
 
@@ -199,7 +225,7 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
                           style={{ color: swatchVar(label.color) }}
                           aria-hidden
                         />
-                        <span className="flex-1 truncate">{label.name}</span>
+                        <span className="rail-label flex-1 truncate">{label.name}</span>
                       </NavLink>
                     </li>
                   );
@@ -209,17 +235,19 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
           )}
         </nav>
 
-        <div className="border-bs border-line p-2">
+        <div className="border-bs border-[var(--rail-line)] p-2">
           <Menu>
-            <MenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start transition-colors hover:bg-surface-2">
+            <MenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start transition-colors hover:bg-[var(--rail-hover)]">
               <span
                 aria-hidden
-                className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-bold text-accent"
+                className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--rail-active)] text-sm font-bold text-[var(--rail-ink)]"
               >
                 {user.name.trim().charAt(0) || '·'}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-ink">{user.name}</span>
+              <span className="rail-label min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-[var(--rail-ink)]">
+                  {user.name}
+                </span>
                 {/* An email is an LTR island inside an RTL block, and those are
                     two separate jobs. `dir="ltr"` on the block did both: it
                     fixed the character order and also moved the whole line to
@@ -227,7 +255,7 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
                     to the opposite side. The block stays RTL and aligns with
                     the name; the isolation happens on an inline `bdi` inside
                     it. */}
-                <span className="block truncate text-xs text-muted">
+                <span className="block truncate text-xs text-[var(--rail-muted)]">
                   <bdi dir="ltr">{user.email}</bdi>
                 </span>
               </span>
@@ -296,13 +324,13 @@ function NavLink({
       aria-current={active ? 'page' : undefined}
       className={cn(
         'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-120',
-        // The whole row takes the accent, not just the label. The icon and the
-        // count used to stay grey on the selected row, which read as a label
-        // that had been highlighted rather than a row that was current.
-        // The descendant selectors outrank the `text-muted` the icons set.
+        // The whole row lights up, not just the label — the icon and the count
+        // used to stay grey on the selected row, which read as a highlighted
+        // word rather than a row that was current. The descendant selectors
+        // outrank the muted colour the icons set for themselves.
         active
-          ? 'bg-accent-soft font-semibold text-accent [&_[data-count]]:text-accent [&_svg]:text-accent'
-          : 'text-ink-2 hover:bg-surface-2 hover:text-ink',
+          ? 'bg-[var(--rail-active)] font-semibold text-[var(--rail-ink)] [&_[data-count]]:text-[var(--rail-ink)] [&_svg]:text-[var(--rail-ink)]'
+          : 'text-[var(--rail-muted)] hover:bg-[var(--rail-hover)] hover:text-[var(--rail-ink)]',
       )}
     >
       {children}
@@ -312,7 +340,7 @@ function NavLink({
 
 function Count({ value }: { value: number }) {
   return (
-    <span data-count className="num shrink-0 text-xs text-muted">
+    <span data-count className="rail-label num shrink-0 text-xs text-[var(--rail-muted)]">
       {value}
     </span>
   );
@@ -323,7 +351,7 @@ function Section({ title, action }: { title: string; action?: React.ReactNode })
     <div className="flex items-center justify-between px-3 pb-1 pt-6">
       {/* No `uppercase`: Hebrew has no case, so it does nothing here and shouts
           at any project or label someone names in Latin. */}
-      <h2 className="text-xs font-bold text-muted">{title}</h2>
+      <h2 className="rail-label text-xs font-bold text-[var(--rail-muted)]">{title}</h2>
       {action}
     </div>
   );

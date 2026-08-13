@@ -90,8 +90,16 @@
      makes the accent read as deliberate rather than as a stray colour. Dark is
      not the light theme inverted: the ground is a deep blue-black and surfaces
      step up in small increments. */
-  --paper: #f7f8fa;
-  --paper: light-dark(oklch(97.6% 0.003 265), oklch(14.5% 0.008 268));
+  /* The ground carries the accent hue rather than a fixed grey. It is a
+     whisper — under 1% chroma — but it is why choosing "green" changes the mood
+     of the whole app instead of recolouring six buttons. Every near-white SaaS
+     app shares the same #f8f9fa; this one's ground belongs to whoever is
+     using it. */
+  --paper: #f6f6fb;
+  --paper: light-dark(
+    oklch(97.4% calc(var(--accent-c) * 0.045) var(--accent-h)),
+    oklch(14.5% calc(var(--accent-c-dark) * 0.06) var(--accent-h))
+  );
   --surface: #ffffff;
   --surface: light-dark(oklch(100% 0 0), oklch(19.5% 0.009 268));
   --surface-2: #f1f3f6;
@@ -112,6 +120,52 @@
   --line: light-dark(oklch(91.5% 0.005 265), oklch(25.5% 0.01 268));
   --line-strong: #cad0da;
   --line-strong: light-dark(oklch(84% 0.011 265), oklch(33% 0.013 268));
+
+  /* ---------------------------------------------------------------- rail
+     The sidebar is a dark, low-chroma slab of the accent hue, against a light
+     content area. Slack, Superhuman and Todoist's own coloured themes all do
+     some version of this, and the reason it works is not decoration: a screen
+     that is one flat light field gives the eye nothing to orient by, so the
+     navigation and the work read as the same material. A dark rail makes the
+     content the lit surface.
+
+     Its own token family rather than reusing the surface ramp, because these
+     invert: on the rail, "muted" is a *lighter* grey, not a darker one, and
+     `--accent-soft` — a pale wash meant for white — would be a hole in it. */
+  --rail: #262a3d;
+  --rail: light-dark(
+    oklch(28% calc(var(--accent-c) * 0.32) var(--accent-h)),
+    oklch(11.5% calc(var(--accent-c-dark) * 0.28) var(--accent-h))
+  );
+  --rail-ink: #f2f2f7;
+  --rail-ink: light-dark(
+    oklch(96% calc(var(--accent-c) * 0.05) var(--accent-h)),
+    oklch(93% calc(var(--accent-c-dark) * 0.04) var(--accent-h))
+  );
+  /* Secondary text on the rail. Clears 4.5:1 on `--rail` in both themes — the
+     contrast audit checks this pair the same way it checks the light ones. */
+  --rail-muted: #a9adc4;
+  --rail-muted: light-dark(
+    oklch(74% calc(var(--accent-c) * 0.14) var(--accent-h)),
+    oklch(66% calc(var(--accent-c-dark) * 0.12) var(--accent-h))
+  );
+  --rail-line: #363b52;
+  --rail-line: light-dark(
+    oklch(35% calc(var(--accent-c) * 0.3) var(--accent-h)),
+    oklch(19% calc(var(--accent-c-dark) * 0.25) var(--accent-h))
+  );
+  /* Hover and current-page grounds: steps *up* from the rail, since it is the
+     dark end here. The current page is the brighter of the two. */
+  --rail-hover: #32374d;
+  --rail-hover: light-dark(
+    oklch(33.5% calc(var(--accent-c) * 0.34) var(--accent-h)),
+    oklch(16.5% calc(var(--accent-c-dark) * 0.3) var(--accent-h))
+  );
+  --rail-active: #3d4463;
+  --rail-active: light-dark(
+    oklch(39% calc(var(--accent-c) * 0.45) var(--accent-h)),
+    oklch(22% calc(var(--accent-c-dark) * 0.42) var(--accent-h))
+  );
 
   /* accent — agency, completion, focus. Hue comes from the accent theme above;
      lightness and chroma from whichever side of this pair applies. The accent
@@ -283,6 +337,26 @@
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* A real spring, sampled.
+     `linear()` interpolates between the points it is given, so a damped
+     harmonic oscillator evaluated at even intervals *is* a spring easing — no
+     runtime, no library. A cubic-bezier cannot express this: it has two
+     control points and can only overshoot once, symmetrically.
+
+     Used where something behaves like an object with weight — the sidebar
+     opening, a panel arriving. Not for colour or opacity, which have no mass
+     and look broken when they overshoot. */
+  --ease-slide: linear(
+    0, 0.0018, 0.0069, 0.0152, 0.0265, 0.0407, 0.0576, 0.0771, 0.0991, 0.1234,
+    0.1499, 0.1785, 0.209, 0.2413, 0.2753, 0.3108, 0.3477, 0.3859, 0.4252,
+    0.4655, 0.5067, 0.5486, 0.591, 0.6339, 0.677, 0.7203, 0.7635, 0.8065,
+    0.8492, 0.8914, 0.9329, 0.9736, 1.0132, 1.0263, 1.0378, 1.0476, 1.0558,
+    1.0623, 1.0673, 1.0708, 1.0729, 1.0736, 1.0731, 1.0715, 1.0688, 1.0652,
+    1.0608, 1.0557, 1.05, 1.0438, 1.0373, 1.0305, 1.0236, 1.0167, 1.0098,
+    1.0031, 0.9997, 0.9985, 0.9979, 0.9977, 0.9979, 0.9984, 0.9991, 1
+  );
+  --duration-slide: 420ms;
 }
 
 /* ---------------------------------------------------------------------------
@@ -568,6 +642,91 @@
   .row-collapse {
     animation: none;
     opacity: 0.55;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The rail, and how it collapses.
+
+   The width springs; the contents do not move. Everything inside keeps its
+   full 16rem and the rail simply clips — so the labels are covered rather than
+   re-flowed, which is the difference between a panel sliding shut and a column
+   of text repeatedly re-wrapping. In RTL the clip eats the inline-end (left)
+   edge, and the icons live at the inline-start, so they are what survives.
+
+   The labels fade before the width finishes, so nothing is caught chopped
+   through the middle of a letter.
+--------------------------------------------------------------------------- */
+.rail {
+  inline-size: 16rem;
+
+  /* The rail re-points the neutral ramp at its own family for everything
+     inside it. `text-muted` on a dark slab was the light theme's muted — a
+     mid-grey that disappeared into it, which is how the "new project" button
+     went invisible.
+
+     Done here rather than at each call site because the components inside are
+     shared: the icon button, the menu trigger and the section heading are the
+     same ones used on white elsewhere. Rewriting them all to take a colour
+     prop would put the rail's business in twenty files. Portalled menus escape
+     this subtree, which is right — a popover is a light surface wherever it
+     was opened from. */
+  --ink: var(--rail-ink);
+  --ink-2: var(--rail-ink);
+  --muted: var(--rail-muted);
+  --line: var(--rail-line);
+  --line-strong: var(--rail-line);
+  --surface: var(--rail-hover);
+  --surface-2: var(--rail-hover);
+}
+
+@media (width >= 48rem) {
+  .rail {
+    overflow: hidden;
+    transition: inline-size var(--duration-slide) var(--ease-slide);
+  }
+
+  /* Pinned, so narrowing the rail cannot reflow what is inside it. */
+  .rail > * {
+    inline-size: 16rem;
+    flex-shrink: 0;
+  }
+
+  .rail-label {
+    transition:
+      opacity 130ms ease-out,
+      transform 130ms ease-out;
+  }
+
+  :root[data-rail='collapsed'] .rail {
+    /* Icon plus the rail's own padding: enough to stay a navigation rather
+       than becoming a stripe. */
+    inline-size: 4.25rem;
+  }
+
+  :root[data-rail='collapsed'] .rail-label {
+    opacity: 0;
+    /* Toward the clip, so they leave rather than dissolve in place. */
+    transform: translateX(0.5rem);
+    pointer-events: none;
+  }
+
+  :root[data-rail='collapsed'] :dir(ltr) .rail-label {
+    transform: translateX(-0.5rem);
+  }
+
+  /* The header's controls sit at the inline-end, which is precisely the edge
+     the collapse eats — so the button that reopens the rail was the first
+     thing to disappear behind it. Reversed while collapsed, the toggle lands
+     in the visible strip and the wordmark takes the clipped side instead. */
+  :root[data-rail='collapsed'] .rail-header {
+    flex-direction: row-reverse;
+  }
+
+  /* No room for a second control in 4.25rem, and brightness is reachable from
+     settings. Not faded like a label: it is leaving, not being covered. */
+  :root[data-rail='collapsed'] .rail-only-open {
+    display: none;
   }
 }
 

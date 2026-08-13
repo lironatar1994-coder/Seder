@@ -34,7 +34,7 @@ await db.session.create({
 
 const browser = await chromium.launch();
 
-async function shoot(name, { width, height, theme, path, action }) {
+async function shoot(name, { width, height, theme, path, action, before }) {
   // A narrow viewport is not a phone. Without `hasTouch` the context still
   // reports `hover: hover` and `pointer: fine`, so every touch-only rule — the
   // always-visible row menu, the enlarged hit areas — silently keeps its
@@ -58,6 +58,7 @@ async function shoot(name, { width, height, theme, path, action }) {
   // has chosen "system" — so `colorScheme` alone renders every "dark" shot
   // light. Store the choice the way the app stores it.
   const page = await context.newPage();
+  if (before) await before(page);
   if (theme === 'dark' || theme === 'light') {
     await page.addInitScript((value) => {
       try {
@@ -292,6 +293,16 @@ if (shared) {
     path: `/app/project/${shared.id}`,
   });
 }
+
+/** The rail collapsed, which is a stored preference rather than a click. */
+await shoot('44-rail-collapsed', {
+  width: 1280,
+  height: 860,
+  path: '/app/today',
+  before: async (page) => {
+    await page.addInitScript(() => localStorage.setItem('seder-rail', 'collapsed'));
+  },
+});
 
 await shoot('08-mobile', { width: 390, height: 844, path: '/app/today' });
 await shoot('33-mobile-dark', {

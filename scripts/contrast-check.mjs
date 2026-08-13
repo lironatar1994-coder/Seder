@@ -234,6 +234,27 @@ for (const [modeName, tokens] of [
     for (const surface of SURFACES) {
       check(`${accentName}: accent on ${surface}`, accent, resolve(tokens[surface], v), 4.5);
     }
+    /* The rail is a second surface family with its own foregrounds, and it is
+       derived from the accent hue — so it needs checking per accent, not once.
+       A dark slab is the easiest place to let secondary text drift to
+       decorative-grey, and the one place nobody notices until they try to read
+       a project name. */
+    const rail = resolve(tokens.rail, v);
+    check(`${accentName}: rail-ink on rail`, resolve(tokens['rail-ink'], v), rail, 4.5);
+    check(`${accentName}: rail-muted on rail`, resolve(tokens['rail-muted'], v), rail, 4.5);
+    check(
+      `${accentName}: rail-ink on rail-active`,
+      resolve(tokens['rail-ink'], v),
+      resolve(tokens['rail-active'], v),
+      4.5,
+    );
+    check(
+      `${accentName}: rail-muted on rail-hover`,
+      resolve(tokens['rail-muted'], v),
+      resolve(tokens['rail-hover'], v),
+      4.5,
+    );
+
     check(`${accentName}: on-accent over accent`, onAccent, accent, 4.5);
     check(
       `${accentName}: accent on accent-soft`,
