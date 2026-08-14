@@ -52,7 +52,9 @@ async function addTask(page: Page, text: string) {
   // outrun it. The confirmation toast is not usable for this: several adds in a
   // row stack identical messages, and they expire on a timer while you wait.
   await expect(input).toHaveValue('');
-  await page.getByRole('button', { name: 'ביטול' }).first().click();
+  // Matched loosely: the composer's cancel names the key that does the same
+  // thing, "esc לביטול".
+  await page.getByRole('button', { name: /ביטול/ }).first().click();
 }
 
 const list = (page: Page) => page.getByTestId('task-list');
@@ -642,13 +644,15 @@ test.describe('tasks', () => {
     await expect(input).toHaveValue('לקנות חלב מחר ');
     await expect(page.getByTestId('composer-chips')).toContainText('מחר');
 
-    // A date is set, so it stops offering a second one that would contradict it.
+    // A date is set, so the slot stops offering a second one that would
+    // contradict it and asks for the hour instead.
     await expect(page.getByRole('button', { name: 'תזמון למחר' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'תזמון להיום' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'קביעת שעה' })).toBeVisible();
 
-    // And the chip is the way back out — the only one, now that the token has
-    // been eaten out of the visible text.
-    await page.getByRole('button', { name: 'הסרת מחר' }).click();
+    // The word itself is the way back out: the parse is drawn onto the text, so
+    // what you press to remove a date is the date.
+    await page.locator('[data-token="date"]').click();
     await expect(input).toHaveValue('לקנות חלב');
     await expect(page.getByRole('button', { name: 'תזמון למחר' })).toBeVisible();
   });
@@ -1196,8 +1200,10 @@ test.describe('repeating tasks', () => {
     await page.getByLabel('משימה חדשה').fill('להשקות את הצמחים כל יומיים');
     await expect(page.getByTestId('composer-chips')).toContainText('כל יומיים');
     await page.getByRole('button', { name: 'הוספה' }).click();
-    await expect(page.getByTestId('toasts')).toContainText('נוספה');
-    await page.getByRole('button', { name: 'ביטול' }).first().click();
+    // Every second day starting today, so it lands in the list being looked at
+    // rather than being announced from the corner.
+    await expect(page.getByLabel('משימה חדשה')).toHaveValue('');
+    await page.getByRole('button', { name: /ביטול/ }).first().click();
 
     const row = list(page).locator('li').filter({ hasText: 'להשקות את הצמחים' });
     await expect(row).toContainText('כל יומיים');

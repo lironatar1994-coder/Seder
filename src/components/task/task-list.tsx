@@ -100,6 +100,10 @@ export function TaskList({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  /** The row just added, while it is still tinted. */
+  const [landedId, setLandedId] = useState<string | null>(null);
+  /** A task saved but not yet returned by the server. */
+  const pendingAdd = useRef<{ id: string; landedIn?: string } | null>(null);
   const [, startTransition] = useTransition();
   const isPhone = useIsPhone();
   const { toast } = useToast();
@@ -171,6 +175,52 @@ export function TaskList({
       const next = new Set([...prev].filter((id) => live.has(id)));
       return next.size === prev.size ? prev : next;
     });
+  }, [groups]);
+
+  /* ------------------------------------------------------------ landing */
+
+  /* A new task used to be announced by a toast naming the view it went to,
+     because it might have gone anywhere — a task added from Today but dated
+     next week is not in the list you are looking at. When it *is*, the row
+     saying so beats a label saying so: it appears where it will live, tinted,
+     and settles. The toast is what happens when it went somewhere else.
+
+     Which of the two is not knowable at save time, only once the server sends
+     the list back, so the add is held here until then. */
+  const handleAdded = useCallback(
+    (id: string, landedIn?: string) => {
+      pendingAdd.current = { id, landedIn };
+      const timer = setTimeout(() => {
+        // Still waiting: the row is not in this view, so say where it is.
+        if (pendingAdd.current?.id !== id) return;
+        pendingAdd.current = null;
+        toast({ message: landedIn ? `נוספה ל${landedIn}` : 'נוספה משימה' });
+      }, 1200);
+      timers.current.add(timer);
+    },
+    [toast],
+  );
+
+  useEffect(() => {
+    const pending = pendingAdd.current;
+    if (!pending) return;
+    if (!groups.some((group) => group.tasks.some((task) => task.id === pending.id))) return;
+
+    pendingAdd.current = null;
+    setLandedId(pending.id);
+    // New tasks are ordered to the top of their group, which can still be below
+    // the fold in a long day.
+    requestAnimationFrame(() =>
+      document
+        .querySelector(`[data-task-id="${pending.id}"]`)
+        ?.scrollIntoView({ block: 'nearest' }),
+    );
+
+    const timer = setTimeout(
+      () => setLandedId((current) => (current === pending.id ? null : current)),
+      1300,
+    );
+    timers.current.add(timer);
   }, [groups]);
 
   /* ---------------------------------------------------------- selection */
@@ -598,6 +648,7 @@ export function TaskList({
               vocabulary={vocabulary}
               variant={isPhone ? 'sheet' : 'inline'}
               onClose={() => setComposerOpen(false)}
+              onAdded={handleAdded}
             />
           </ComposerSlot>
         ) : (
@@ -659,6 +710,7 @@ export function TaskList({
                           key={task.id}
                           task={task}
                           completing={completing.has(task.id)}
+                          landed={landedId === task.id}
                           selected={selectedId === task.id}
                           selecting={checkedIds.size > 0}
                           checked={checkedIds.has(task.id)}

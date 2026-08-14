@@ -664,6 +664,119 @@
   overflow: hidden;
 }
 
+/* ---------------------------------------------------------------------------
+   Quick add — the parse, drawn onto the sentence itself.
+
+   The composer used to print the raw syntax as grey punctuation and then
+   repeat every value as a pill underneath, so the task was on screen twice and
+   neither copy was the clean one. Now the field colours what it understood in
+   place: one line, and the line is the task.
+
+   Mechanically the field is two layers. A transparent <input> sits over a
+   mirror that repeats the same string with the parsed spans wrapped. That only
+   holds while the two agree character for character, which is the constraint
+   behind every rule below.
+--------------------------------------------------------------------------- */
+
+/* Block padding and a spread shadow, never inline padding: horizontal padding
+   would push every glyph after it and the mirror would drift out of register
+   with the input standing behind it. Block padding and box-shadow both paint
+   outside the line box without moving anything. */
+.qa-token {
+  border-radius: var(--radius-sm);
+  padding-block: 0.125rem;
+  background: var(--qa-bg);
+  color: var(--qa-fg);
+  /* 1px, not 2. Two tokens are separated by one space — about 4px — and a 2px
+     bleed on each side closed that to nothing, so "ביום חמישי בשעה 20:00" read
+     as one long band rather than a day and an hour you can take out
+     separately. */
+  box-shadow: 0 0 0 1px var(--qa-bg);
+  animation: seder-recognise 200ms var(--ease-spring) both;
+  /* The one thing on the mirror that answers a press — the layer itself stays
+     transparent to the pointer so a tap anywhere else still lands a caret. */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Lit rather than outlined while it holds the caret. The composer is a white
+   card among white rows, and a hairline is not enough to say which one is the
+   place you write.
+
+   Here rather than as a `focus-within:` utility because the resting shadow is
+   one too, and between two single-class rules for the same property the winner
+   is whichever Tailwind emitted last — which is the resting one. */
+.composer-card {
+  transition:
+    box-shadow 160ms var(--ease-out-soft),
+    border-color 160ms var(--ease-out-soft);
+}
+
+.composer-card:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    var(--shadow-row);
+}
+
+/* Says it is an object rather than a word, without moving anything: an inline
+   ring is drawn outside the line box, the same way the fill is. */
+.qa-token:hover {
+  box-shadow:
+    0 0 0 1px var(--qa-bg),
+    0 0 0 2px color-mix(in oklab, var(--qa-fg) 40%, transparent);
+}
+
+/* The sigil is the one part of the token the highlight already says. `#` is
+   noise once the word is wearing the project's colour. */
+.qa-sigil {
+  opacity: 0.5;
+}
+
+/* Recognition. Typing "מחר" and having the app understand it is the whole
+   pitch of this product, and until now nothing moved when it happened.
+   The pill inflates out of the word on a spring — the only overshoot in the
+   app besides completion.
+
+   Spread, not transform: a transform needs `display: inline-block`, and an
+   atomic inline is a single neutral object to the bidi algorithm, which would
+   reorder the mirror differently from the input on a mixed Hebrew/Latin line.
+
+   It plays on mount and never again, which is why the spans are keyed by what
+   the parser understood rather than by where it sits in the string. Keyed by
+   position, typing a title in front of a finished "מחר" would re-key the span
+   on every keystroke and the pill would pulse the whole way. */
+@keyframes seder-recognise {
+  from {
+    box-shadow: 0 0 0 -1px var(--qa-bg);
+  }
+}
+
+/* The input's own glyphs are transparent, so an opaque selection band would
+   cover the mirror and select-all would blank the field. */
+.qa-input::selection {
+  background: color-mix(in oklab, var(--accent) 26%, transparent);
+}
+
+/* Where it landed.
+   A new task used to be announced by a toast in the corner, because the row
+   itself might be anywhere — or nowhere. When it is on screen, the row saying
+   so is better than a label saying so: the tint fades and leaves the list. No
+   fill mode, so the row goes back to its own hover and selection colours the
+   moment it is over. */
+@keyframes seder-landed {
+  from {
+    background-color: var(--accent-soft);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.row-landed {
+  animation: seder-landed 1200ms var(--ease-out-soft);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
