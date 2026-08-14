@@ -52,7 +52,7 @@ export async function readWhatsappHealth(): Promise<WhatsappHealth> {
   const since = new Date(Date.now() - WINDOW_HOURS * 60 * 60 * 1000);
 
   const [enabledAccounts, grouped, problems] = await Promise.all([
-    db.user.count({ where: { whatsappEnabled: true, phone: { not: null } } }),
+    db.user.count({ where: { whatsappReminders: true, phone: { not: null } } }),
     db.whatsappLog.groupBy({
       by: ['direction', 'kind', 'status'],
       where: { createdAt: { gte: since } },

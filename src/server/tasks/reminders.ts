@@ -25,8 +25,8 @@ export const remindable: Prisma.TaskWhereInput = {
  *  project, otherwise the author. */
 const reachable: Prisma.TaskWhereInput = {
   OR: [
-    { assigneeId: null, user: { whatsappEnabled: true, phone: { not: null } } },
-    { assignee: { whatsappEnabled: true, phone: { not: null } } },
+    { assigneeId: null, user: { whatsappReminders: true, phone: { not: null } } },
+    { assignee: { whatsappReminders: true, phone: { not: null } } },
   ],
 };
 

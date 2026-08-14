@@ -51,7 +51,8 @@ beforeAll(async () => {
       name: 'בודק',
       passwordHash: 'x',
       phone: `05${String(Date.now()).slice(-8)}`,
-      whatsappEnabled: true,
+      whatsappCapture: true,
+      whatsappReminders: true,
     },
     select: { id: true },
   });
@@ -122,7 +123,8 @@ describe('the recipient filter survives being combined', () => {
         email: `reminders-off-${Date.now()}@test.local`,
         name: 'בודק',
         passwordHash: 'x',
-        whatsappEnabled: false,
+        whatsappCapture: false,
+        whatsappReminders: false,
       },
       select: { id: true },
     });

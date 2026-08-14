@@ -35,9 +35,14 @@ model User {
   /// WhatsApp message has to resolve to exactly one account — two people
   /// sharing a number would make "whose Inbox does this go to" unanswerable.
   phone           String? @unique
-  /// Off until asked for. A number on file is not consent to act on messages
-  /// arriving from it, and the number is also how we reach you for reminders.
-  whatsappEnabled Boolean @default(false)
+  /// Two switches, because they are two different consents. Letting the app
+  /// turn your messages into tasks is not the same as letting it message you,
+  /// and someone who wants reminders but files everything by hand — or the
+  /// reverse — had no way to say so while these were one flag.
+  ///
+  /// Both off until asked for: a number on file is not permission for either.
+  whatsappCapture   Boolean @default(false)
+  whatsappReminders Boolean @default(false)
 
   /// The hour a reminder fires for a task that has a day but no time of its
   /// own — 0–23, Israel time. One setting for the whole account rather than a

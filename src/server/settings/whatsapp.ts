@@ -14,9 +14,9 @@ function refresh() {
 /**
  * Save the number messages will arrive from.
  *
- * Clearing it also switches the feature off. Leaving `whatsappEnabled` true
- * with no number would be a setting that claims to be on and cannot possibly
- * work — and the reminder sweep would keep selecting the row and skipping it.
+ * Clearing it switches both features off. A switch left on with no number is a
+ * setting that claims to be working and cannot possibly be — and the reminder
+ * sweep would keep selecting the row only to skip it.
  */
 export async function updatePhoneAction(
   _prev: SettingsState,
@@ -28,7 +28,7 @@ export async function updatePhoneAction(
   if (!raw) {
     await db.user.update({
       where: { id: user.id },
-      data: { phone: null, whatsappEnabled: false },
+      data: { phone: null, whatsappCapture: false, whatsappReminders: false },
     });
     refresh();
     return { saved: true };
@@ -74,16 +74,31 @@ export async function setReminderHourAction(hour: number): Promise<SettingsState
   return { saved: true };
 }
 
-/** Turn capture and reminders on or off. Requires a number to be on file. */
-export async function setWhatsappEnabledAction(enabled: boolean): Promise<SettingsState> {
+/** Which of the two WhatsApp features a switch controls. */
+export type WhatsappSwitch = 'capture' | 'reminders';
+
+/**
+ * Turn one of the two features on or off.
+ *
+ * They are separate because they are separate permissions: letting the app
+ * read your messages and turn them into tasks is a different decision from
+ * letting it message you. Either can be on without the other.
+ */
+export async function setWhatsappSwitchAction(
+  which: WhatsappSwitch,
+  enabled: boolean,
+): Promise<SettingsState> {
   const { user } = await requireSession();
 
   const row = await db.user.findUnique({ where: { id: user.id }, select: { phone: true } });
   if (enabled && !row?.phone) {
-    return { errors: { enabled: 'צריך לשמור מספר טלפון קודם' } };
+    return { errors: { [which]: 'צריך לשמור מספר טלפון קודם' } };
   }
 
-  await db.user.update({ where: { id: user.id }, data: { whatsappEnabled: enabled } });
+  await db.user.update({
+    where: { id: user.id },
+    data: which === 'capture' ? { whatsappCapture: enabled } : { whatsappReminders: enabled },
+  });
   refresh();
   return { saved: true };
 }

@@ -10,8 +10,9 @@ import { Switch } from '@/components/ui/switch';
 import { formatPhone } from '@/lib/phone';
 import {
   updatePhoneAction,
-  setWhatsappEnabledAction,
+  setWhatsappSwitchAction,
   setReminderHourAction,
+  type WhatsappSwitch,
 } from '@/server/settings/whatsapp';
 import { hourLabel } from '@/lib/reminder';
 import type { SettingsState } from '@/server/settings/actions';
@@ -40,14 +41,16 @@ const CONNECTION: Record<WhatsappState['status'], { text: string; tone: 'ok' | '
 
 export function WhatsappForm({
   phone,
-  enabled,
+  capture,
+  reminders,
   reminderHour,
   state,
   isAdmin,
   recent,
 }: {
   phone: string | null;
-  enabled: boolean;
+  capture: boolean;
+  reminders: boolean;
   reminderHour: number;
   state: WhatsappState;
   /** Only the operator pairs the number, so only they see the code. */
@@ -59,10 +62,11 @@ export function WhatsappForm({
   const [value, setValue] = useState(phone ? formatPhone(phone) : '');
   const [showSaved, setShowSaved] = useState(false);
 
-  const [on, setOn] = useState(enabled);
+  const [onCapture, setOnCapture] = useState(capture);
+  const [onReminders, setOnReminders] = useState(reminders);
   const [hour, setHour] = useState(reminderHour);
   const [hourSaved, setHourSaved] = useState(false);
-  const [toggleError, setToggleError] = useState<string | undefined>();
+  const [switchError, setSwitchError] = useState<Partial<Record<WhatsappSwitch, string>>>({});
   const [, startToggle] = useTransition();
 
   useEffect(() => {
@@ -89,14 +93,18 @@ export function WhatsappForm({
   const connection = CONNECTION[state.status] ?? CONNECTION.OFFLINE;
   const dirty = value.trim() !== (phone ? formatPhone(phone) : '');
 
-  function toggle(next: boolean) {
-    setOn(next);
-    setToggleError(undefined);
+  /* Optimistic, then reverted if the server refuses — a switch that waits for
+     a round trip before moving reads as broken. */
+  function toggle(which: WhatsappSwitch, next: boolean) {
+    const apply = which === 'capture' ? setOnCapture : setOnReminders;
+    apply(next);
+    setSwitchError((prev) => ({ ...prev, [which]: undefined }));
+
     startToggle(async () => {
-      const result = await setWhatsappEnabledAction(next);
+      const result = await setWhatsappSwitchAction(which, next);
       if (result.errors) {
-        setOn(!next);
-        setToggleError(result.errors.enabled);
+        apply(!next);
+        setSwitchError((prev) => ({ ...prev, [which]: result.errors?.[which] }));
       }
     });
   }
@@ -146,25 +154,50 @@ export function WhatsappForm({
           </SettingRow>
         </form>
 
+        {/* Two switches, because they are two permissions. Letting the app read
+            your messages is a different decision from letting it message you,
+            and one control forced them to be the same answer. */}
         <SettingRow
-          label="פתיחת משימות מוואטסאפ"
+          label="פתיחת משימות מהודעות"
           description={
             phone
-              ? 'כשזה כבוי, הודעות מהמספר הזה לא ייפתחו כמשימות ולא יישלחו תזכורות.'
+              ? 'הודעה שתשלח למספר של סדר תיפתח כמשימה. כשזה כבוי, ההודעות פשוט לא ייקלטו.'
               : 'צריך לשמור מספר קודם.'
           }
-          htmlFor="settings-whatsapp-enabled"
+          htmlFor="settings-whatsapp-capture"
           control="auto"
         >
           <div className="flex items-center gap-3">
             <Switch
-              id="settings-whatsapp-enabled"
-              checked={on}
+              id="settings-whatsapp-capture"
+              checked={onCapture}
               disabled={!phone}
-              onChange={toggle}
-              aria-label="פתיחת משימות מוואטסאפ"
+              onChange={(next) => toggle('capture', next)}
+              aria-label="פתיחת משימות מהודעות"
             />
-            <FieldError>{toggleError}</FieldError>
+            <FieldError>{switchError.capture}</FieldError>
+          </div>
+        </SettingRow>
+
+        <SettingRow
+          label="קבלת תזכורות"
+          description={
+            phone
+              ? 'תזכורות על משימות יגיעו לוואטסאפ. כשזה כבוי, אפשר עדיין לפתוח משימות בהודעה.'
+              : 'צריך לשמור מספר קודם.'
+          }
+          htmlFor="settings-whatsapp-reminders"
+          control="auto"
+        >
+          <div className="flex items-center gap-3">
+            <Switch
+              id="settings-whatsapp-reminders"
+              checked={onReminders}
+              disabled={!phone}
+              onChange={(next) => toggle('reminders', next)}
+              aria-label="קבלת תזכורות"
+            />
+            <FieldError>{switchError.reminders}</FieldError>
           </div>
         </SettingRow>
 

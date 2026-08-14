@@ -359,7 +359,7 @@ async function handleMessage(raw: any): Promise<string | null> {
   if (!phone) return `not an Israeli mobile (${jid})`;
 
   const user = await db.user.findFirst({
-    where: { phone, whatsappEnabled: true },
+    where: { phone, whatsappCapture: true },
     select: { id: true },
   });
 
@@ -458,9 +458,9 @@ async function sweep(): Promise<void> {
         scheduledFor: true,
         scheduledTime: true,
         reminder: true,
-        user: { select: { id: true, phone: true, whatsappEnabled: true, reminderHour: true } },
+        user: { select: { id: true, phone: true, whatsappReminders: true, reminderHour: true } },
         assignee: {
-          select: { id: true, phone: true, whatsappEnabled: true, reminderHour: true },
+          select: { id: true, phone: true, whatsappReminders: true, reminderHour: true },
         },
       },
       take: 100,
@@ -468,7 +468,7 @@ async function sweep(): Promise<void> {
 
     for (const task of tasks) {
       const person = task.assignee ?? task.user;
-      if (!person?.phone || !person.whatsappEnabled) continue;
+      if (!person?.phone || !person.whatsappReminders) continue;
 
       /* The lead is the task's own when it has one, and the account default
          otherwise — so "an hour before" on one task does not quietly become
@@ -545,8 +545,8 @@ async function sweepMorning(day: Date, dayStart: number, now: number): Promise<v
       id: true,
       title: true,
       createdAt: true,
-      user: { select: { id: true, phone: true, whatsappEnabled: true, reminderHour: true } },
-      assignee: { select: { id: true, phone: true, whatsappEnabled: true, reminderHour: true } },
+      user: { select: { id: true, phone: true, whatsappReminders: true, reminderHour: true } },
+      assignee: { select: { id: true, phone: true, whatsappReminders: true, reminderHour: true } },
     },
     orderBy: { createdAt: 'asc' },
     take: 400,
@@ -560,7 +560,7 @@ async function sweepMorning(day: Date, dayStart: number, now: number): Promise<v
 
   for (const task of tasks) {
     const person = task.assignee ?? task.user;
-    if (!person?.phone || !person.whatsappEnabled) continue;
+    if (!person?.phone || !person.whatsappReminders) continue;
 
     /* Only what already existed at their morning hour. A task added at 15:00
        for today does not need announcing back to the person who just typed

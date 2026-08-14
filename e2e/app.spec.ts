@@ -148,10 +148,14 @@ test.describe('settings', () => {
     await openSettings(page);
     await page.getByRole('link', { name: 'וואטסאפ', exact: true }).click();
 
-    const toggle = page.getByRole('switch', { name: 'פתיחת משימות מוואטסאפ' });
-    // Nothing to identify an incoming message by yet, so the switch is not
-    // offered — rather than offered and then quietly doing nothing.
-    await expect(toggle).toBeDisabled();
+    // Two switches, because they are two permissions: reading your messages
+    // and messaging you are separate decisions.
+    const capture = page.getByRole('switch', { name: 'פתיחת משימות מהודעות' });
+    const reminders = page.getByRole('switch', { name: 'קבלת תזכורות' });
+    // Nothing to identify an incoming message by yet, so neither is offered —
+    // rather than offered and then quietly doing nothing.
+    await expect(capture).toBeDisabled();
+    await expect(reminders).toBeDisabled();
 
     const field = page.getByLabel('המספר שלי');
     await field.fill('12345');
@@ -165,15 +169,23 @@ test.describe('settings', () => {
     await expect(page.getByText('נשמר')).toBeVisible();
     await expect(field).toHaveValue(phone.shown);
 
-    await expect(toggle).toBeEnabled();
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await expect(capture).toBeEnabled();
+    await expect(reminders).toBeEnabled();
+
+    // One on, the other left off — the whole point of splitting them.
+    await reminders.click();
+    await expect(reminders).toHaveAttribute('aria-checked', 'true');
+    await expect(capture).toHaveAttribute('aria-checked', 'false');
 
     await page.reload();
     await expect(page.getByLabel('המספר שלי')).toHaveValue(phone.shown);
-    await expect(page.getByRole('switch', { name: 'פתיחת משימות מוואטסאפ' })).toHaveAttribute(
+    await expect(page.getByRole('switch', { name: 'קבלת תזכורות' })).toHaveAttribute(
       'aria-checked',
       'true',
+    );
+    await expect(page.getByRole('switch', { name: 'פתיחת משימות מהודעות' })).toHaveAttribute(
+      'aria-checked',
+      'false',
     );
   });
 
