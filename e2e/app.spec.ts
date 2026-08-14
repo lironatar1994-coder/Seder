@@ -641,6 +641,51 @@ test.describe('tasks', () => {
     await expect(page.getByRole('button', { name: 'תזמון למחר' })).toBeVisible();
   });
 
+  test('a reminder can be set per task, and only what the task can honour', async ({ page }) => {
+    await register(page);
+
+    await addTask(page, 'להתקשר למוסך מחר בשעה 14:00');
+    await page.goto(at('/app/upcoming'));
+    await page.getByRole('button', { name: 'פתיחת להתקשר למוסך', exact: true }).first().click();
+    await page.getByRole('dialog').waitFor();
+
+    // The default says what it actually is, rather than making you go and look.
+    const reminder = page.getByRole('button', { name: /ברירת מחדל/ });
+    await expect(reminder).toBeVisible();
+
+    await reminder.click();
+    // Exact: "שעה לפני" is a substring of "חצי שעה לפני", and getByRole
+    // matches names by substring unless told otherwise.
+    await page.getByRole('menuitem', { name: 'שעה לפני', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'שעה לפני', exact: true })).toBeVisible();
+
+    // It survives a reload, so it was actually written.
+    await page.reload();
+    await page.getByRole('button', { name: 'פתיחת להתקשר למוסך', exact: true }).first().click();
+    await expect(page.getByRole('button', { name: 'שעה לפני', exact: true })).toBeVisible();
+  });
+
+  test('a task with no time is still remindable, at the account hour', async ({ page }) => {
+    await register(page);
+
+    await addTask(page, 'לקנות חלב מחר');
+    await page.goto(at('/app/upcoming'));
+    await page.getByRole('button', { name: 'פתיחת לקנות חלב', exact: true }).first().click();
+    await page.getByRole('dialog').waitFor();
+
+    // The hour is an account setting, so the control names it rather than
+    // leaving "default" to mean whatever the reader assumes.
+    await page.getByRole('button', { name: /ברירת מחדל · 08:00/ }).click();
+
+    // "Ten minutes before" is meaningless with no moment to be before.
+    await expect(page.getByRole('menuitem', { name: '10 דקות לפני' })).toHaveCount(0);
+    await expect(page.getByRole('menuitem', { name: 'בזמן המשימה' })).toHaveCount(0);
+    await expect(page.getByRole('menuitem', { name: 'יום לפני' })).toBeVisible();
+
+    await page.getByRole('menuitem', { name: 'בלי תזכורת' }).click();
+    await expect(page.getByRole('button', { name: 'בלי תזכורת' })).toBeVisible();
+  });
+
   test('a dated but unfiled task stays in the Inbox', async ({ page }) => {
     await register(page);
     // The Inbox is a place, not a date. Scheduling something must not file it.

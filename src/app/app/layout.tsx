@@ -6,6 +6,8 @@ import { Sidebar } from '@/components/nav/sidebar';
 import { TabBar } from '@/components/nav/tab-bar';
 import { CommandPalette } from '@/components/nav/command-palette';
 import { ViewTransitions } from '@/components/nav/view-transitions';
+import { ReminderDefaultsProvider } from '@/components/task/reminder-defaults';
+import { envNumber } from '@/lib/env';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // The middleware only checked that a cookie exists. This is where the session
@@ -18,6 +20,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const sidebar = await getSidebarData(user.id);
 
+  // Read once here rather than threaded through every page that renders a
+  // task: the reminder picker is the only consumer, and it only needs them
+  // to say out loud what "default" means.
+  const reminderDefaults = {
+    hour: user.reminderHour,
+    lead: envNumber(process.env.WHATSAPP_REMINDER_LEAD, 15),
+  };
+
   return (
     <div data-app-shell className="flex h-dvh overflow-hidden bg-paper max-md:flex-col">
       <Sidebar data={sidebar} user={user} onLogout={logoutAction} />
@@ -28,7 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             A page that is a grid rather than prose — the calendar — opts out by
             marking its root `data-wide`. */}
         <div className="mx-auto w-full max-w-[44rem] px-4 has-[[data-wide]]:max-w-[82rem] md:px-8">
-          {children}
+          <ReminderDefaultsProvider value={reminderDefaults}>{children}</ReminderDefaultsProvider>
         </div>
         {/* The tab bar is fixed, so the column owes it a floor to scroll to.
             Without this the last task sits under the bar and cannot be read,

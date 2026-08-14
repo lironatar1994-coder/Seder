@@ -32,6 +32,7 @@ export function taskSelect(viewerId: string) {
     deadline: true,
     completedAt: true,
     recurrence: true,
+    reminder: true,
     position: true,
     projectId: true,
     sectionId: true,
@@ -58,6 +59,8 @@ export interface TaskDTO {
   scheduledTime: string | null;
   deadline: Date | null;
   completedAt: Date | null;
+  /** null = the account default · 'off' · minutes before, as a string. */
+  reminder: string | null;
   /** Serialised repeat rule, or null. See lib/recurrence.ts. */
   recurrence: string | null;
   position: string;

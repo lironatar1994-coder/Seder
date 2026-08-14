@@ -286,10 +286,18 @@ export async function updateTaskAction(input: unknown): Promise<ActionResult> {
     }
   }
 
+  /* Moving a task, or changing what it asked for, makes any reminder already
+     sent about it a reminder for a different arrangement. `remindedAt` is what
+     stops one firing twice; leaving it set after a reschedule is what stops
+     the *new* one firing at all. */
+  const reminderChanged =
+    scheduledFor !== undefined || rest.scheduledTime !== undefined || rest.reminder !== undefined;
+
   await db.task.update({
     where: { id },
     data: {
       ...rest,
+      ...(reminderChanged ? { remindedAt: null } : {}),
       ...(scheduledFor !== undefined ? { scheduledFor: parseDay(scheduledFor) } : {}),
       ...(deadline !== undefined ? { deadline: parseDay(deadline) } : {}),
       ...(labelIds
@@ -325,6 +333,9 @@ export async function scheduleTaskAction(
       whenBucket: when.bucket,
       scheduledFor: scheduled ? parseDay(when.date) : null,
       scheduledTime: scheduled ? when.time ?? null : null,
+      // The task has moved, so anything already sent about it was about the
+      // old date. Left set, the reminder for the new one never fires.
+      remindedAt: null,
     },
   });
 

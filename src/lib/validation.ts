@@ -68,6 +68,14 @@ export const createTaskSchema = z.object({
   deadline: dayStringSchema,
   labelIds: z.array(z.string().cuid()).max(20).default([]),
   recurrence: z.string().max(60).nullable().optional(),
+  /** null = the account default · 'off' · minutes before, as a string.
+   *  Constrained here rather than left as free text: it is read back as a
+   *  number by the send loop, and an unparseable value would silently mean
+   *  "no reminder" for a task whose owner asked for one. */
+  reminder: z
+    .union([z.literal('off'), z.string().regex(/^\d{1,5}$/, 'ערך תזכורת לא תקין')])
+    .nullable()
+    .optional(),
 });
 
 export const updateTaskSchema = createTaskSchema.partial().extend({

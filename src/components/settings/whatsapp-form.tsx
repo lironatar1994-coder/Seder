@@ -8,7 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input, FieldError } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { formatPhone } from '@/lib/phone';
-import { updatePhoneAction, setWhatsappEnabledAction } from '@/server/settings/whatsapp';
+import {
+  updatePhoneAction,
+  setWhatsappEnabledAction,
+  setReminderHourAction,
+} from '@/server/settings/whatsapp';
+import { hourLabel } from '@/lib/reminder';
 import type { SettingsState } from '@/server/settings/actions';
 import type { WhatsappState } from '@/server/whatsapp/status';
 import { SettingRow, SettingsSection, SavedNote } from './shell';
@@ -36,12 +41,14 @@ const CONNECTION: Record<WhatsappState['status'], { text: string; tone: 'ok' | '
 export function WhatsappForm({
   phone,
   enabled,
+  reminderHour,
   state,
   isAdmin,
   recent,
 }: {
   phone: string | null;
   enabled: boolean;
+  reminderHour: number;
   state: WhatsappState;
   /** Only the operator pairs the number, so only they see the code. */
   isAdmin: boolean;
@@ -53,6 +60,8 @@ export function WhatsappForm({
   const [showSaved, setShowSaved] = useState(false);
 
   const [on, setOn] = useState(enabled);
+  const [hour, setHour] = useState(reminderHour);
+  const [hourSaved, setHourSaved] = useState(false);
   const [toggleError, setToggleError] = useState<string | undefined>();
   const [, startToggle] = useTransition();
 
@@ -156,6 +165,37 @@ export function WhatsappForm({
               aria-label="פתיחת משימות מוואטסאפ"
             />
             <FieldError>{toggleError}</FieldError>
+          </div>
+        </SettingRow>
+
+        <SettingRow
+          label="שעת התזכורת היומית"
+          description="משימה שיש לה תאריך אבל אין לה שעה — התזכורת עליה תגיע בשעה הזאת, יחד עם שאר המשימות של אותו יום."
+          htmlFor="settings-reminder-hour"
+        >
+          <div className="flex items-center gap-2">
+            <select
+              id="settings-reminder-hour"
+              value={hour}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                setHour(next);
+                setHourSaved(false);
+                startToggle(async () => {
+                  const result = await setReminderHourAction(next);
+                  if (!result.errors) setHourSaved(true);
+                });
+              }}
+              // 36px is right beside dense content and wrong under a thumb.
+              className="h-9 w-full rounded-lg border border-line bg-surface px-3 text-sm text-ink [@media(pointer:coarse)]:h-11"
+            >
+              {Array.from({ length: 24 }, (_, value) => (
+                <option key={value} value={value}>
+                  {hourLabel(value)}
+                </option>
+              ))}
+            </select>
+            <SavedNote show={hourSaved} />
           </div>
         </SettingRow>
 

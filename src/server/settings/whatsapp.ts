@@ -55,6 +55,25 @@ export async function updatePhoneAction(
   return { saved: true };
 }
 
+/**
+ * The hour an untimed task's reminder fires.
+ *
+ * One setting for the account rather than a field on every task: "remind me
+ * about the day's undated things in the morning" is a habit, and asking for it
+ * on every task would be a question with the same answer forever.
+ */
+export async function setReminderHourAction(hour: number): Promise<SettingsState> {
+  const { user } = await requireSession();
+
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+    return { errors: { reminderHour: 'שעה לא תקינה' } };
+  }
+
+  await db.user.update({ where: { id: user.id }, data: { reminderHour: hour } });
+  refresh();
+  return { saved: true };
+}
+
 /** Turn capture and reminders on or off. Requires a number to be on file. */
 export async function setWhatsappEnabledAction(enabled: boolean): Promise<SettingsState> {
   const { user } = await requireSession();

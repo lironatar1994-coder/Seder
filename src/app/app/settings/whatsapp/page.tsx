@@ -31,7 +31,7 @@ export default async function WhatsappSettingsPage() {
   const [row, state, recent] = await Promise.all([
     db.user.findUnique({
       where: { id: user.id },
-      select: { phone: true, whatsappEnabled: true },
+      select: { phone: true, whatsappEnabled: true, reminderHour: true },
     }),
     readWhatsappState(),
     db.whatsappLog.findMany({
@@ -51,6 +51,7 @@ export default async function WhatsappSettingsPage() {
       <WhatsappForm
         phone={row?.phone ?? null}
         enabled={row?.whatsappEnabled ?? false}
+        reminderHour={row?.reminderHour ?? 8}
         state={state}
         isAdmin={operator}
         recent={recent.map((log) => ({

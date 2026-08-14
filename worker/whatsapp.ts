@@ -50,7 +50,8 @@ import {
   reminderMessage,
 } from './reply';
 import { toQuickAddLine } from './rewrite';
-import { decideTimed, morningInstant, morningIsDue } from './schedule';
+import { decideAt, morningInstant, morningIsDue } from './schedule';
+import { REMINDER_OFF, reminderFireAt } from '@/lib/reminder';
 import { DailyCapReached, SendQueue } from './queue';
 import { Alerts } from './alerts';
 import { envFlag, envNumber, envText } from '@/lib/env';
@@ -455,6 +456,8 @@ async function sweep(): Promise<void> {
         scheduledTime: { not: null },
         remindedAt: null,
         parentId: null,
+        // A task that asked for no reminder is not a task to remind about.
+        NOT: { reminder: REMINDER_OFF },
         // Whoever is actually doing it gets the reminder. In an unshared
         // project that is always the author.
         OR: [
@@ -465,9 +468,13 @@ async function sweep(): Promise<void> {
       select: {
         id: true,
         title: true,
+        scheduledFor: true,
         scheduledTime: true,
-        user: { select: { id: true, phone: true, whatsappEnabled: true } },
-        assignee: { select: { id: true, phone: true, whatsappEnabled: true } },
+        reminder: true,
+        user: { select: { id: true, phone: true, whatsappEnabled: true, reminderHour: true } },
+        assignee: {
+          select: { id: true, phone: true, whatsappEnabled: true, reminderHour: true },
+        },
       },
       take: 100,
     });
@@ -476,13 +483,19 @@ async function sweep(): Promise<void> {
       const person = task.assignee ?? task.user;
       if (!person?.phone || !person.whatsappEnabled) continue;
 
-      const verdict = decideTimed({
-        now,
-        dayStart,
-        time: String(task.scheduledTime),
-        leadMinutes: LEAD_MINUTES,
-        staleMinutes: STALE_MINUTES,
+      /* The lead is the task's own when it has one, and the account default
+         otherwise — so "an hour before" on one task does not quietly become
+         fifteen minutes because that is what everything else uses. */
+      const fireAt = reminderFireAt({
+        scheduledFor: task.scheduledFor,
+        scheduledTime: task.scheduledTime,
+        reminder: task.reminder,
+        reminderHour: person.reminderHour,
+        defaultLead: LEAD_MINUTES,
       });
+      if (!fireAt) continue;
+
+      const verdict = decideAt({ now, fireAt: fireAt.getTime(), staleMinutes: STALE_MINUTES });
 
       if (verdict === 'wait') continue;
 
@@ -536,11 +549,9 @@ async function sweep(): Promise<void> {
  * instantly, since the morning hour is already behind us.
  */
 async function sweepMorning(day: Date, dayStart: number, now: number): Promise<void> {
-  if (!morningIsDue({ now, dayStart, hour: MORNING_HOUR, graceMinutes: MORNING_GRACE_MINUTES })) {
-    return;
-  }
-  const morning = morningInstant(dayStart, MORNING_HOUR);
-
+  /* Every candidate for the day, then filtered per person: the hour is an
+     account setting now, so "is the morning note due?" has a different answer
+     for each recipient and cannot be asked once up front. */
   const tasks = await db.task.findMany({
     where: {
       status: 'TODO',
@@ -548,7 +559,7 @@ async function sweepMorning(day: Date, dayStart: number, now: number): Promise<v
       scheduledTime: null,
       remindedAt: null,
       parentId: null,
-      createdAt: { lt: new Date(morning) },
+      NOT: { reminder: REMINDER_OFF },
       OR: [
         { assigneeId: null, user: { whatsappEnabled: true, phone: { not: null } } },
         { assignee: { whatsappEnabled: true, phone: { not: null } } },
@@ -558,26 +569,47 @@ async function sweepMorning(day: Date, dayStart: number, now: number): Promise<v
       id: true,
       title: true,
       createdAt: true,
-      user: { select: { id: true, phone: true, whatsappEnabled: true } },
-      assignee: { select: { id: true, phone: true, whatsappEnabled: true } },
+      user: { select: { id: true, phone: true, whatsappEnabled: true, reminderHour: true } },
+      assignee: { select: { id: true, phone: true, whatsappEnabled: true, reminderHour: true } },
     },
     orderBy: { createdAt: 'asc' },
-    take: 200,
+    take: 400,
   });
 
   // Grouped by whoever is doing them, not by who wrote them.
-  const byPerson = new Map<string, { phone: string; ids: string[]; titles: string[] }>();
+  const byPerson = new Map<
+    string,
+    { phone: string; hour: number; ids: string[]; titles: string[] }
+  >();
+
   for (const task of tasks) {
     const person = task.assignee ?? task.user;
     if (!person?.phone || !person.whatsappEnabled) continue;
 
-    const bucket = byPerson.get(person.id) ?? { phone: person.phone, ids: [], titles: [] };
+    /* Only what already existed at their morning hour. A task added at 15:00
+       for today does not need announcing back to the person who just typed
+       it, and without this every afternoon addition would ping immediately —
+       the hour is already behind us by then. */
+    if (task.createdAt.getTime() >= morningInstant(dayStart, person.reminderHour)) continue;
+
+    const bucket = byPerson.get(person.id) ?? {
+      phone: person.phone,
+      hour: person.reminderHour,
+      ids: [],
+      titles: [],
+    };
     bucket.ids.push(task.id);
     bucket.titles.push(task.title);
     byPerson.set(person.id, bucket);
   }
 
   for (const [userId, bucket] of byPerson) {
+    if (
+      !morningIsDue({ now, dayStart, hour: bucket.hour, graceMinutes: MORNING_GRACE_MINUTES })
+    ) {
+      continue;
+    }
+
     const sent = await send(bucket.phone, morningMessage(bucket.titles), {
       userId,
       kind: 'REMINDER',

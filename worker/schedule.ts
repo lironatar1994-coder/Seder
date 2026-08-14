@@ -24,30 +24,25 @@ export function minutesOfDay(time: string): number | null {
   return hours * 60 + minutes;
 }
 
-export type TimedVerdict =
-  /** Not yet — the lead time has not been reached. */
+export type Verdict =
+  /** Not yet — the moment it is due has not arrived. */
   | 'wait'
   /** Send it. */
   | 'send'
   /** So late that delivering it would misinform rather than remind. */
   | 'stale';
 
-export function decideTimed(input: {
-  now: number;
-  dayStart: number;
-  time: string;
-  leadMinutes: number;
-  staleMinutes: number;
-}): TimedVerdict {
-  const offset = minutesOfDay(input.time);
-  // An unparseable time is not a thing to send and not a thing to retry
-  // forever either; treating it as stale retires it quietly.
-  if (offset === null) return 'stale';
-
-  const startsAt = input.dayStart + offset * 60_000;
-
-  if (input.now < startsAt - input.leadMinutes * 60_000) return 'wait';
-  if (input.now > startsAt + input.staleMinutes * 60_000) return 'stale';
+/**
+ * Whether a reminder due at `fireAt` should go out now.
+ *
+ * Lateness is measured from when the reminder was due, not from when the task
+ * starts. With an hour's lead those are an hour apart, and "this reminder is
+ * ninety minutes late" is the question worth asking — a 09:00 nudge for a
+ * 10:00 meeting is useless at 14:00 whether or not the meeting has begun.
+ */
+export function decideAt(input: { now: number; fireAt: number; staleMinutes: number }): Verdict {
+  if (input.now < input.fireAt) return 'wait';
+  if (input.now > input.fireAt + input.staleMinutes * 60_000) return 'stale';
   return 'send';
 }
 
