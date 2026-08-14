@@ -51,7 +51,8 @@ import {
 } from './reply';
 import { toQuickAddLine } from './rewrite';
 import { decideAt, morningInstant, morningIsDue } from './schedule';
-import { REMINDER_OFF, reminderFireAt } from '@/lib/reminder';
+import { reminderFireAt } from '@/lib/reminder';
+import { timedDueWhere, untimedDueWhere } from '@/server/tasks/reminders';
 import { DailyCapReached, SendQueue } from './queue';
 import { Alerts } from './alerts';
 import { envFlag, envNumber, envText } from '@/lib/env';
@@ -450,21 +451,7 @@ async function sweep(): Promise<void> {
     const now = Date.now();
 
     const tasks = await db.task.findMany({
-      where: {
-        status: 'TODO',
-        scheduledFor: day,
-        scheduledTime: { not: null },
-        remindedAt: null,
-        parentId: null,
-        // A task that asked for no reminder is not a task to remind about.
-        NOT: { reminder: REMINDER_OFF },
-        // Whoever is actually doing it gets the reminder. In an unshared
-        // project that is always the author.
-        OR: [
-          { assigneeId: null, user: { whatsappEnabled: true, phone: { not: null } } },
-          { assignee: { whatsappEnabled: true, phone: { not: null } } },
-        ],
-      },
+      where: timedDueWhere(day),
       select: {
         id: true,
         title: true,
@@ -553,18 +540,7 @@ async function sweepMorning(day: Date, dayStart: number, now: number): Promise<v
      account setting now, so "is the morning note due?" has a different answer
      for each recipient and cannot be asked once up front. */
   const tasks = await db.task.findMany({
-    where: {
-      status: 'TODO',
-      scheduledFor: day,
-      scheduledTime: null,
-      remindedAt: null,
-      parentId: null,
-      NOT: { reminder: REMINDER_OFF },
-      OR: [
-        { assigneeId: null, user: { whatsappEnabled: true, phone: { not: null } } },
-        { assignee: { whatsappEnabled: true, phone: { not: null } } },
-      ],
-    },
+    where: untimedDueWhere(day),
     select: {
       id: true,
       title: true,
