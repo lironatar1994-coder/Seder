@@ -510,7 +510,9 @@ test.describe('composer pickers', () => {
     const composer = page.getByTestId('task-composer');
     const input = composer.getByLabel('משימה חדשה', { exact: true });
     await input.fill('לתכנן מסלול');
-    await expect(composer.getByTestId('composer-controls').getByRole('button')).toHaveCount(4);
+    for (const label of ['תאריך', 'פרויקט', 'עדיפות', 'מועד הגשה', 'תוויות', 'חזרה']) {
+      await expect(composer.getByRole('button', { name: new RegExp(`^בחירת ${label},`) })).toBeVisible();
+    }
     await composer.getByRole('button', { name: /^בחירת תאריך/ }).click();
     await page.keyboard.press('Escape');
     await expect(input).toHaveValue('לתכנן מסלול');
@@ -528,20 +530,16 @@ test.describe('composer pickers', () => {
     await composer.getByRole('button', { name: /^בחירת פרויקט/ }).click();
     await page.getByLabel('חיפוש פרויקטים', { exact: true }).fill('משפחתי');
     await page.getByRole('group', { name: 'פרויקטים', exact: true }).getByRole('button', { name: 'טיול משפחתי', exact: true }).click();
-    const more = composer.getByRole('button', { name: /^פרטים נוספים/ });
-    await more.click();
-    await page.getByTestId('composer-properties').getByRole('button', { name: /^עדיפות/ }).click();
+    await composer.getByRole('button', { name: /^בחירת עדיפות,/ }).click();
     await page.getByRole('button', { name: 'דחוף', exact: true }).click();
-    await more.click();
-    await page.getByTestId('composer-properties').getByRole('button', { name: /^מועד הגשה/ }).click();
+    await composer.getByRole('button', { name: /^בחירת מועד הגשה,/ }).click();
     await page.getByTestId('date-picker').getByRole('button', { name: 'היום', exact: true }).click();
-    await more.click();
-    await page.getByTestId('composer-properties').getByRole('button', { name: /^תוויות/ }).click();
+    await composer.getByRole('button', { name: /^בחירת תוויות,/ }).click();
     await page.getByTestId('composer-properties').getByRole('button', { name: 'טלפון', exact: true }).click();
     await page.getByRole('button', { name: 'סיום', exact: true }).click();
     await expect(input).toHaveValue('לתכנן מסלול');
     await page.evaluate(() => document.fonts.ready);
-    await composer.screenshot({ path: '.local-artifacts/composer-desktop.png' });
+    await composer.screenshot({ path: '.local-artifacts/composer-expanded-desktop.png' });
     await composer.getByRole('button', { name: 'הוספה', exact: true }).click();
     await expect(input).toHaveValue('');
     await expect(composer.getByRole('button', { name: /^בחירת פרויקט/ })).toContainText('תיבה נכנסת');
@@ -554,6 +552,86 @@ test.describe('composer pickers', () => {
     await expect(page.getByRole('combobox', { name: 'פרויקט', exact: true }).locator('option:checked')).toHaveText('טיול משפחתי');
     await expect(page.getByRole('group', { name: 'עדיפות', exact: true })).toContainText('דחוף');
     await expect(page.getByRole('group', { name: 'תוויות', exact: true })).toContainText('טלפון');
+  });
+
+  test('account preferences persist across browser contexts, keep hidden fields usable and restore full defaults', async ({ page, browser }) => {
+    await register(page);
+    await page.goto(at('/app/settings/quick-add'));
+    await expect(page.getByLabel('הצגת תאריך', { exact: true })).toBeChecked();
+    await page.getByRole('button', { name: 'הקדמת פרויקט', exact: true }).click();
+    await page.getByLabel('הצגת מועד הגשה', { exact: true }).uncheck();
+    await page.getByLabel('הצגת תוויות', { exact: true }).uncheck();
+    await page.getByLabel('הצגת חזרה', { exact: true }).uncheck();
+    await page.getByLabel('שמות השדות', { exact: true }).uncheck();
+    await page.getByRole('button', { name: 'שמירת שינויים', exact: true }).click();
+    await expect(page.getByRole('status', { name: '' }).filter({ hasText: 'נשמר' })).toBeVisible();
+    await page.reload();
+    await expect(page.getByLabel('שמות השדות', { exact: true })).not.toBeChecked();
+    await expect(page.getByLabel('הצגת חזרה', { exact: true })).not.toBeChecked();
+    await page.evaluate(() => document.fonts.ready);
+    await page.screenshot({ path: '.local-artifacts/composer-settings-desktop.png' });
+
+    // Fresh context has no local storage. Only the account session is shared.
+    const phoneContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'he-IL', timezoneId: 'Asia/Jerusalem', storageState: { cookies: (await page.context().storageState()).cookies, origins: [] } });
+    try {
+      const phone = await phoneContext.newPage();
+      await phone.goto(at('/app/today'));
+      await phone.locator('button.mobile-add').click();
+      const composer = phone.getByTestId('task-composer');
+      await expect(composer.locator('[data-composer-field]')).toHaveCount(3);
+      await expect(composer.locator('[data-composer-field]').first()).toHaveAttribute('data-composer-field', 'project');
+      await expect(composer.getByRole('button', { name: /^בחירת עדיפות,/ })).toHaveText('');
+      await composer.getByLabel('משימה חדשה', { exact: true }).fill('משימה עם שדות מוסתרים');
+      await composer.getByRole('button', { name: /^פרטים נוספים/ }).click();
+      await phone.getByTestId('composer-properties').getByRole('button', { name: /^חזרה/ }).click();
+      await phone.getByRole('button', { name: 'כל יום', exact: true }).click();
+      await composer.getByRole('button', { name: /^פרטים נוספים/ }).click();
+      await phone.getByTestId('composer-properties').getByRole('button', { name: /^מועד הגשה/ }).click();
+      await phone.getByTestId('date-picker').getByRole('button', { name: 'היום', exact: true }).click();
+      await expect(composer.getByRole('button', { name: /^פרטים נוספים/ })).toContainText('2');
+      await composer.getByRole('button', { name: 'הוספה', exact: true }).click();
+      await expect(composer.getByLabel('משימה חדשה', { exact: true })).toHaveValue('');
+      await phone.keyboard.press('Escape');
+      await phone.reload();
+      await phone.getByRole('button', { name: 'פתיחת משימה עם שדות מוסתרים', exact: true }).click();
+      await expect(phone.getByRole('group', { name: 'חזרה', exact: true })).toContainText('כל יום');
+      await expect(phone.getByRole('group', { name: 'מועד הגשה', exact: true })).toContainText('היום');
+    } finally { await phoneContext.close(); }
+
+    // Date and project can also be hidden; their real pickers stay in More.
+    await page.goto(at('/app/settings/quick-add'));
+    for (const label of ['פרויקט', 'תאריך', 'עדיפות']) await page.getByLabel(`הצגת ${label}`, { exact: true }).uncheck();
+    await page.getByRole('button', { name: 'שמירת שינויים', exact: true }).click();
+    await expect(page.getByText('נשמר', { exact: true })).toBeVisible();
+    await page.setViewportSize({ width: 320, height: 844 });
+    await page.goto(at('/app/today'));
+    await page.locator('button.mobile-add').click();
+    const composer = page.getByTestId('task-composer');
+    await expect(composer.locator('[data-composer-field]')).toHaveCount(0);
+    await composer.getByLabel('משימה חדשה', { exact: true }).fill('בחירה מתוך עוד');
+    await composer.getByRole('button', { name: /^פרטים נוספים/ }).click();
+    await page.getByTestId('composer-properties').getByRole('button', { name: /^תאריך/ }).click();
+    let bounds = (await page.locator('[data-radix-popper-content-wrapper]').last().boundingBox())!;
+    expect(bounds.x).toBeGreaterThanOrEqual(12);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(308);
+    await page.getByTestId('date-picker').getByRole('button', { name: /^מחר/ }).click();
+    await composer.getByRole('button', { name: /^פרטים נוספים/ }).click();
+    await page.getByTestId('composer-properties').getByRole('button', { name: /^פרויקט/ }).click();
+    bounds = (await page.locator('[data-radix-popper-content-wrapper]').last().boundingBox())!;
+    expect(bounds.x).toBeGreaterThanOrEqual(12);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(308);
+    await page.getByRole('group', { name: 'פרויקטים', exact: true }).getByRole('button', { name: 'עבודה', exact: true }).click();
+    await composer.getByRole('button', { name: /^פרטים נוספים/ }).click();
+    await page.getByRole('link', { name: 'התאמת השדות', exact: true }).click();
+    await expect(page).toHaveURL(/settings\/quick-add/);
+    await page.getByRole('button', { name: 'ברירת מחדל', exact: true }).click();
+    await page.getByRole('button', { name: 'שמירת שינויים', exact: true }).click();
+    await expect(page.getByText('נשמר', { exact: true })).toBeVisible();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(at('/app/today'));
+    await page.getByRole('button', { name: /^משימה חדשה/ }).click();
+    await expect(page.getByTestId('task-composer').locator('[data-composer-field]')).toHaveCount(6);
+    await expect(page.getByTestId('task-composer').getByRole('button', { name: /^בחירת עדיפות,/ })).toHaveText('עדיפות');
   });
 
   test('clears an inherited day and project, and really saves an undated Inbox task', async ({ page }) => {
@@ -586,6 +664,15 @@ test.describe('composer pickers', () => {
     await composer.getByLabel('משימה חדשה', { exact: true }).fill('לסיים מצגת מחר בשעה 14:30 #עבודה !1');
     await expect(composer.getByRole('button', { name: /^בחירת תאריך/ })).toContainText('מחר');
     await expect(composer.getByRole('button', { name: /^בחירת פרויקט/ })).toContainText('עבודה');
+    for (const name of [/^בחירת תאריך,/, /^בחירת פרויקט,/, /^בחירת עדיפות,/, /^בחירת מועד הגשה,/, /^בחירת תוויות,/, /^בחירת חזרה,/, /^פרטים נוספים/]) {
+      await composer.getByRole('button', { name }).click();
+      const bounds = (await page.locator('[data-radix-popper-content-wrapper]').last().boundingBox())!;
+      expect(bounds.x).toBeGreaterThanOrEqual(12);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(308);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.keyboard.press('Escape');
+      await expect(composer.getByLabel('משימה חדשה', { exact: true })).toHaveValue('לסיים מצגת מחר בשעה 14:30 #עבודה !1');
+    }
     await composer.getByRole('button', { name: /^פרטים נוספים/ }).click();
     await page.keyboard.press('Escape');
     await expect(composer).toBeVisible();
@@ -595,6 +682,9 @@ test.describe('composer pickers', () => {
     const box = (await picker.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(320);
+    const outer = (await picker.locator('..').boundingBox())!;
+    expect(outer.x).toBeGreaterThanOrEqual(12);
+    expect(outer.x + outer.width).toBeLessThanOrEqual(308);
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: '.local-artifacts/composer-mobile-picker.png' });
     await picker.getByRole('button', { name: 'היום', exact: true }).click();

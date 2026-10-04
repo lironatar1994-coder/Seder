@@ -31,6 +31,10 @@ model User {
   /// src/lib/constants.ts.
   defaultView String @default("today")
 
+  /// Ordered Quick Add fields and icon/text preference, shared across devices.
+  /// Null uses the complete default row; explicit empty fields means More only.
+  composerPreferences String?
+
   /// Israeli mobile in local form, "0541234567". Unique because an inbound
   /// WhatsApp message has to resolve to exactly one account — two people
   /// sharing a number would make "whose Inbox does this go to" unanswerable.

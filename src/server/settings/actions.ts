@@ -6,6 +6,7 @@ import { db } from '@/server/db';
 import { requireSession, destroyCurrentSession } from '@/server/auth/session';
 import { hashPassword, verifyPassword } from '@/server/auth/password';
 import { nameSchema, passwordSchema, viewSlugSchema } from '@/lib/validation';
+import { composerPreferencesSchema } from '@/lib/composer-preferences';
 
 export interface SettingsState {
   errors?: Record<string, string>;
@@ -39,6 +40,15 @@ export async function updateDefaultViewAction(slug: string): Promise<SettingsSta
   if (!parsed.success) return { errors: { defaultView: 'תצוגה לא מוכרת' } };
 
   await db.user.update({ where: { id: user.id }, data: { defaultView: parsed.data } });
+  refresh();
+  return { saved: true };
+}
+
+export async function updateComposerPreferencesAction(value: unknown): Promise<SettingsState> {
+  const { user } = await requireSession();
+  const parsed = composerPreferencesSchema.safeParse(value);
+  if (!parsed.success) return { errors: { composer: 'הבחירה לא תקינה. נסו לבחור שוב.' } };
+  await db.user.update({ where: { id: user.id }, data: { composerPreferences: JSON.stringify(parsed.data) } });
   refresh();
   return { saved: true };
 }

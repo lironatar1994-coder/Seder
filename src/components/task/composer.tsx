@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { ArrowUp, CalendarDays, Check, Folder, Inbox, MoreHorizontal, X } from 'lucide-react';
+import { ArrowUp, Check, Folder, Inbox, MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { parseQuickAdd, type ParsedToken, type TokenKind } from '@/lib/quick-add-parser';
 import { quickAddAction, type QuickAddContext } from '@/server/tasks/actions';
@@ -11,6 +11,11 @@ import { DatePickerPanel, type WhenValue } from '@/components/calendar/date-pick
 import { relativeDayLabel, today } from '@/lib/dates';
 import { quickAddSchedule, reconcileQuickAddSelection, withoutQuickAddTokens, type QuickAddSelection } from '@/lib/quick-add-selection';
 import { ComposerProperties } from './composer-properties';
+import { useComposerPreferences } from './composer-preferences';
+import { COMPOSER_FIELD_DETAILS } from './composer-fields';
+import { COMPOSER_FIELDS, type ComposerField } from '@/lib/composer-preferences';
+import { PRIORITY_LABELS } from '@/lib/constants';
+import { describeStored } from '@/lib/recurrence';
 
 export interface ComposerProject { id: string; name: string; color: string }
 
@@ -70,7 +75,7 @@ function segment(text: string, tokens: ParsedToken[]): Segment[] {
   return out;
 }
 
-/** Hebrew sentence capture, with date and project pickers and optional details. */
+/** Hebrew sentence capture with account-configurable, direct attribute pickers. */
 export function Composer({
   context,
   vocabulary,
@@ -98,6 +103,7 @@ export function Composer({
   const [dateOpen, setDateOpen] = useState(false);
   const [projectOpen, setProjectOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [propertyOpen, setPropertyOpen] = useState<ComposerField | null>(null);
   const [projectSearch, setProjectSearch] = useState('');
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +111,7 @@ export function Composer({
   const caretRef = useRef<number | null>(null);
   const { toast } = useToast();
   const sheet = variant === 'sheet';
+  const preferences = useComposerPreferences();
 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus();
@@ -136,9 +143,13 @@ export function Composer({
   const priority = selection.priority ?? parsed.priority;
   const labelNames = selection.labelNames ?? parsed.labelNames;
   const recurrence = selection.recurrence !== undefined ? selection.recurrence : parsed.recurrence;
-  const extraCount = Number(Boolean(deadline)) + Number(priority !== 4) + Number(labelNames.length > 0) + Number(Boolean(recurrence));
+  const hiddenFields = COMPOSER_FIELDS.filter(field => !preferences.fields.includes(field));
+  const selectedFields: Record<ComposerField, boolean> = { date: Boolean(schedule.date || schedule.bucket === 'SOMEDAY'), project: Boolean(projectName), priority: priority !== 4, deadline: Boolean(deadline), labels: labelNames.length > 0, repeat: Boolean(recurrence) };
+  const extraCount = hiddenFields.filter(field => selectedFields[field]).length;
   const filteredProjects = projects.filter(project => project.name.toLocaleLowerCase().includes(projectSearch.toLocaleLowerCase()));
   const controlClass = 'inline-flex h-9 min-w-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-sm text-ink-2 transition-colors hover:bg-surface-2 disabled:opacity-50 [@media(pointer:coarse)]:h-11';
+  // Width includes the popover's padding, not just its calendar/list child.
+  const pickerClass = 'max-w-[calc(100vw-1.5rem)] [&_[data-testid=date-picker]]:max-w-full [&_[data-testid=composer-properties]]:max-w-full';
 
   function choose(kinds: TokenKind[], value: Partial<QuickAddSelection>) {
     const next = withoutQuickAddTokens(text, parsed, kinds);
@@ -148,6 +159,7 @@ export function Composer({
   function chooseSchedule(value: WhenValue) {
     choose(['date', 'bucket', 'time'], { schedule: value });
     setDateOpen(false);
+    setMoreOpen(false);
   }
   function type(value: string) {
     setSelection(current => reconcileQuickAddSelection(parsed, parseQuickAdd(value, new Date(), vocabulary), current));
@@ -207,6 +219,34 @@ export function Composer({
   }
 
   const ready = Boolean(parsed?.title) && !pending;
+
+  const datePicker = <DatePickerPanel value={schedule.date} bucket={schedule.bucket} time={schedule.time} onPick={chooseSchedule}
+    onClear={() => chooseSchedule({ bucket: 'ANYTIME', date: null, time: null })} />;
+  function pickProject(id: string | null) { choose(['project'], { projectId: id }); setProjectOpen(false); setMoreOpen(false); setProjectSearch(''); }
+  const projectPicker = <>
+    <input dir="auto" aria-label="חיפוש פרויקטים" placeholder="חיפוש פרויקט" value={projectSearch} onChange={event => setProjectSearch(event.target.value)} className="mb-2 h-11 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink" />
+    <div className="max-h-64 overflow-y-auto" role="group" aria-label="פרויקטים">
+      <button type="button" aria-pressed={!projectName} onClick={() => pickProject(null)} className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-ink hover:bg-surface-2"><Inbox className="size-4 text-muted" aria-hidden /><span className="flex-1">תיבה נכנסת</span>{!projectName && <Check className="size-4 text-accent" aria-hidden />}</button>
+      {filteredProjects.map(project => <button key={project.id} type="button" aria-pressed={project.id === projectId} onClick={() => pickProject(project.id)} className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-ink hover:bg-surface-2"><Folder className="size-4 shrink-0 text-muted" aria-hidden /><span dir="auto" className="min-w-0 flex-1 truncate">{project.name}</span>{project.id === projectId && <Check className="size-4 shrink-0 text-accent" aria-hidden />}</button>)}
+      {projectSearch && !filteredProjects.length && <p className="px-2 py-3 text-sm text-muted">לא נמצאו פרויקטים</p>}
+    </div>
+  </>;
+  function properties(initialPage: 'root' | ComposerField = 'root') {
+    return <ComposerProperties initialPage={initialPage} fields={hiddenFields} datePicker={datePicker} projectPicker={projectPicker} dateLabel={`${dateLabel}${schedule.time ? ` ${schedule.time}` : ''}`} projectName={projectName ?? 'תיבה נכנסת'}
+      deadline={deadline ?? null} priority={priority} labels={labelNames} knownLabels={vocabulary?.labels ?? []} recurrence={recurrence} date={schedule.date}
+      onDeadline={value => choose(['deadline'], { deadline: value })}
+      onPriority={value => choose(['priority'], { priority: value })}
+      onLabels={value => choose(['label'], { labelNames: value })}
+      onRecurrence={value => choose(['recurrence'], { recurrence: value })}
+      onClose={() => { setMoreOpen(false); setPropertyOpen(null); setProjectSearch(''); }} />;
+  }
+  const fieldValues: Record<ComposerField, string> = {
+    date: dateLabel, project: projectName ?? 'תיבה נכנסת',
+    priority: priority === 4 ? 'עדיפות' : PRIORITY_LABELS[priority],
+    deadline: deadline ? `עד ${relativeDayLabel(new Date(`${deadline}T00:00:00.000Z`))}` : 'מועד הגשה',
+    labels: labelNames.length ? `${labelNames[0]}${labelNames.length > 1 ? ` +${labelNames.length - 1}` : ''}` : 'תוויות',
+    repeat: describeStored(recurrence) ?? 'חזרה',
+  };
 
   return (
     <form
@@ -323,50 +363,42 @@ export function Composer({
         {chips.map((token) => token.display).join(' · ')}
       </p>
 
-      <div className="mt-3 flex items-center gap-1.5" data-testid="composer-controls">
-        <Popover open={dateOpen} onOpenChange={setDateOpen}>
+      <div className="mt-3 flex flex-wrap items-center gap-1.5" data-testid="composer-controls">
+        {preferences.fields.map(field => {
+          const { label, icon: FieldIcon } = COMPOSER_FIELD_DETAILS[field];
+          const Icon = field === 'project' && !projectName ? Inbox : FieldIcon;
+          const open = field === 'date' ? dateOpen : field === 'project' ? projectOpen : propertyOpen === field;
+          function setOpen(next: boolean) {
+            if (field === 'date') setDateOpen(next);
+            else if (field === 'project') { setProjectOpen(next); if (!next) setProjectSearch(''); }
+            else setPropertyOpen(next ? field : null);
+          }
+          const accessible = `בחירת ${label}, ${fieldValues[field]}${field === 'date' && schedule.time ? ` ${schedule.time}` : ''}`;
+          return <Popover key={field} open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <button type="button" disabled={pending} aria-label={accessible} title={accessible} data-composer-field={field}
+                className={cn(controlClass, 'max-w-full', preferences.showLabels ? 'max-w-56' : 'justify-center px-2.5', selectedFields[field] && 'text-accent')}>
+                <Icon className="size-4 shrink-0" style={field === 'priority' && priority !== 4 ? { color: `var(--p${priority})` } : undefined} aria-hidden />
+                {preferences.showLabels && <span dir="auto" className="min-w-0 truncate">{fieldValues[field]}</span>}
+                {field === 'date' && schedule.time && <span dir="ltr" className="num shrink-0 text-xs">{schedule.time}</span>}
+                {!preferences.showLabels && field === 'labels' && labelNames.length > 0 && <span className="num text-xs">{labelNames.length}</span>}
+                {!preferences.showLabels && field === 'priority' && priority !== 4 && <span className="num text-xs">{priority}</span>}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent aria-label={`${label} המשימה`} className={cn(pickerClass, field === 'project' && 'w-72')} side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput} onEscapeKeyDown={stopPickerKey} onKeyDown={stopPickerKey}>
+              {field === 'date' ? datePicker : field === 'project' ? projectPicker : properties(field)}
+            </PopoverContent>
+          </Popover>;
+        })}
+        <Popover open={moreOpen} onOpenChange={open => { setMoreOpen(open); if (!open) setProjectSearch(''); }}>
           <PopoverTrigger asChild>
-            <button type="button" disabled={pending} aria-label={`בחירת תאריך, ${dateLabel}${schedule.time ? ` ${schedule.time}` : ''}`} className={cn(controlClass, 'max-w-[48%]', schedule.date && 'text-accent')}>
-              <CalendarDays className="size-4 shrink-0" aria-hidden />
-              <span className="truncate">{dateLabel}</span>
-              {schedule.time && <span dir="ltr" className="num shrink-0 text-xs">{schedule.time}</span>}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent aria-label="תאריך המשימה" onCloseAutoFocus={restoreInput} side={sheet ? 'top' : 'bottom'} onEscapeKeyDown={stopPickerKey} onKeyDown={stopPickerKey}>
-            <DatePickerPanel value={schedule.date} bucket={schedule.bucket} time={schedule.time} onPick={chooseSchedule}
-              onClear={() => chooseSchedule({ bucket: 'ANYTIME', date: null, time: null })} />
-          </PopoverContent>
-        </Popover>
-        <Popover open={projectOpen} onOpenChange={open => { setProjectOpen(open); if (!open) setProjectSearch(''); }}>
-          <PopoverTrigger asChild>
-            <button type="button" disabled={pending} aria-label={`בחירת פרויקט, ${projectName ?? 'תיבה נכנסת'}`} className={cn(controlClass, 'max-w-[42%]')}>
-              {projectName ? <Folder className="size-4 shrink-0" aria-hidden /> : <Inbox className="size-4 shrink-0" aria-hidden />}
-              <span dir="auto" className="truncate">{projectName ?? 'תיבה נכנסת'}</span>
-            </button>
-          </PopoverTrigger>
-          <PopoverContent aria-label="פרויקט המשימה" className="w-72" side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput} onEscapeKeyDown={stopPickerKey} onKeyDown={stopPickerKey}>
-            <input dir="auto" aria-label="חיפוש פרויקטים" placeholder="חיפוש פרויקט" value={projectSearch} onChange={event => setProjectSearch(event.target.value)} className="mb-2 h-11 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink" />
-            <div className="max-h-64 overflow-y-auto" role="group" aria-label="פרויקטים">
-              <button type="button" aria-pressed={!projectName} onClick={() => { choose(['project'], { projectId: null }); setProjectOpen(false); }} className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-ink hover:bg-surface-2"><Inbox className="size-4 text-muted" aria-hidden /><span className="flex-1">תיבה נכנסת</span>{!projectName && <Check className="size-4 text-accent" aria-hidden />}</button>
-              {filteredProjects.map(project => <button key={project.id} type="button" aria-pressed={project.id === projectId} onClick={() => { choose(['project'], { projectId: project.id }); setProjectOpen(false); }} className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-ink hover:bg-surface-2"><Folder className="size-4 shrink-0 text-muted" aria-hidden /><span dir="auto" className="min-w-0 flex-1 truncate">{project.name}</span>{project.id === projectId && <Check className="size-4 shrink-0 text-accent" aria-hidden />}</button>)}
-              {projectSearch && !filteredProjects.length && <p className="px-2 py-3 text-sm text-muted">לא נמצאו פרויקטים</p>}
-            </div>
-          </PopoverContent>
-        </Popover>
-        <Popover open={moreOpen} onOpenChange={setMoreOpen}>
-          <PopoverTrigger asChild>
-            <button type="button" disabled={pending} aria-label={extraCount ? `פרטים נוספים, ${extraCount} נבחרו` : 'פרטים נוספים'} className={cn(controlClass, 'shrink-0 border-transparent px-2')}>
-              <MoreHorizontal className="size-4 shrink-0" aria-hidden /><span className="hidden sm:inline">עוד</span>
+            <button type="button" disabled={pending} aria-label={extraCount ? `פרטים נוספים, ${extraCount} נבחרו` : 'פרטים נוספים'} title="פרטים נוספים והתאמת השדות" className={cn(controlClass, 'shrink-0 border-transparent px-2')}>
+              <MoreHorizontal className="size-4 shrink-0" aria-hidden />{preferences.showLabels && <span>עוד</span>}
               {extraCount > 0 && <span className="num text-xs text-accent">{extraCount}</span>}
             </button>
           </PopoverTrigger>
-          <PopoverContent aria-label="פרטים נוספים למשימה" side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput} onEscapeKeyDown={stopPickerKey} onKeyDown={stopPickerKey}>
-            <ComposerProperties deadline={deadline ?? null} priority={priority} labels={labelNames} knownLabels={vocabulary?.labels ?? []} recurrence={recurrence} date={schedule.date}
-              onDeadline={value => choose(['deadline'], { deadline: value })}
-              onPriority={value => choose(['priority'], { priority: value })}
-              onLabels={value => choose(['label'], { labelNames: value })}
-              onRecurrence={value => choose(['recurrence'], { recurrence: value })}
-              onClose={() => setMoreOpen(false)} />
+          <PopoverContent aria-label="פרטים נוספים למשימה" className={pickerClass} side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput} onEscapeKeyDown={stopPickerKey} onKeyDown={stopPickerKey}>
+            {properties()}
           </PopoverContent>
         </Popover>
         {!sheet && onClose && <button type="button" aria-label="ביטול" onClick={onClose} className="ms-auto grid size-9 shrink-0 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-ink [@media(pointer:coarse)]:size-11"><X className="size-4" aria-hidden /></button>}

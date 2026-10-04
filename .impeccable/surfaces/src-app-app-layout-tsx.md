@@ -99,3 +99,12 @@ Enter/Escape and accessible cancellation remain. Evidence uses synthetic account
 .local-artifacts/composer-desktop.png, composer-mobile.png and composer-mobile-picker.png.
 Three focused browser cases and ten pure selection cases passed. Full regression and
 production verification remain separate gates recorded in the release evidence.
+
+
+Current capture direction (user correction, 2026-10-04): expose all six supported
+fields by default, with direct pickers and concise selected values. The new capture
+settings page inherits the settings shell: open rows, preview, visibility controls,
+accessible order arrows, text/icon choice, Save and restore defaults. Store validated
+preferences per account, not per device. More preserves every hidden picker and selected
+hidden-field count. Wrap the field row at phone widths. This supersedes the minimal
+Date/Project/More default described above while preserving its real picker behavior.

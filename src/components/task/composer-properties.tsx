@@ -1,19 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronRight, Flag, Repeat, Tag, X } from 'lucide-react';
+import { CalendarDays, Check, ChevronRight, Flag, Folder, Repeat, Settings2, Tag, X } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import { PRIORITIES, PRIORITY_LABELS, type Priority } from '@/lib/constants';
 import { relativeDayLabel, today } from '@/lib/dates';
 import { describeStored, recurrencePresets } from '@/lib/recurrence';
 import { DatePickerPanel } from '@/components/calendar/date-picker';
 import { labelSchema } from '@/lib/validation';
+import type { ComposerField } from '@/lib/composer-preferences';
 
-type PropertyPage = 'root' | 'deadline' | 'priority' | 'labels' | 'repeat';
+type PropertyPage = 'root' | ComposerField;
 
-/** One overlay, with a back path, keeps optional details off the capture row.
+/** Shared picker pages serve both visible capture fields and hidden fields in More.
  * Avoid flyout menus on phones: these selectors share the same anchored panel. */
-export function ComposerProperties({ deadline, priority, labels, knownLabels, recurrence, date, onDeadline, onPriority, onLabels, onRecurrence, onClose }: {
+export function ComposerProperties({ initialPage = 'root', fields = ['priority', 'deadline', 'labels', 'repeat'], datePicker, projectPicker, dateLabel, projectName, deadline, priority, labels, knownLabels, recurrence, date, onDeadline, onPriority, onLabels, onRecurrence, onClose }: {
+  initialPage?: PropertyPage;
+  fields?: readonly ComposerField[];
+  datePicker?: React.ReactNode;
+  projectPicker?: React.ReactNode;
+  dateLabel?: string;
+  projectName?: string;
   deadline: string | null;
   priority: Priority;
   labels: string[];
@@ -26,28 +34,33 @@ export function ComposerProperties({ deadline, priority, labels, knownLabels, re
   onRecurrence: (value: string | null) => void;
   onClose: () => void;
 }) {
-  const [page, setPage] = useState<PropertyPage>('root');
+  const [page, setPage] = useState<PropertyPage>(initialPage);
   const [search, setSearch] = useState('');
   const names = [...new Set([...knownLabels, ...labels])].filter(name => name.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const newLabel = search.trim();
   const canCreate = labelSchema.shape.name.safeParse(newLabel).success && ![...knownLabels, ...labels].includes(newLabel);
   const reference = date ? new Date(`${date}T00:00:00.000Z`) : today();
-  const titles: Record<PropertyPage, string> = { root: 'פרטים נוספים', deadline: 'מועד הגשה', priority: 'עדיפות', labels: 'תוויות', repeat: 'חזרה' };
+  const titles: Record<PropertyPage, string> = { root: 'פרטים נוספים', date: 'תאריך', project: 'פרויקט', deadline: 'מועד הגשה', priority: 'עדיפות', labels: 'תוויות', repeat: 'חזרה' };
   const choose = (action: () => void) => { action(); onClose(); };
   const itemClass = 'flex min-h-11 w-full items-center gap-2.5 rounded-md px-2 text-start text-sm text-ink hover:bg-surface-2';
 
   return <div className="w-72" data-testid="composer-properties">
     <div className="mb-2 flex min-h-9 items-center gap-2">
-      {page !== 'root' && <button type="button" aria-label="חזרה לפרטים נוספים" onClick={() => setPage('root')} className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-2"><ChevronRight className="size-4" aria-hidden /></button>}
+      {initialPage === 'root' && page !== 'root' && <button type="button" aria-label="חזרה לפרטים נוספים" onClick={() => setPage('root')} className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-2"><ChevronRight className="size-4" aria-hidden /></button>}
       <h3 className="flex-1 text-sm font-semibold text-ink">{titles[page]}</h3>
       <button type="button" aria-label="סגירת פרטים נוספים" onClick={onClose} className="grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-surface-2"><X className="size-4" aria-hidden /></button>
     </div>
     {page === 'root' && <div>
-      <button type="button" onClick={() => setPage('priority')} className={itemClass}><Flag className="size-4 shrink-0" aria-hidden /><span>עדיפות</span><span className="ms-auto truncate text-muted">{PRIORITY_LABELS[priority]}</span></button>
-      <button type="button" onClick={() => setPage('deadline')} className={itemClass}><Flag className="size-4 shrink-0" aria-hidden /><span>מועד הגשה</span><span className="ms-auto truncate text-muted">{deadline ? relativeDayLabel(new Date(`${deadline}T00:00:00.000Z`)) : 'ללא'}</span></button>
-      <button type="button" onClick={() => setPage('labels')} className={itemClass}><Tag className="size-4 shrink-0" aria-hidden /><span>תוויות</span><span className="ms-auto max-w-36 truncate text-muted">{labels.length ? labels.join(', ') : 'ללא'}</span></button>
-      <button type="button" onClick={() => setPage('repeat')} className={itemClass}><Repeat className="size-4 shrink-0" aria-hidden /><span>חזרה</span><span className="ms-auto truncate text-muted">{recurrence ? describeStored(recurrence) : 'ללא'}</span></button>
+      {fields.includes('date') && <button type="button" onClick={() => setPage('date')} className={itemClass}><CalendarDays className="size-4 shrink-0" aria-hidden /><span>תאריך</span><span className="ms-auto truncate text-muted">{dateLabel}</span></button>}
+      {fields.includes('project') && <button type="button" onClick={() => setPage('project')} className={itemClass}><Folder className="size-4 shrink-0" aria-hidden /><span>פרויקט</span><span dir="auto" className="ms-auto max-w-36 truncate text-muted">{projectName}</span></button>}
+      {fields.includes('priority') && <button type="button" onClick={() => setPage('priority')} className={itemClass}><Flag className="size-4 shrink-0" aria-hidden /><span>עדיפות</span><span className="ms-auto truncate text-muted">{PRIORITY_LABELS[priority]}</span></button>}
+      {fields.includes('deadline') && <button type="button" onClick={() => setPage('deadline')} className={itemClass}><Flag className="size-4 shrink-0" aria-hidden /><span>מועד הגשה</span><span className="ms-auto truncate text-muted">{deadline ? relativeDayLabel(new Date(`${deadline}T00:00:00.000Z`)) : 'ללא'}</span></button>}
+      {fields.includes('labels') && <button type="button" onClick={() => setPage('labels')} className={itemClass}><Tag className="size-4 shrink-0" aria-hidden /><span>תוויות</span><span className="ms-auto max-w-36 truncate text-muted">{labels.length ? labels.join(', ') : 'ללא'}</span></button>}
+      {fields.includes('repeat') && <button type="button" onClick={() => setPage('repeat')} className={itemClass}><Repeat className="size-4 shrink-0" aria-hidden /><span>חזרה</span><span className="ms-auto truncate text-muted">{recurrence ? describeStored(recurrence) : 'ללא'}</span></button>}
+      <Link href="/app/settings/quick-add" className={cn(itemClass, fields.length > 0 && 'mt-2 border-bs border-line pt-2')}><Settings2 className="size-4 shrink-0" aria-hidden />התאמת השדות</Link>
     </div>}
+    {page === 'date' && datePicker}
+    {page === 'project' && projectPicker}
     {page === 'deadline' && <DatePickerPanel value={deadline} variant="deadline" onPick={value => choose(() => onDeadline(value.date ?? null))} onClear={() => choose(() => onDeadline(null))} />}
     {page === 'priority' && PRIORITIES.map(value => <button key={value} type="button" aria-pressed={value === priority} onClick={() => choose(() => onPriority(value))} className={itemClass}><Flag className="size-4" style={{ color: `var(--p${value})` }} aria-hidden /><span className="flex-1">{PRIORITY_LABELS[value]}</span>{value === priority && <Check className="size-4 text-accent" aria-hidden />}</button>)}
     {page === 'repeat' && <>

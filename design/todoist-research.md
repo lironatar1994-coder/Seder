@@ -65,3 +65,21 @@ membership remain mandatory. Saving an hour inside the portalled editor must nev
 the task. Focused browser checks cover these interactions, saved attributes and 320px.
 
 Post-release keyboard check: isolate picker keyboard events from the underlying list and calendar. Escape dismisses only the active picker and preserves the composer draft, including on the phone sheet. Native capture-phase dismissal requires its own propagation guard. Scoped regressions cover date/project Escape, phone More Escape, time editing and surrounding list/board/mobile workflows.
+
+
+## Configurable expanded capture — 2026-10-04
+
+The user corrected the minimal default: show more choices initially and allow later
+customization in Settings. [Todoist's Quick Add customization](https://www.todoist.com/zh-CN/help/todoist/features/customize-quick-add-in-todoist-eqRRlZJNN)
+(last updated 2026-09-16) documents field visibility, order, text/icon labels,
+access to hidden actions through More and preferences shared across platforms.
+
+Seder now defaults to all six supported fields: schedule (including hour), project,
+priority, deadline, labels and recurrence. Each visible field opens its real picker
+directly. `/app/settings/quick-add` provides a preview, visibility checkboxes, accessible
+up/down ordering, text/icon choice, explicit Save and default restoration. Preferences
+are stored on the authenticated account with an additive nullable migration; missing
+or malformed settings fall back to the complete labeled row. Hidden fields remain
+functional in More, which counts selected hidden fields and links to customization.
+All pickers retain natural-language reconciliation and keyboard isolation. Controls
+wrap on phones; text remains concise and no syntax-offer strip returns.
