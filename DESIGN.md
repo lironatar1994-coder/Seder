@@ -56,7 +56,6 @@ typography:
     fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 600
-    lineHeight: 1.5
     letterSpacing: "normal"
   metadata:
     fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"

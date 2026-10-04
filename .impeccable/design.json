@@ -1,0 +1,735 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T08:06:12.765Z",
+  "title": "Design System: סדר",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Cool Paper",
+        "canonical": "light-dark(oklch(97.4% calc(var(--accent-c) * 0.045) var(--accent-h)), oklch(14.5% calc(var(--accent-c-dark) * 0.06) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.00855 268)",
+          "oklch(26% 0.00855 268)",
+          "oklch(38% 0.00855 268)",
+          "oklch(49% 0.00855 268)",
+          "oklch(61% 0.00855 268)",
+          "oklch(72% 0.00855 268)",
+          "oklch(84% 0.00855 268)",
+          "oklch(95% 0.00855 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "White Work Surface",
+        "canonical": "light-dark(oklch(100% 0 0), oklch(19.5% 0.009 268))",
+        "tonalRamp": [
+          "oklch(15% 0 268)",
+          "oklch(26% 0 268)",
+          "oklch(38% 0 268)",
+          "oklch(49% 0 268)",
+          "oklch(61% 0 268)",
+          "oklch(72% 0 268)",
+          "oklch(84% 0 268)",
+          "oklch(95% 0 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Quiet Layer",
+        "canonical": "light-dark(oklch(95.8% 0.005 265), oklch(24% 0.01 268))",
+        "tonalRamp": [
+          "oklch(15% 0.005 265)",
+          "oklch(26% 0.005 265)",
+          "oklch(38% 0.005 265)",
+          "oklch(49% 0.005 265)",
+          "oklch(61% 0.005 265)",
+          "oklch(72% 0.005 265)",
+          "oklch(84% 0.005 265)",
+          "oklch(95% 0.005 265)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "surface-sunk": {
+        "role": "neutral",
+        "displayName": "Recessed Layer",
+        "canonical": "light-dark(oklch(94.6% 0.006 265), oklch(11.5% 0.007 268))",
+        "tonalRamp": [
+          "oklch(15% 0.006 265)",
+          "oklch(26% 0.006 265)",
+          "oklch(38% 0.006 265)",
+          "oklch(49% 0.006 265)",
+          "oklch(61% 0.006 265)",
+          "oklch(72% 0.006 265)",
+          "oklch(84% 0.006 265)",
+          "oklch(95% 0.006 265)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "light-dark(oklch(17.5% 0.008 270), oklch(93% 0.005 268))",
+        "tonalRamp": [
+          "oklch(15% 0.008 270)",
+          "oklch(26% 0.008 270)",
+          "oklch(38% 0.008 270)",
+          "oklch(49% 0.008 270)",
+          "oklch(61% 0.008 270)",
+          "oklch(72% 0.008 270)",
+          "oklch(84% 0.008 270)",
+          "oklch(95% 0.008 270)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Secondary Ink",
+        "canonical": "light-dark(oklch(33.5% 0.014 265), oklch(78% 0.011 268))",
+        "tonalRamp": [
+          "oklch(15% 0.014 265)",
+          "oklch(26% 0.014 265)",
+          "oklch(38% 0.014 265)",
+          "oklch(49% 0.014 265)",
+          "oklch(61% 0.014 265)",
+          "oklch(72% 0.014 265)",
+          "oklch(84% 0.014 265)",
+          "oklch(95% 0.014 265)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "light-dark(oklch(47.5% 0.019 265), oklch(63% 0.016 268))",
+        "tonalRamp": [
+          "oklch(15% 0.019 265)",
+          "oklch(26% 0.019 265)",
+          "oklch(38% 0.019 265)",
+          "oklch(49% 0.019 265)",
+          "oklch(61% 0.019 265)",
+          "oklch(72% 0.019 265)",
+          "oklch(84% 0.019 265)",
+          "oklch(95% 0.019 265)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "light-dark(oklch(91.5% 0.005 265), oklch(25.5% 0.01 268))",
+        "tonalRamp": [
+          "oklch(15% 0.005 265)",
+          "oklch(26% 0.005 265)",
+          "oklch(38% 0.005 265)",
+          "oklch(49% 0.005 265)",
+          "oklch(61% 0.005 265)",
+          "oklch(72% 0.005 265)",
+          "oklch(84% 0.005 265)",
+          "oklch(95% 0.005 265)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Control Outline",
+        "canonical": "light-dark(oklch(84% 0.011 265), oklch(33% 0.013 268))",
+        "tonalRamp": [
+          "oklch(15% 0.011 265)",
+          "oklch(26% 0.011 265)",
+          "oklch(38% 0.011 265)",
+          "oklch(49% 0.011 265)",
+          "oklch(61% 0.011 265)",
+          "oklch(72% 0.011 265)",
+          "oklch(84% 0.011 265)",
+          "oklch(95% 0.011 265)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "rail": {
+        "role": "primary",
+        "displayName": "Indigo Rail",
+        "canonical": "light-dark(oklch(28% calc(var(--accent-c) * 0.32) var(--accent-h)), oklch(11.5% calc(var(--accent-c-dark) * 0.28) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.0608 268)",
+          "oklch(26% 0.0608 268)",
+          "oklch(38% 0.0608 268)",
+          "oklch(49% 0.0608 268)",
+          "oklch(61% 0.0608 268)",
+          "oklch(72% 0.0608 268)",
+          "oklch(84% 0.0608 268)",
+          "oklch(95% 0.0608 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "rail-ink": {
+        "role": "primary",
+        "displayName": "Rail Ink",
+        "canonical": "light-dark(oklch(96% calc(var(--accent-c) * 0.05) var(--accent-h)), oklch(93% calc(var(--accent-c-dark) * 0.04) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.0095 268)",
+          "oklch(26% 0.0095 268)",
+          "oklch(38% 0.0095 268)",
+          "oklch(49% 0.0095 268)",
+          "oklch(61% 0.0095 268)",
+          "oklch(72% 0.0095 268)",
+          "oklch(84% 0.0095 268)",
+          "oklch(95% 0.0095 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "rail-muted": {
+        "role": "primary",
+        "displayName": "Rail Secondary Ink",
+        "canonical": "light-dark(oklch(74% calc(var(--accent-c) * 0.14) var(--accent-h)), oklch(66% calc(var(--accent-c-dark) * 0.12) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.0266 268)",
+          "oklch(26% 0.0266 268)",
+          "oklch(38% 0.0266 268)",
+          "oklch(49% 0.0266 268)",
+          "oklch(61% 0.0266 268)",
+          "oklch(72% 0.0266 268)",
+          "oklch(84% 0.0266 268)",
+          "oklch(95% 0.0266 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "rail-line": {
+        "role": "primary",
+        "displayName": "Rail Divider",
+        "canonical": "light-dark(oklch(35% calc(var(--accent-c) * 0.3) var(--accent-h)), oklch(19% calc(var(--accent-c-dark) * 0.25) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.057 268)",
+          "oklch(26% 0.057 268)",
+          "oklch(38% 0.057 268)",
+          "oklch(49% 0.057 268)",
+          "oklch(61% 0.057 268)",
+          "oklch(72% 0.057 268)",
+          "oklch(84% 0.057 268)",
+          "oklch(95% 0.057 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "rail-hover": {
+        "role": "primary",
+        "displayName": "Rail Hover",
+        "canonical": "light-dark(oklch(33.5% calc(var(--accent-c) * 0.34) var(--accent-h)), oklch(16.5% calc(var(--accent-c-dark) * 0.3) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.0646 268)",
+          "oklch(26% 0.0646 268)",
+          "oklch(38% 0.0646 268)",
+          "oklch(49% 0.0646 268)",
+          "oklch(61% 0.0646 268)",
+          "oklch(72% 0.0646 268)",
+          "oklch(84% 0.0646 268)",
+          "oklch(95% 0.0646 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "rail-active": {
+        "role": "primary",
+        "displayName": "Rail Current",
+        "canonical": "light-dark(oklch(39% calc(var(--accent-c) * 0.45) var(--accent-h)), oklch(22% calc(var(--accent-c-dark) * 0.42) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.0855 268)",
+          "oklch(26% 0.0855 268)",
+          "oklch(38% 0.0855 268)",
+          "oklch(49% 0.0855 268)",
+          "oklch(61% 0.0855 268)",
+          "oklch(72% 0.0855 268)",
+          "oklch(84% 0.0855 268)",
+          "oklch(95% 0.0855 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Action Indigo",
+        "canonical": "light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(70% var(--accent-c-dark) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.19 268)",
+          "oklch(26% 0.19 268)",
+          "oklch(38% 0.19 268)",
+          "oklch(49% 0.19 268)",
+          "oklch(61% 0.19 268)",
+          "oklch(72% 0.19 268)",
+          "oklch(84% 0.19 268)",
+          "oklch(95% 0.19 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Action Hover",
+        "canonical": "light-dark(oklch(44% var(--accent-c) var(--accent-h)), oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.19 268)",
+          "oklch(26% 0.19 268)",
+          "oklch(38% 0.19 268)",
+          "oklch(49% 0.19 268)",
+          "oklch(61% 0.19 268)",
+          "oklch(72% 0.19 268)",
+          "oklch(84% 0.19 268)",
+          "oklch(95% 0.19 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Action Wash",
+        "canonical": "light-dark(oklch(94.5% calc(var(--accent-c) * 0.14) var(--accent-h)), oklch(24% calc(var(--accent-c-dark) * 0.38) var(--accent-h)))",
+        "tonalRamp": [
+          "oklch(15% 0.0266 268)",
+          "oklch(26% 0.0266 268)",
+          "oklch(38% 0.0266 268)",
+          "oklch(49% 0.0266 268)",
+          "oklch(61% 0.0266 268)",
+          "oklch(72% 0.0266 268)",
+          "oklch(84% 0.0266 268)",
+          "oklch(95% 0.0266 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "on-accent": {
+        "role": "primary",
+        "displayName": "Action Foreground",
+        "canonical": "light-dark(oklch(100% 0 0), oklch(14.5% 0.008 268))",
+        "tonalRamp": [
+          "oklch(15% 0 268)",
+          "oklch(26% 0 268)",
+          "oklch(38% 0 268)",
+          "oklch(49% 0 268)",
+          "oklch(61% 0 268)",
+          "oklch(72% 0 268)",
+          "oklch(84% 0 268)",
+          "oklch(95% 0 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "flag": {
+        "role": "secondary",
+        "displayName": "Deadline Amber",
+        "canonical": "light-dark(oklch(50% 0.128 58), oklch(76% 0.13 70))",
+        "tonalRamp": [
+          "oklch(15% 0.128 58)",
+          "oklch(26% 0.128 58)",
+          "oklch(38% 0.128 58)",
+          "oklch(49% 0.128 58)",
+          "oklch(61% 0.128 58)",
+          "oklch(72% 0.128 58)",
+          "oklch(84% 0.128 58)",
+          "oklch(95% 0.128 58)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "flag-soft": {
+        "role": "secondary",
+        "displayName": "Deadline Wash",
+        "canonical": "light-dark(oklch(96% 0.024 75), oklch(24% 0.035 70))",
+        "tonalRamp": [
+          "oklch(15% 0.024 75)",
+          "oklch(26% 0.024 75)",
+          "oklch(38% 0.024 75)",
+          "oklch(49% 0.024 75)",
+          "oklch(61% 0.024 75)",
+          "oklch(72% 0.024 75)",
+          "oklch(84% 0.024 75)",
+          "oklch(95% 0.024 75)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "p1": {
+        "role": "secondary",
+        "displayName": "Urgency Red",
+        "canonical": "light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))",
+        "tonalRamp": [
+          "oklch(15% 0.17 27)",
+          "oklch(26% 0.17 27)",
+          "oklch(38% 0.17 27)",
+          "oklch(49% 0.17 27)",
+          "oklch(61% 0.17 27)",
+          "oklch(72% 0.17 27)",
+          "oklch(84% 0.17 27)",
+          "oklch(95% 0.17 27)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "p2": {
+        "role": "secondary",
+        "displayName": "Priority Amber",
+        "canonical": "light-dark(oklch(50% 0.128 58), oklch(76% 0.13 70))",
+        "tonalRamp": [
+          "oklch(15% 0.128 58)",
+          "oklch(26% 0.128 58)",
+          "oklch(38% 0.128 58)",
+          "oklch(49% 0.128 58)",
+          "oklch(61% 0.128 58)",
+          "oklch(72% 0.128 58)",
+          "oklch(84% 0.128 58)",
+          "oklch(95% 0.128 58)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "p3": {
+        "role": "secondary",
+        "displayName": "Priority Indigo",
+        "canonical": "light-dark(oklch(50% 0.19 268), oklch(70% 0.155 272))",
+        "tonalRamp": [
+          "oklch(15% 0.19 268)",
+          "oklch(26% 0.19 268)",
+          "oklch(38% 0.19 268)",
+          "oklch(49% 0.19 268)",
+          "oklch(61% 0.19 268)",
+          "oklch(72% 0.19 268)",
+          "oklch(84% 0.19 268)",
+          "oklch(95% 0.19 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "p4": {
+        "role": "secondary",
+        "displayName": "Priority Gray",
+        "canonical": "light-dark(oklch(59.5% 0.015 265), oklch(59% 0.014 268))",
+        "tonalRamp": [
+          "oklch(15% 0.015 265)",
+          "oklch(26% 0.015 265)",
+          "oklch(38% 0.015 265)",
+          "oklch(49% 0.015 265)",
+          "oklch(61% 0.015 265)",
+          "oklch(72% 0.015 265)",
+          "oklch(84% 0.015 265)",
+          "oklch(95% 0.015 265)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "swatch-teal": {
+        "role": "secondary",
+        "displayName": "Project Teal",
+        "canonical": "light-dark(#0d9488, #2dd4bf)",
+        "tonalRamp": [
+          "oklch(15% 0.14 180)",
+          "oklch(26% 0.14 180)",
+          "oklch(38% 0.14 180)",
+          "oklch(49% 0.14 180)",
+          "oklch(61% 0.14 180)",
+          "oklch(72% 0.14 180)",
+          "oklch(84% 0.14 180)",
+          "oklch(95% 0.14 180)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "swatch-clay": {
+        "role": "secondary",
+        "displayName": "Project Clay",
+        "canonical": "light-dark(#ea580c, #fb923c)",
+        "tonalRamp": [
+          "oklch(15% 0.17 45)",
+          "oklch(26% 0.17 45)",
+          "oklch(38% 0.17 45)",
+          "oklch(49% 0.17 45)",
+          "oklch(61% 0.17 45)",
+          "oklch(72% 0.17 45)",
+          "oklch(84% 0.17 45)",
+          "oklch(95% 0.17 45)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "swatch-plum": {
+        "role": "secondary",
+        "displayName": "Project Plum",
+        "canonical": "light-dark(#7c3aed, #a78bfa)",
+        "tonalRamp": [
+          "oklch(15% 0.2 300)",
+          "oklch(26% 0.2 300)",
+          "oklch(38% 0.2 300)",
+          "oklch(49% 0.2 300)",
+          "oklch(61% 0.2 300)",
+          "oklch(72% 0.2 300)",
+          "oklch(84% 0.2 300)",
+          "oklch(95% 0.2 300)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "swatch-moss": {
+        "role": "secondary",
+        "displayName": "Project Moss",
+        "canonical": "light-dark(#16a34a, #4ade80)",
+        "tonalRamp": [
+          "oklch(15% 0.17 145)",
+          "oklch(26% 0.17 145)",
+          "oklch(38% 0.17 145)",
+          "oklch(49% 0.17 145)",
+          "oklch(61% 0.17 145)",
+          "oklch(72% 0.17 145)",
+          "oklch(84% 0.17 145)",
+          "oklch(95% 0.17 145)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "swatch-slate": {
+        "role": "secondary",
+        "displayName": "Project Slate",
+        "canonical": "light-dark(#64748b, #94a3b8)",
+        "tonalRamp": [
+          "oklch(15% 0.025 255)",
+          "oklch(26% 0.025 255)",
+          "oklch(38% 0.025 255)",
+          "oklch(49% 0.025 255)",
+          "oklch(61% 0.025 255)",
+          "oklch(72% 0.025 255)",
+          "oklch(84% 0.025 255)",
+          "oklch(95% 0.025 255)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      },
+      "swatch-rose": {
+        "role": "secondary",
+        "displayName": "Project Rose",
+        "canonical": "light-dark(#e11d48, #fb7185)",
+        "tonalRamp": [
+          "oklch(15% 0.21 15)",
+          "oklch(26% 0.21 15)",
+          "oklch(38% 0.21 15)",
+          "oklch(49% 0.21 15)",
+          "oklch(61% 0.21 15)",
+          "oklch(72% 0.21 15)",
+          "oklch(84% 0.21 15)",
+          "oklch(95% 0.21 15)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Today Display",
+        "purpose": "Desktop weekday lockup; reduces to 2rem on mobile."
+      },
+      "title": {
+        "displayName": "View Title",
+        "purpose": "View and project identity."
+      },
+      "body": {
+        "displayName": "Hebrew Interface",
+        "purpose": "Task titles and readable prose."
+      },
+      "label": {
+        "displayName": "Control Label",
+        "purpose": "Concise field and control labels."
+      },
+      "metadata": {
+        "displayName": "Supporting Metadata",
+        "purpose": "Compact task and navigation context."
+      },
+      "numerals": {
+        "displayName": "Stable Numerals",
+        "purpose": "Tabular figures inside isolated LTR islands."
+      }
+    },
+    "shadows": [
+      {
+        "name": "row",
+        "value": "0 1px 2px var(--shadow-tint-1)",
+        "purpose": "Shallow controls and small work surfaces."
+      },
+      {
+        "name": "card",
+        "value": "0 2px 5px var(--shadow-tint-1)",
+        "purpose": "Board cards and selected project view segment."
+      },
+      {
+        "name": "pop",
+        "value": "0 12px 32px -14px var(--shadow-tint-2), 0 2px 6px -2px var(--shadow-tint-3)",
+        "purpose": "Popovers, sheets and lifted work."
+      },
+      {
+        "name": "panel",
+        "value": "-18px 0 40px -28px var(--shadow-tint-4)",
+        "purpose": "RTL detail-panel edge; physical offset mirrors for LTR."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-color",
+        "value": "120ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Shared button, field and rail state transitions."
+      },
+      {
+        "name": "board-target",
+        "value": "150ms ease-out",
+        "purpose": "Board target and project directory hover transitions."
+      },
+      {
+        "name": "rail-slide",
+        "value": "420ms var(--ease-slide)",
+        "purpose": "The exact sampled linear spring lives in globals.css; retain that source token."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Animations and transitions become effectively instant, preserving readable end states."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "desktop-navigation",
+        "value": "768px"
+      },
+      {
+        "name": "today-planning-margin",
+        "value": "1280px"
+      }
+    ],
+    "appearance": {
+      "defaultBrightness": "light",
+      "brightnessModes": [
+        "light",
+        "dark",
+        "system"
+      ],
+      "accents": [
+        "indigo",
+        "violet",
+        "blue",
+        "teal",
+        "green",
+        "pink",
+        "graphite"
+      ],
+      "source": "src/app/globals.css",
+      "rampPolicy": "Ramps are synthesized preview metadata, not new implementation tokens."
+    },
+    "scope": {
+      "systemBoundary": "Authenticated workspace and shared incumbent tokens",
+      "surfaceBrief": ".impeccable/surfaces/src-app-app-layout-tsx.md",
+      "inheritedLandingBrief": ".impeccable/surfaces/src-app-page-tsx.md",
+      "shippingRasters": "No new or replaced generated rasters. Preserved landing shots are inherited interface captures using synthetic demo tasks."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Shared primary action at the default control size.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-btn-primary\">שמירה</button>",
+      "css": ".ds-btn-primary{font-family:var(--font-assistant),'Assistant',sans-serif;font-size:1rem;font-weight:600;border-radius:.625rem;min-height:2.75rem;padding:0 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:background-color 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);background:var(--accent);color:var(--on-accent);border:0;box-shadow:var(--shadow-row);}.ds-btn-primary:hover{background:var(--accent-hover);}.ds-btn-primary:active{filter:brightness(.98)}.ds-btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-btn-primary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-btn-primary{transition:none}}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Shared secondary action at the default control size.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-btn-secondary\">שיתוף הפרויקט</button>",
+      "css": ".ds-btn-secondary{font-family:var(--font-assistant),'Assistant',sans-serif;font-size:1rem;font-weight:600;border-radius:.625rem;min-height:2.75rem;padding:0 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:background-color 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);}.ds-btn-secondary:hover{background:var(--surface-2);}.ds-btn-secondary:active{filter:brightness(.98)}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-btn-secondary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-btn-secondary{transition:none}}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Shared ghost action at the default control size.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-btn-ghost\">ביטול</button>",
+      "css": ".ds-btn-ghost{font-family:var(--font-assistant),'Assistant',sans-serif;font-size:1rem;font-weight:600;border-radius:.625rem;min-height:2.75rem;padding:0 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:background-color 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);background:transparent;color:var(--ink-2);border:0;}.ds-btn-ghost:hover{background:var(--surface-2);color:var(--ink);}.ds-btn-ghost:active{filter:brightness(.98)}.ds-btn-ghost:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-btn-ghost:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-btn-ghost{transition:none}}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Shared danger action at the default control size.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-btn-danger\">מחיקת קטע</button>",
+      "css": ".ds-btn-danger{font-family:var(--font-assistant),'Assistant',sans-serif;font-size:1rem;font-weight:600;border-radius:.625rem;min-height:2.75rem;padding:0 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:background-color 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);background:var(--surface);color:var(--p1);border:1px solid color-mix(in oklab,var(--p1) 30%,transparent);}.ds-btn-danger:hover{background:color-mix(in oklab,var(--p1) 8%,transparent);}.ds-btn-danger:active{filter:brightness(.98)}.ds-btn-danger:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-btn-danger:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-btn-danger{transition:none}}"
+    },
+    {
+      "name": "Hebrew Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Body-sized field with automatic text direction and semantic invalid state.",
+      "html": "<input class=\"ds-input\" dir=\"auto\" aria-label=\"שם המסנן\" placeholder=\"למשל: משימות לשבוע הזה\" />",
+      "css": ".ds-input{display:block;width:100%;font-family:var(--font-assistant),Assistant,sans-serif;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:.625rem;padding:.625rem .75rem;text-align:start;caret-color:var(--accent);transition:border-color 120ms}.ds-input::placeholder{color:var(--muted);opacity:1}.ds-input:hover{border-color:var(--muted)}.ds-input:focus{border-color:var(--accent)}.ds-input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-input[aria-invalid=true]{border-color:var(--p1)}@media(pointer:coarse){.ds-input{min-height:2.75rem}}@media(prefers-reduced-motion:reduce){.ds-input{transition:none}}"
+    },
+    {
+      "name": "Rail Navigation",
+      "kind": "nav",
+      "description": "Full-row hover and current-place state on the dark navigation material.",
+      "html": "<nav dir=\"rtl\" class=\"ds-rail\" aria-label=\"תצוגות\"><a class=\"ds-nav\" href=\"#today\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><path d=\"M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z\"/></svg><span>היום</span><span class=\"ds-nav-count\">6</span></a><a class=\"ds-nav\" href=\"#upcoming\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><path d=\"M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z\"/></svg><span>בקרוב</span><span class=\"ds-nav-count\">4</span></a></nav>",
+      "css": ".ds-rail{width:14rem;padding:.5rem;background:var(--rail);border-radius:.625rem;font-family:var(--font-assistant),Assistant,sans-serif}.ds-nav{display:flex;align-items:center;gap:.625rem;padding:.5rem .75rem;border-radius:.625rem;font-size:.875rem;color:var(--rail-muted);text-decoration:none;transition:color 120ms,background-color 120ms}.ds-nav:hover{background:var(--rail-hover);color:var(--rail-ink)}.ds-nav[aria-current=page]{background:var(--rail-active);color:var(--rail-ink);font-weight:600}.ds-nav-count{margin-inline-start:auto;font-family:var(--font-inter),Inter,sans-serif;direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}.ds-nav:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-nav:active{background:var(--rail-active)}@media(prefers-reduced-motion:reduce){.ds-nav{transition:none}}"
+    },
+    {
+      "name": "Filter Choice",
+      "kind": "chip",
+      "refersTo": "filter-chip",
+      "description": "White quick-filter choice with an accent wash for the active route.",
+      "html": "<nav dir=\"rtl\" class=\"ds-filter-set\" aria-label=\"מסננים מהירים\"><a href=\"#mine\" aria-current=\"page\" class=\"ds-filter\">באחריותי</a><a href=\"#week\" class=\"ds-filter\">השבוע הקרוב</a></nav>",
+      "css": ".ds-filter-set{display:flex;flex-wrap:wrap;gap:.5rem}.ds-filter{display:inline-flex;align-items:center;min-height:2.5rem;padding:0 1rem;border-radius:.6rem;background:var(--surface);color:var(--ink-2);font-family:var(--font-assistant),Assistant,sans-serif;font-size:.875rem;text-decoration:none}.ds-filter:hover{background:var(--surface-2)}.ds-filter[aria-current=page]{background:var(--accent-soft);color:var(--accent);font-weight:700}.ds-filter:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-filter:active{background:var(--accent-soft)}"
+    },
+    {
+      "name": "Task Group",
+      "kind": "card",
+      "refersTo": "task-surface",
+      "description": "Flat white work surface with restrained separators and priority-colored completion controls.",
+      "html": "<div dir=\"rtl\" class=\"ds-tasks\"><div class=\"ds-task\"><button class=\"ds-task-check\" type=\"button\" role=\"checkbox\" aria-checked=\"false\" aria-label=\"סימון כהושלם: לסיים את המצגת\"></button><button class=\"ds-task-open\" type=\"button\">לסיים את המצגת<span class=\"ds-task-meta\">היום · עבודה <span class=\"ds-deadline\">עד מחר</span></span></button></div><div class=\"ds-task\"><button class=\"ds-task-check\" type=\"button\" role=\"checkbox\" aria-checked=\"false\" aria-label=\"סימון כהושלם: לקנות לחם\"></button><button class=\"ds-task-open\" type=\"button\">לקנות לחם<span class=\"ds-task-meta\">היום · בית</span></button></div></div>",
+      "css": ".ds-tasks{padding:.25rem;border-radius:.75rem;background:var(--surface);color:var(--ink);font-family:var(--font-assistant),Assistant,sans-serif}.ds-task{position:relative;display:flex;gap:.75rem;min-height:3.5rem;padding:.75rem;align-items:start;border-radius:.625rem}.ds-task+.ds-task:before{content:\"\";position:absolute;inset-block-start:0;inset-inline:2.5rem 1rem;height:1px;background:var(--line)}.ds-task:hover{background:var(--surface-2)}.ds-task-check{flex:none;width:1.25rem;height:1.25rem;margin-top:.125rem;background:transparent;border:2px solid var(--p1);border-radius:.375rem;cursor:pointer}.ds-task-check:hover{border-color:var(--accent)}.ds-task-check:active{background:var(--accent-soft)}.ds-task-open{flex:1;border:0;background:transparent;font:inherit;font-size:1rem;line-height:1.375;color:inherit;text-align:start;cursor:pointer}.ds-task-meta{display:block;font-size:.8125rem;color:var(--muted);margin-top:.25rem;line-height:1.6}.ds-deadline{background:var(--flag-soft);color:var(--flag);padding:0 .25rem;border-radius:.25rem}.ds-task-check:focus-visible,.ds-task-open:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+    },
+    {
+      "name": "Board Card",
+      "kind": "card",
+      "description": "Liftable project task card, with explicit movement control and restrained depth.",
+      "html": "<article dir=\"rtl\" class=\"ds-board-card\"><button class=\"ds-board-title\" type=\"button\">לסיים את המצגת</button><p class=\"ds-board-note\">שקף סיכום ועוד שני נתונים.</p><label class=\"ds-board-move\">העברה לקטע<select aria-label=\"העברת המשימה לקטע\"><option>בביצוע</option><option>הושלם</option></select></label></article>",
+      "css": ".ds-board-card{padding:1rem;border-radius:.7rem;background:var(--surface);color:var(--ink);box-shadow:0 2px 5px var(--shadow-tint-1);font-family:var(--font-assistant),Assistant,sans-serif;max-width:17rem}.ds-board-title{padding:0;background:transparent;border:0;color:var(--ink);font-family:inherit;font-size:1rem;font-weight:600;line-height:1.375;text-align:start;cursor:pointer}.ds-board-title:hover{color:var(--accent)}.ds-board-note{font-size:.875rem;color:var(--muted);line-height:1.5;margin:.5rem 0 .75rem}.ds-board-move{display:flex;justify-content:space-between;align-items:center;gap:.5rem;border-block-start:1px solid var(--line);padding-top:.5rem;font-size:.8125rem;color:var(--muted)}.ds-board-move select{min-height:2.25rem;max-width:60%;border:0;border-radius:.375rem;padding:0 .5rem;background:var(--surface);color:var(--ink-2);font-family:inherit;font-size:.8125rem}.ds-board-move select:hover{background:var(--surface-2)}.ds-board-title:focus-visible,.ds-board-move select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-board-title:active{color:var(--accent-hover)}"
+    },
+    {
+      "name": "Project View Switch",
+      "kind": "custom",
+      "description": "Recessed list/board control with a lightly raised pressed segment.",
+      "html": "<div dir=\"rtl\" class=\"ds-switch\" role=\"group\" aria-label=\"תצוגת הפרויקט\"><button type=\"button\" aria-pressed=\"true\">רשימה</button><button type=\"button\" aria-pressed=\"false\">לוח</button></div>",
+      "css": ".ds-switch{display:inline-flex;gap:.25rem;padding:.25rem;border-radius:.65rem;background:var(--surface-2);font-family:var(--font-assistant),Assistant,sans-serif}.ds-switch button{min-height:2.25rem;padding:0 .9rem;border:0;border-radius:.45rem;background:transparent;color:var(--muted);font-family:inherit;font-size:.875rem;cursor:pointer}.ds-switch button:hover{color:var(--ink)}.ds-switch button[aria-pressed=true]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 2px 5px var(--shadow-tint-1)}.ds-switch button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-switch button:active{background:var(--accent-soft)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A clear place for Hebrew work",
+    "overview": "This records the built, inherited visual world: a dark indigo navigation rail beside cool paper and white task surfaces. It supports Hebrew capture, planning and shared projects with familiar task-manager affordances. Dense working content stays legible; color and display type establish orientation without competing with tasks.\n\nThe interface is Hebrew-first and RTL. Assistant carries everyday controls, Frank Ruhl Libre gives the wordmark and view titles their character, and Inter keeps numbers stable. The default appearance is light; explicit dark and system modes use the same semantic structure. Seven accent choices change the navigation and action family while urgency colors remain fixed.",
+    "keyCharacteristics": [
+      "Tasks lead; planning information supports them from a margin or follows them on small screens.",
+      "Cool tonal surfaces, gentle corners and restrained elevation.",
+      "Hebrew display titles paired with a practical interface face and isolated numerals.",
+      "A stable navigation frame, explicit state and visible capture affordances."
+    ],
+    "rules": [
+      {
+        "name": "The Stable Meaning Rule",
+        "body": "Appearance changes action and navigation color; priority, deadline and project identities remain separately named semantic families.",
+        "section": "colors"
+      },
+      {
+        "name": "The Hebrew Reading Rule",
+        "body": "Preserve RTL reading order, normal Hebrew letter spacing and isolated LTR islands for times, dates, shortcuts and counts. User-entered task and project titles resolve with `dir=\"auto\"`.",
+        "section": "typography"
+      },
+      {
+        "name": "The Task First Rule",
+        "body": "Capture and working tasks retain the first useful viewport. Planning panels move after tasks on mobile rather than consuming that viewport.",
+        "section": "layout"
+      },
+      {
+        "name": "The Grounded Depth Rule",
+        "body": "Keep resting task groups flat; use elevation to distinguish a floating control, a popover or an object being moved.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** inherit the semantic color tokens in both themes and retain the rail's local neutral remapping.",
+      "**Do** keep Hebrew task titles readable, metadata subordinate and task controls explicitly labeled.",
+      "**Do** preserve separate visual meanings for schedule, deadline, priority, project and completion.",
+      "**Do** keep mobile capture reachable and clear fixed navigation with the shared safe-area spacing.",
+      "**Do** use quiet surface layering before adding shadows, and honor reduced motion."
+    ],
+    "donts": [
+      "**Don't** introduce raw component colors that bypass appearance and semantic state tokens.",
+      "**Don't** letter-space Hebrew or allow mixed dates, times and shortcuts to reorder punctuation.",
+      "**Don't** turn Today planning data into a productivity score or place it ahead of mobile tasks.",
+      "**Don't** reuse urgency styling as a decorative accent or infer project identity from the action hue.",
+      "**Don't** make hovering or dragging the only way to reach a task action."
+    ]
+  }
+}

@@ -28,6 +28,14 @@ fi
 
 install -d -m 700 "$DATA_DIR" "$BACKUP_DIR"
 
+# The domain also serves the portfolio. Preserve its live routing on updates.
+if [ -f "$NGINX_AVAILABLE" ]; then
+  if ! grep -Fq "location ~ ^$BASE_PATH" "$NGINX_AVAILABLE" || ! grep -Fq "proxy_pass http://127.0.0.1:$APP_PORT;" "$NGINX_AVAILABLE"; then
+    echo '[ERROR] Existing domain routing does not contain the expected Seder upstream.' >&2
+    exit 1
+  fi
+fi
+
 # Kept outside the release directory on purpose. Deploying replaces
 # /root/Seder wholesale, and pairing state inside it would mean re-scanning the
 # WhatsApp QR after every single deploy.
@@ -123,6 +131,7 @@ location = $BASE_PATH/.well-known/vee-visitor-signal {
 NGINX
 chmod 600 "$VISITOR_SIGNAL_SNIPPET"
 
+if [ ! -f "$NGINX_AVAILABLE" ]; then
 if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
   cat > "$NGINX_AVAILABLE" <<NGINX
 server {
@@ -206,6 +215,7 @@ server {
     }
 }
 NGINX
+fi
 fi
 
 ln -sfn "$NGINX_AVAILABLE" "$NGINX_ENABLED"
