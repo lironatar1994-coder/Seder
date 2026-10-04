@@ -85,6 +85,7 @@ export function DayPanel({
           <div className="scroll-quiet flex-1 space-y-5 overflow-y-auto p-4">
             <Composer
               context={{ view: 'calendar', defaultDate: iso }}
+              projects={projects}
               vocabulary={{
                 projects: projects.map((p) => p.name),
                 labels: labels.map((l) => l.name),

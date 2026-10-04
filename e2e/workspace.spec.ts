@@ -18,7 +18,7 @@ async function add(page: Page, text: string) {
   await page.getByLabel('משימה חדשה', { exact: true }).fill(text);
   await page.getByRole('button', { name: 'הוספה', exact: true }).click();
   await expect(page.getByLabel('משימה חדשה', { exact: true })).toHaveValue('');
-  await page.getByRole('button', { name: /לביטול/ }).click();
+  await page.getByRole('button', { name: 'ביטול', exact: true }).click();
 }
 
 test('list search, priority filters, sorting, and focus timer work', async ({ page }) => {

@@ -18,6 +18,7 @@ import { titleSchema, fieldErrors } from '@/lib/validation';
 import { accessibleProjectIds, canUseProject } from '@/server/access';
 import { today } from '@/lib/dates';
 import type { WhenBucket } from '@/lib/constants';
+import { quickAddSchedule, quickAddSelectionSchema, type QuickAddSelection } from '@/lib/quick-add-selection';
 
 export interface ActionResult {
   ok: boolean;
@@ -52,6 +53,9 @@ export interface QuickAddContext {
   /** "YYYY-MM-DD". Set by the calendar's day panel: adding from inside a day
    *  means that day, unless the text says otherwise. */
   defaultDate?: string | null;
+  /** Explicit choices from the web composer. The server validates these and
+   * checks project membership just as it does for a typed project name. */
+  selection?: QuickAddSelection;
 }
 
 function parseDay(value: string | null | undefined): Date | null {
@@ -148,6 +152,9 @@ export async function captureTask(
   text: string,
   context: QuickAddContext = {},
 ): Promise<QuickAddResult> {
+  const selectionCheck = quickAddSelectionSchema.safeParse(context.selection ?? {});
+  if (!selectionCheck.success) return { ok: false, error: Object.values(fieldErrors(selectionCheck.error))[0] };
+  const selection = selectionCheck.data;
   // The parser needs the existing names to match "#טיול ליוון" as one project
   // rather than stopping at the space and inventing "טיול".
   const [knownProjects, knownLabels] = await Promise.all([
@@ -155,7 +162,7 @@ export async function captureTask(
     // by that name, not quietly create a private second one beside it.
     db.project.findMany({
       where: { id: { in: await accessibleProjectIds(userId) } },
-      select: { name: true },
+      select: { id: true, name: true },
     }),
     db.label.findMany({ where: { userId }, select: { name: true } }),
   ]);
@@ -170,36 +177,24 @@ export async function captureTask(
     return { ok: false, error: fieldErrors(titleCheck.error)._ ?? 'לכל משימה צריך שם' };
   }
 
-  // What the user typed always wins. Only when the text says nothing about
-  // timing does the view they were looking at get to decide.
-  let whenBucket: WhenBucket = parsed.whenBucket;
-  let scheduledFor = parseDay(parsed.scheduledFor);
-  const textCarriedTiming = Boolean(parsed.scheduledFor) || parsed.whenBucket !== 'ANYTIME';
-
-  if (!textCarriedTiming) {
-    if (context.defaultDate) {
-      whenBucket = 'SCHEDULED';
-      scheduledFor = parseDay(context.defaultDate);
-    } else if (context.view === 'today') {
-      whenBucket = 'SCHEDULED';
-      scheduledFor = today();
-    } else if (context.view === 'someday') {
-      whenBucket = 'SOMEDAY';
-    }
-    // Everything else stays ANYTIME. Whether it shows in the Inbox or in
-    // "בכל עת" follows from having a project, not from the bucket.
-  }
-
-  const projectId = parsed.projectName
+  const schedule = quickAddSchedule(parsed, context, selection);
+  const whenBucket = schedule.bucket;
+  const scheduledFor = parseDay(schedule.date);
+  const deadline = selection.deadline !== undefined ? selection.deadline : parsed.deadline;
+  const recurrence = selection.recurrence !== undefined ? selection.recurrence : parsed.recurrence;
+  const priority = selection.priority ?? parsed.priority;
+  const projectId = selection.projectId !== undefined ? selection.projectId : parsed.projectName
     ? await resolveProject(userId, parsed.projectName)
     : context.projectId ?? null;
 
-  const labelIds = await resolveLabels(userId, parsed.labelNames);
   if (projectId && !(await canUseProject(userId, projectId))) return { ok: false, error: 'הפרויקט לא נמצא' };
   if (context.sectionId && projectId === context.projectId) {
     const section = projectId ? await db.section.findFirst({ where: { id: context.sectionId, projectId } }) : null;
     if (!section) return { ok: false, error: 'הקטע לא נמצא בפרויקט הזה' };
   }
+
+  const labelNames = selection.labelNames ?? parsed.labelNames;
+  const labelIds = await resolveLabels(userId, labelNames);
 
   const siblings = await db.task.findMany({
     where: { userId, parentId: null, status: 'TODO' },
@@ -212,12 +207,12 @@ export async function captureTask(
     data: {
       userId,
       title: titleCheck.data,
-      priority: parsed.priority,
+      priority,
       whenBucket,
       scheduledFor,
-      scheduledTime: parsed.scheduledTime,
-      deadline: parseDay(parsed.deadline),
-      recurrence: parsed.recurrence,
+      scheduledTime: schedule.time,
+      deadline: parseDay(deadline),
+      recurrence,
       projectId,
       sectionId: projectId === context.projectId ? context.sectionId ?? null : null,
       // New tasks land at the top — that is where you look for what you just
@@ -237,12 +232,12 @@ export async function captureTask(
       // Report what was *stored*, not what the text said: the view context can
       // have supplied a date the message never mentioned.
       scheduledFor: scheduledFor ? scheduledFor.toISOString().slice(0, 10) : null,
-      scheduledTime: parsed.scheduledTime,
-      deadline: parsed.deadline,
-      projectName: parsed.projectName,
-      labelNames: parsed.labelNames,
-      priority: parsed.priority,
-      recurrence: parsed.recurrence,
+      scheduledTime: schedule.time,
+      deadline: deadline ?? null,
+      projectName: projectId ? knownProjects.find(project => project.id === projectId)?.name ?? parsed.projectName : null,
+      labelNames,
+      priority,
+      recurrence,
     },
   };
 }

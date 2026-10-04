@@ -87,3 +87,15 @@ deployment. Google OAuth availability requires operator configuration and a real
 provider connection; a connection link or synthetic event is not proof it is active.
 Future visual work must use the real task and collaboration states, and cannot claim
 new capabilities from the demonstration data.
+
+
+The subsequent capture refinement is scoped to the composer. Its default row has date,
+project and More; actual values are chosen through the shared calendar/time editor,
+searchable accessible-project list, and one optional-details panel. Sentence syntax
+remains supported; picker choices do not insert incomplete tokens. Explicit date and
+project clearing overrides route defaults. Selected optional fields are counted, and
+current day/hour and project are readable on the row. Keyboard hints were removed;
+Enter/Escape and accessible cancellation remain. Evidence uses synthetic accounts:
+.local-artifacts/composer-desktop.png, composer-mobile.png and composer-mobile-picker.png.
+Three focused browser cases and ten pure selection cases passed. Full regression and
+production verification remain separate gates recorded in the release evidence.

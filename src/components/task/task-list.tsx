@@ -677,6 +677,7 @@ export function TaskList({
             <Composer
               context={context}
               vocabulary={vocabulary}
+              projects={projects}
               variant={isPhone ? 'sheet' : 'inline'}
               onClose={() => setComposerOpen(false)}
               onAdded={handleAdded}

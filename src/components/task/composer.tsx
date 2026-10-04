@@ -1,115 +1,19 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { ArrowUp, CalendarDays, Clock, Flag, Folder, Layers, Repeat, Tag } from 'lucide-react';
+import { ArrowUp, CalendarDays, Check, Folder, Inbox, MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { parseQuickAdd, type ParsedToken, type TokenKind } from '@/lib/quick-add-parser';
 import { quickAddAction, type QuickAddContext } from '@/server/tasks/actions';
 import { useToast } from '@/components/ui/toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/overlays';
+import { DatePickerPanel, type WhenValue } from '@/components/calendar/date-picker';
+import { relativeDayLabel, today } from '@/lib/dates';
+import { quickAddSchedule, reconcileQuickAddSelection, withoutQuickAddTokens, type QuickAddSelection } from '@/lib/quick-add-selection';
+import { ComposerProperties } from './composer-properties';
 
-const TOKEN_ICONS: Record<TokenKind, typeof CalendarDays> = {
-  date: CalendarDays,
-  deadline: Flag,
-  time: Clock,
-  bucket: Layers,
-  project: Folder,
-  label: Tag,
-  priority: Flag,
-  recurrence: Repeat,
-};
+export interface ComposerProject { id: string; name: string; color: string }
 
-interface Suggestion {
-  /** Shown on the chip — the syntax itself, so tapping teaches you to type it. */
-  label: string;
-  /** Announced instead of the raw syntax, which reads as gibberish aloud. */
-  aria: string;
-  /** What lands in the field. */
-  insert: string;
-  kind: TokenKind;
-  /** The insert is only the opening of a token — leave the caret against it and
-   *  no trailing space, because the user still has to type the value. */
-  partial?: boolean;
-}
-
-const DAY_OFFERS: Suggestion[] = [
-  { label: 'היום', aria: 'תזמון להיום', insert: 'היום', kind: 'date' },
-  { label: 'מחר', aria: 'תזמון למחר', insert: 'מחר', kind: 'date' },
-  { label: 'שבוע הבא', aria: 'תזמון לשבוע הבא', insert: 'שבוע הבא', kind: 'date' },
-];
-
-const TIME_OFFER: Suggestion = {
-  label: 'בשעה',
-  aria: 'קביעת שעה',
-  insert: 'בשעה ',
-  kind: 'time',
-  partial: true,
-};
-
-const DEADLINE_OFFER: Suggestion = {
-  label: 'עד…',
-  aria: 'קביעת מועד הגשה',
-  insert: 'עד ',
-  kind: 'deadline',
-  partial: true,
-};
-
-const PROJECT_OFFER: Suggestion = {
-  label: '#פרויקט',
-  aria: 'שיוך לפרויקט',
-  insert: '#',
-  kind: 'project',
-  partial: true,
-};
-
-const LABEL_OFFER: Suggestion = {
-  label: '@תווית',
-  aria: 'הוספת תווית',
-  insert: '@',
-  kind: 'label',
-  partial: true,
-};
-
-const PRIORITY_OFFER: Suggestion = {
-  label: '!1',
-  aria: 'עדיפות גבוהה',
-  insert: '!1',
-  kind: 'priority',
-};
-
-const REPEAT_OFFER: Suggestion = {
-  label: 'כל יום',
-  aria: 'משימה חוזרת',
-  insert: 'כל יום ',
-  kind: 'recurrence',
-  partial: true,
-};
-
-/**
- * The syntax, as buttons — what is still missing, never what is already there.
- *
- * This was a fixed row of seven that only ever shrank. It is now a reading of
- * the sentence so far: the first slot answers "when", and once a day is settled
- * it stops proposing a second one and offers the hour instead. The deadline is
- * here at all now — `עד` is one of the two axes the product is built on, and it
- * was the only feature you could not discover from the interface.
- */
-function offersFor(chips: ParsedToken[]): Suggestion[] {
-  const has = (kind: TokenKind) => chips.some((token) => token.kind === kind);
-  const out: Suggestion[] = [];
-
-  const dated = has('date') || has('bucket') || has('recurrence');
-  if (!dated) out.push(...DAY_OFFERS);
-  else if (!has('time')) out.push(TIME_OFFER);
-
-  if (!has('deadline')) out.push(DEADLINE_OFFER);
-  if (!has('project')) out.push(PROJECT_OFFER);
-  // A task can carry several, so this one never leaves.
-  out.push(LABEL_OFFER);
-  if (!has('priority')) out.push(PRIORITY_OFFER);
-  if (!has('recurrence')) out.push(REPEAT_OFFER);
-
-  return out;
-}
 
 /**
  * A resolved token is coloured like the thing it will produce. `!1` is a red
@@ -160,30 +64,11 @@ function segment(text: string, tokens: ParsedToken[]): Segment[] {
   return out;
 }
 
-/**
- * Quick add.
- *
- * The field draws the parse onto the sentence itself. It used to keep the raw
- * syntax as grey punctuation and repeat every value as a pill underneath — the
- * task on screen twice, and neither copy the clean one. Now `מחר` wears the
- * colour of the date it became, in place, and the strip below carries only what
- * you could still add.
- *
- * What you typed is still exactly what is in the field: nothing is substituted
- * or reordered, only coloured. The input is transparent and a mirror behind it
- * repeats the same string with the parsed spans wrapped, so every character
- * stays where the browser put it and editing behaves like the plain field it
- * still is. That only holds while the two layers agree character for character,
- * which is why the highlight may not change any inline metric — see `.qa-token`.
- *
- * `sheet` is the phone: the composer is the surface rather than a card inside
- * one, so it goes flush to the edges the keyboard already owns. Cancel does not
- * survive that trade — there the scrim behind it is the way out, and it is a
- * labelled button in the tab order for anyone not using a thumb.
- */
+/** Hebrew sentence capture, with date and project pickers and optional details. */
 export function Composer({
   context,
   vocabulary,
+  projects = [],
   onClose,
   onAdded,
   autoFocus = true,
@@ -193,6 +78,7 @@ export function Composer({
   /** Existing project and label names, so the live highlight matches what the
    *  server will do with multi-word names. */
   vocabulary?: { projects: string[]; labels: string[] };
+  projects?: ComposerProject[];
   onClose?: () => void;
   /** Handed the saved task instead of announcing it. A caller that can show the
    *  row — the list — says so by making it land there; one that cannot leaves
@@ -202,6 +88,11 @@ export function Composer({
   variant?: 'inline' | 'sheet';
 }) {
   const [text, setText] = useState('');
+  const [selection, setSelection] = useState<QuickAddSelection>({});
+  const [dateOpen, setDateOpen] = useState(false);
+  const [projectOpen, setProjectOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [projectSearch, setProjectSearch] = useState('');
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   const mirrorRef = useRef<HTMLDivElement>(null);
@@ -223,11 +114,43 @@ export function Composer({
   });
 
   const parsed = useMemo(
-    () => (text.trim() ? parseQuickAdd(text, new Date(), vocabulary) : null),
+    () => parseQuickAdd(text, new Date(), vocabulary),
     [text, vocabulary],
   );
   const chips = useMemo(() => parsed?.tokens ?? [], [parsed]);
-  const offered = useMemo(() => offersFor(chips), [chips]);
+  const schedule = quickAddSchedule(parsed, context, selection);
+  const projectId = selection.projectId !== undefined ? selection.projectId : parsed.projectName
+    ? projects.find(project => project.name === parsed.projectName)?.id ?? null : context.projectId ?? null;
+  const projectName = selection.projectId !== undefined
+    ? projects.find(project => project.id === selection.projectId)?.name
+    : parsed.projectName ?? projects.find(project => project.id === context.projectId)?.name;
+  const dateLabel = schedule.date ? relativeDayLabel(new Date(`${schedule.date}T00:00:00.000Z`), today())
+    : schedule.bucket === 'SOMEDAY' ? 'מתישהו' : 'תאריך';
+  const deadline = selection.deadline !== undefined ? selection.deadline : parsed.deadline;
+  const priority = selection.priority ?? parsed.priority;
+  const labelNames = selection.labelNames ?? parsed.labelNames;
+  const recurrence = selection.recurrence !== undefined ? selection.recurrence : parsed.recurrence;
+  const extraCount = Number(Boolean(deadline)) + Number(priority !== 4) + Number(labelNames.length > 0) + Number(Boolean(recurrence));
+  const filteredProjects = projects.filter(project => project.name.toLocaleLowerCase().includes(projectSearch.toLocaleLowerCase()));
+  const controlClass = 'inline-flex h-9 min-w-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-sm text-ink-2 transition-colors hover:bg-surface-2 disabled:opacity-50 [@media(pointer:coarse)]:h-11';
+
+  function choose(kinds: TokenKind[], value: Partial<QuickAddSelection>) {
+    const next = withoutQuickAddTokens(text, parsed, kinds);
+    setText(next);
+    setSelection(current => ({ ...current, ...value }));
+  }
+  function chooseSchedule(value: WhenValue) {
+    choose(['date', 'bucket', 'time'], { schedule: value });
+    setDateOpen(false);
+  }
+  function type(value: string) {
+    setSelection(current => reconcileQuickAddSelection(parsed, parseQuickAdd(value, new Date(), vocabulary), current));
+    setText(value);
+  }
+  function restoreInput(event: Event) {
+    event.preventDefault();
+    inputRef.current?.focus();
+  }
   const segments = useMemo(() => segment(text, chips), [text, chips]);
 
   /* Once the text is wider than the field the input scrolls, and the mirror has
@@ -255,27 +178,18 @@ export function Composer({
     edit(next, next.length);
   }
 
-  function insert(suggestion: Suggestion) {
-    const input = inputRef.current;
-    const at = input?.selectionStart ?? text.length;
-    const before = text.slice(0, at);
-    const after = text.slice(at);
-    const lead = before && !/\s$/.test(before) ? ' ' : '';
-    const head = before + lead + suggestion.insert + (suggestion.partial ? '' : ' ');
-    edit(head + after, head.length);
-  }
-
   function submit() {
     const value = text.trim();
     if (!value || pending) return;
 
     startTransition(async () => {
-      const result = await quickAddAction(value, context);
+      const result = await quickAddAction(value, { ...context, selection });
       if (!result.ok) {
         toast({ message: result.error ?? 'לא הצלחנו לשמור את המשימה', tone: 'error' });
         return;
       }
       setText('');
+      setSelection({});
       inputRef.current?.focus();
 
       // Say where it went. A task added from Today but scheduled for next week
@@ -291,9 +205,13 @@ export function Composer({
   return (
     <form
       onSubmit={(event) => {
+        // A time editor is portalled outside this form, but React still bubbles
+        // its submit event through the composer. Saving an hour is not Add.
+        if (event.target !== event.currentTarget) return;
         event.preventDefault();
         submit();
       }}
+      data-testid="task-composer"
       className={cn(
         sheet
           ? // Flush to the three edges the keyboard already occupies. As a
@@ -348,12 +266,12 @@ export function Composer({
             ref={inputRef}
             dir="auto"
             value={text}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => type(event.target.value)}
             onScroll={syncScroll}
             onKeyDown={(event) => {
               if (event.key === 'Escape') {
                 event.stopPropagation();
-                if (text) setText('');
+                if (text) { setText(''); setSelection({}); }
                 else onClose?.();
               }
             }}
@@ -399,75 +317,55 @@ export function Composer({
         {chips.map((token) => token.display).join(' · ')}
       </p>
 
-      <div className="mt-2 flex items-center gap-2">
-        <div
-          className={cn(
-            // Scrolls rather than wraps: wrapping made the sheet grow a line at
-            // a time under the thumb while the keyboard was pushing it up.
-            'flex min-w-0 flex-1 items-center gap-1 overflow-x-auto',
-            '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-            // Full-bleed on the sheet, so the strip runs off the edge instead
-            // of ending in a gap that reads as "that is all of them".
-            sheet && '-mx-4 px-4',
-          )}
-        >
-          {parsed?.title === '' && (
-            <span className="shrink-0 text-xs font-semibold text-p2">חסר שם למשימה</span>
-          )}
-
-          {offered.map((suggestion) => {
-            const Icon = TOKEN_ICONS[suggestion.kind];
-            return (
-              <button
-                key={suggestion.label}
-                type="button"
-                // Without this the field blurs, and on a phone the keyboard
-                // drops and the sheet lurches down the screen mid-tap.
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => insert(suggestion)}
-                aria-label={suggestion.aria}
-                className={cn(
-                  // No border. These are what you could still say, not controls
-                  // with weight of their own — outlined, they were the same
-                  // object as the resolved chips they used to sit beside.
-                  'inline-flex h-8 min-w-11 shrink-0 items-center justify-center gap-1 rounded-full px-2',
-                  'text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-ink',
-                  '[@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:px-3',
-                )}
-              >
-                <Icon className="size-3.5 shrink-0" aria-hidden />
-                {/* Each label is its own bidi paragraph. Otherwise the leading
-                    "#", "@" and "!" are neutral characters that the surrounding
-                    Hebrew drags to the far side, and the chip tells you to type
-                    "תווית@" — which the parser does not accept. */}
-                <span dir="auto" className="[unicode-bidi:isolate]">
-                  {suggestion.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Two text buttons under a rule cost a whole band of height to say what
-            the keyboard already does, at the far end of a column from the word
-            being typed. The keys say it in place. */}
-        {!sheet && (
-          <div className="flex shrink-0 items-center gap-3 ps-2 text-2xs text-muted">
-            <span>
-              <kbd className="font-sans">⏎</kbd> להוספה
-            </span>
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="underline-offset-2 transition-colors hover:text-ink hover:underline"
-              >
-                <kbd className="font-sans">esc</kbd> לביטול
-              </button>
-            )}
-          </div>
-        )}
+      <div className="mt-3 flex items-center gap-1.5" data-testid="composer-controls">
+        <Popover open={dateOpen} onOpenChange={setDateOpen}>
+          <PopoverTrigger asChild>
+            <button type="button" disabled={pending} aria-label={`בחירת תאריך, ${dateLabel}${schedule.time ? ` ${schedule.time}` : ''}`} className={cn(controlClass, 'max-w-[48%]', schedule.date && 'text-accent')}>
+              <CalendarDays className="size-4 shrink-0" aria-hidden />
+              <span className="truncate">{dateLabel}</span>
+              {schedule.time && <span dir="ltr" className="num shrink-0 text-xs">{schedule.time}</span>}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent aria-label="תאריך המשימה" onCloseAutoFocus={restoreInput} side={sheet ? 'top' : 'bottom'}>
+            <DatePickerPanel value={schedule.date} bucket={schedule.bucket} time={schedule.time} onPick={chooseSchedule}
+              onClear={() => chooseSchedule({ bucket: 'ANYTIME', date: null, time: null })} />
+          </PopoverContent>
+        </Popover>
+        <Popover open={projectOpen} onOpenChange={open => { setProjectOpen(open); if (!open) setProjectSearch(''); }}>
+          <PopoverTrigger asChild>
+            <button type="button" disabled={pending} aria-label={`בחירת פרויקט, ${projectName ?? 'תיבה נכנסת'}`} className={cn(controlClass, 'max-w-[42%]')}>
+              {projectName ? <Folder className="size-4 shrink-0" aria-hidden /> : <Inbox className="size-4 shrink-0" aria-hidden />}
+              <span dir="auto" className="truncate">{projectName ?? 'תיבה נכנסת'}</span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent aria-label="פרויקט המשימה" className="w-72" side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput}>
+            <input dir="auto" aria-label="חיפוש פרויקטים" placeholder="חיפוש פרויקט" value={projectSearch} onChange={event => setProjectSearch(event.target.value)} className="mb-2 h-11 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink" />
+            <div className="max-h-64 overflow-y-auto" role="group" aria-label="פרויקטים">
+              <button type="button" aria-pressed={!projectName} onClick={() => { choose(['project'], { projectId: null }); setProjectOpen(false); }} className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-ink hover:bg-surface-2"><Inbox className="size-4 text-muted" aria-hidden /><span className="flex-1">תיבה נכנסת</span>{!projectName && <Check className="size-4 text-accent" aria-hidden />}</button>
+              {filteredProjects.map(project => <button key={project.id} type="button" aria-pressed={project.id === projectId} onClick={() => { choose(['project'], { projectId: project.id }); setProjectOpen(false); }} className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-ink hover:bg-surface-2"><Folder className="size-4 shrink-0 text-muted" aria-hidden /><span dir="auto" className="min-w-0 flex-1 truncate">{project.name}</span>{project.id === projectId && <Check className="size-4 shrink-0 text-accent" aria-hidden />}</button>)}
+              {projectSearch && !filteredProjects.length && <p className="px-2 py-3 text-sm text-muted">לא נמצאו פרויקטים</p>}
+            </div>
+          </PopoverContent>
+        </Popover>
+        <Popover open={moreOpen} onOpenChange={setMoreOpen}>
+          <PopoverTrigger asChild>
+            <button type="button" disabled={pending} aria-label={extraCount ? `פרטים נוספים, ${extraCount} נבחרו` : 'פרטים נוספים'} className={cn(controlClass, 'shrink-0 border-transparent px-2')}>
+              <MoreHorizontal className="size-4 shrink-0" aria-hidden /><span className="hidden sm:inline">עוד</span>
+              {extraCount > 0 && <span className="num text-xs text-accent">{extraCount}</span>}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent aria-label="פרטים נוספים למשימה" side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput}>
+            <ComposerProperties deadline={deadline ?? null} priority={priority} labels={labelNames} knownLabels={vocabulary?.labels ?? []} recurrence={recurrence} date={schedule.date}
+              onDeadline={value => choose(['deadline'], { deadline: value })}
+              onPriority={value => choose(['priority'], { priority: value })}
+              onLabels={value => choose(['label'], { labelNames: value })}
+              onRecurrence={value => choose(['recurrence'], { recurrence: value })}
+              onClose={() => setMoreOpen(false)} />
+          </PopoverContent>
+        </Popover>
+        {!sheet && onClose && <button type="button" aria-label="ביטול" onClick={onClose} className="ms-auto grid size-9 shrink-0 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-ink [@media(pointer:coarse)]:size-11"><X className="size-4" aria-hidden /></button>}
       </div>
+      {text.trim() && !parsed.title && <p className="mt-2 text-xs text-p2">חסר שם למשימה</p>}
     </form>
   );
 }

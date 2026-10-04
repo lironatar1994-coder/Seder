@@ -42,3 +42,24 @@ FORM: user-pinned Todoist canon overrides assigned candidate 5, seed 95c8c208; c
 SIGNATURE: round checkbox tick, strike and row collapse; reduced motion remains immediate.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review,
 the verdict, DESIGN.md, and every shipping raster carrying its provenance.
+
+## Quick Add refinement — 2026-10-04
+
+The user rejected the crowded syntax-offer strip. Official references:
+[cleaner Quick Add](https://www.todoist.com/zh-CN/help/todoist/product-updates/a-cleaner-simpler-quick-add-june-29-PuIpiLmLh)
+and [Task Quick Add](https://www.todoist.com/help/todoist/features/use-task-quick-add-in-todoist-va4Lhpzz).
+Todoist describes a minimal empty state, project/date defaults and optional actions.
+These sources informed disclosure and selection behavior; Seder retains Hebrew recognition,
+its own recurrence rules and independent schedule/deadline axes.
+
+Replace the seven/eight permanent syntax offers with Date, Project and More. Date selects
+an actual day and optional hour. Project searches accessible projects and selects their ID,
+so identically named projects do not silently resolve to the wrong ID. The main field stays
+a task sentence. More contains priority, deadline, label and repeat choices with a compact
+selected-field count. Remove instructional key text; preserve keyboard behavior and an
+accessible cancel icon. Preserve natural-language and sigil input.
+
+Explicit clearing survives route defaults. Picking an attribute removes its competing text
+tokens while preserving the title and other attributes. Server validation and project
+membership remain mandatory. Saving an hour inside the portalled editor must never submit
+the task. Focused browser checks cover these interactions, saved attributes and 320px.

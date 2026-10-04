@@ -320,6 +320,7 @@ export function Agenda({
                   <Composer
                     context={{ view: 'calendar', defaultDate: day.iso }}
                     vocabulary={vocabulary}
+                    projects={projects}
                     onClose={() => setComposerIso(null)}
                   />
                 </div>
