@@ -6,6 +6,7 @@ import { LogbookView } from '@/components/task/logbook-view';
 import { VIEWS, isViewSlug, type ViewSlug } from '@/lib/constants';
 import { ViewHeader } from '@/components/nav/view-header';
 import { TaskList } from '@/components/task/task-list';
+import { TodayInsights } from '@/components/task/today-insights';
 
 /* Empty screens are invitations, not apologies — each one says what this view
    is for and offers the next action. */
@@ -76,13 +77,15 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
   ]);
 
   return (
-    <>
+    <div data-wide={view === 'today' ? true : undefined}>
       <ViewHeader
         title={meta.label}
         subtitle={view === 'today' ? null : meta.hint}
         showDate={view === 'today'}
         progress={data.progress}
       />
+      <div className={view === 'today' ? 'today-workspace' : undefined}>
+      <div className="min-w-0">
       <TaskList
         groups={data.groups}
         context={{ view }}
@@ -94,6 +97,9 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
         reorderable={view !== 'upcoming'}
         empty={EMPTY[view]}
       />
-    </>
+      </div>
+      {view === 'today' && <TodayInsights userId={user.id} projects={sidebar.projects} />}
+      </div>
+    </div>
   );
 }

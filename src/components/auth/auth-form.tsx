@@ -43,11 +43,13 @@ export function AuthForm({
   mode,
   action,
   justReset = false,
+  next = '/app',
 }: {
   mode: Mode;
   action: (state: AuthFormState, formData: FormData) => Promise<AuthFormState>;
   /** Arriving straight from a completed password reset. */
   justReset?: boolean;
+  next?: string;
 }) {
   const [state, formAction] = useActionState<AuthFormState, FormData>(action, {});
   const copy = COPY[mode];
@@ -68,6 +70,7 @@ export function AuthForm({
       )}
 
       <form action={formAction} className="mt-8 space-y-5" noValidate>
+        <input type="hidden" name="next" value={next} />
         {errors._ && (
           <div
             role="alert"
@@ -153,7 +156,7 @@ export function AuthForm({
       <p className="mt-6 text-sm text-muted">
         {copy.switchText}{' '}
         <Link
-          href={copy.switchHref}
+          href={`${copy.switchHref}?next=${encodeURIComponent(next)}`}
           className="font-semibold text-accent underline-offset-4 hover:underline"
         >
           {copy.switchCta}

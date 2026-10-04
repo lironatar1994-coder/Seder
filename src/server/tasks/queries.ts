@@ -32,6 +32,7 @@ export function taskSelect(viewerId: string) {
     deadline: true,
     completedAt: true,
     recurrence: true,
+    reminder: true,
     position: true,
     projectId: true,
     sectionId: true,
@@ -58,6 +59,8 @@ export interface TaskDTO {
   scheduledTime: string | null;
   deadline: Date | null;
   completedAt: Date | null;
+  /** null = the account default · 'off' · minutes before, as a string. */
+  reminder: string | null;
   /** Serialised repeat rule, or null. See lib/recurrence.ts. */
   recurrence: string | null;
   position: string;
@@ -503,6 +506,7 @@ export async function getCalendarView(
 }
 
 export interface SidebarData {
+  savedFilters: { id: string; name: string }[];
   projects: {
     id: string;
     name: string;
@@ -520,6 +524,7 @@ export interface SidebarData {
 /** One pass for the whole sidebar — six separate count queries per navigation
  *  would be six round trips on every page. */
 export async function getSidebarData(userId: string): Promise<SidebarData> {
+  const savedFilters = await db.savedFilter.findMany({ where: { userId }, select: { id: true, name: true }, orderBy: { createdAt: 'asc' } });
   const base = today();
   const horizon = addDays(base, 30);
   const mine = await myWork(userId);
@@ -603,6 +608,7 @@ export async function getSidebarData(userId: string): Promise<SidebarData> {
       memberCount: _count.members,
       joined: ownerId !== userId,
     })),
+    savedFilters,
     labels,
     counts: {
       inbox: inboxCount,
@@ -613,4 +619,17 @@ export async function getSidebarData(userId: string): Promise<SidebarData> {
       logbook: 0,
     },
   };
+}
+
+export async function getTodayInsights(userId: string) {
+  const base = today(); const end = addDays(base, 7); const scope = await myWork(userId);
+  const [tasks, completed] = await Promise.all([
+    db.task.findMany({ where: { ...scope, parentId: null, status: 'TODO', OR: [{ scheduledFor: { gte: base, lt: end } }, { deadline: { lte: end } }] }, select: { id: true, title: true, scheduledFor: true, deadline: true, priority: true, projectId: true, project: { select: { name: true, color: true } } }, orderBy: [{ deadline: 'asc' }, { priority: 'asc' }] }),
+    db.task.count({ where: { ...scope, parentId: null, status: 'DONE', completedAt: { gte: dayStartInstant(addDays(base, -6)) } } }),
+  ]);
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const day = addDays(base, index); const iso = day.toISOString().slice(0, 10);
+    return { iso, count: tasks.filter((task) => task.scheduledFor?.toISOString().slice(0, 10) === iso).length };
+  });
+  return { days, completed, deadlines: tasks.filter((task) => task.deadline).sort((a, b) => a.deadline!.getTime() - b.deadline!.getTime()).slice(0, 4) };
 }

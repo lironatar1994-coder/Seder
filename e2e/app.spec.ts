@@ -816,7 +816,7 @@ test.describe('working together', () => {
     await page.goto(at('/app/today'));
     await expect(list(page).getByText('לבדוק מלונות')).toBeVisible();
 
-    await page.getByRole('link', { name: /חופשה/ }).click();
+    await page.locator('aside.rail').getByRole('link', { name: /חופשה/ }).click();
     await page.getByRole('button', { name: 'אפשרויות למשימה' }).click();
     await page.getByRole('menuitem', { name: 'נועה', exact: true }).click();
     await expect(page.getByTestId('toasts')).toContainText('הוקצה לנועה');
@@ -850,7 +850,7 @@ test.describe('working together', () => {
     // Nor through search, which is the other way a task could leak.
     await guest.page.goto(at('/app/today'));
     await guest.page.keyboard.press('Control+k');
-    await guest.page.getByPlaceholder(/חיפוש/).fill('סוד');
+    await guest.page.getByRole('dialog').getByRole('combobox').fill('סוד');
     await expect(guest.page.getByText('סוד שלי')).toHaveCount(0);
 
     await guest.context.close();
@@ -1027,7 +1027,7 @@ test.describe('repeating tasks', () => {
     await page.getByLabel('משימה חדשה').fill('להשקות את הצמחים כל יומיים');
     await expect(page.getByTestId('composer-chips')).toContainText('כל יומיים');
     await page.getByRole('button', { name: 'הוספה' }).click();
-    await expect(page.getByTestId('toasts')).toContainText('נוספה');
+    await expect(page.getByLabel('משימה חדשה')).toHaveValue('');
     await page.getByRole('button', { name: 'ביטול' }).first().click();
 
     const row = list(page).locator('li').filter({ hasText: 'להשקות את הצמחים' });
@@ -1268,7 +1268,7 @@ test.describe('rtl', () => {
     // Measure against the content box, not the viewport: in RTL the scrollbar
     // gutter takes a slice off one side.
     const contentWidth = await page.evaluate(() => document.documentElement.clientWidth);
-    const sidebar = (await page.locator('aside').boundingBox())!;
+    const sidebar = (await page.locator('aside.rail').boundingBox())!;
     const main = (await page.locator('main').boundingBox())!;
 
     // Inline-start in RTL is the right edge.

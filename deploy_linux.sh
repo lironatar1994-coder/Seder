@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_ROOT='/root/Seder'
+APP_ROOT="$(pwd -P)"
+PHASE="${1:-deploy}"
 APP_NAME='seder-live'
+WORKER_NAME='seder-whatsapp'
 APP_PORT='3107'
 DOMAIN='lawebs.co.il'
 BASE_PATH='/seder'
@@ -19,31 +21,73 @@ if [ "$(id -u)" -ne 0 ]; then
   echo '[ERROR] Run deploy_linux.sh as root.' >&2
   exit 1
 fi
-if [ "$PWD" != "$APP_ROOT" ] || [ ! -f package.json ] || [ ! -f next.config.ts ]; then
+if [[ "$APP_ROOT" != /root/Seder && "$APP_ROOT" != /root/Seder.releases/* ]] || [ ! -f package.json ] || [ ! -f next.config.ts ]; then
   echo "[ERROR] Run this script from $APP_ROOT." >&2
   exit 1
 fi
 
 install -d -m 700 "$DATA_DIR" "$BACKUP_DIR"
 
+# Kept outside the release directory on purpose. Deploying replaces
+# /root/Seder wholesale, and pairing state inside it would mean re-scanning the
+# WhatsApp QR after every single deploy.
+WHATSAPP_AUTH_DIR="$DATA_DIR/whatsapp-auth"
+WHATSAPP_STATUS_FILE="$DATA_DIR/whatsapp-status.json"
+install -d -m 700 "$WHATSAPP_AUTH_DIR"
+
+# Secrets that must survive a release: written once by hand on the server,
+# sourced back in here. Absent is fine — the WhatsApp rewrite fallback simply
+# stays off, and the pairing code is shown to nobody.
+SECRETS_FILE="$DATA_DIR/secrets.env"
+if [ -f "$SECRETS_FILE" ]; then
+  # shellcheck disable=SC1090
+  . "$SECRETS_FILE"
+fi
+
 cat > .env.production <<ENV
 DATABASE_URL="file:$DATABASE_FILE"
 APP_URL="https://$DOMAIN$BASE_PATH"
-MAIL_FROM="סדר <no-reply@$DOMAIN>"
+MAIL_FROM="${MAIL_FROM:-סדר <no-reply@$DOMAIN>}"
+RESEND_API_KEY="${RESEND_API_KEY:-}"
+WHATSAPP_AUTH_DIR="$WHATSAPP_AUTH_DIR"
+WHATSAPP_STATUS_FILE="$WHATSAPP_STATUS_FILE"
+SEDER_ADMIN_EMAIL="${SEDER_ADMIN_EMAIL:-}"
+GEMINI_API_KEY="${GEMINI_API_KEY:-}"
+SMTP_URL="${SMTP_URL:-}"
+WHATSAPP_DEBUG="${WHATSAPP_DEBUG:-}"
+WHATSAPP_OUTAGE_MINUTES="${WHATSAPP_OUTAGE_MINUTES:-}"
+WHATSAPP_MORNING_HOUR="${WHATSAPP_MORNING_HOUR:-}"
+WHATSAPP_REMINDER_LEAD="${WHATSAPP_REMINDER_LEAD:-}"
+WHATSAPP_DAILY_CAP="${WHATSAPP_DAILY_CAP:-}"
 ENV
 chmod 600 .env.production
 
+if [ "$PHASE" != activate ]; then
 echo '[INFO] Installing production dependencies...'
 npm ci --silent
 
 echo '[INFO] Applying database migrations...'
-DATABASE_URL="file:$DATABASE_FILE" npx prisma migrate deploy
+if [ "$PHASE" != prepare ]; then DATABASE_URL="file:$DATABASE_FILE" npx prisma migrate deploy; fi
 
 echo '[INFO] Building Seder...'
 DATABASE_URL="file:$DATABASE_FILE" APP_URL="https://$DOMAIN$BASE_PATH" npm run build
+fi
+
+if [ "$PHASE" = prepare ]; then
+  echo '[SUCCESS] Release built; production is still serving the previous version.'
+  exit 0
+fi
 
 echo '[INFO] Starting Seder...'
 pm2 startOrReload ecosystem.config.cjs --only "$APP_NAME" --update-env
+
+# Reloaded separately, and never fatal. A WhatsApp socket that will not come up
+# is a degraded feature; the site failing to deploy because of it would be a
+# worse outcome than the feature being down.
+if ! pm2 startOrReload ecosystem.config.cjs --only "$WORKER_NAME" --update-env; then
+  echo "[WARN] $WORKER_NAME did not reload. The site is up; WhatsApp is not." >&2
+fi
+
 pm2 save --force >/dev/null
 
 for attempt in $(seq 1 30); do

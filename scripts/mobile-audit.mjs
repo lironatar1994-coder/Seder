@@ -33,21 +33,25 @@ const SLACK = 1;
 const WIDTHS = [320, 390, 430];
 
 /**
- * Declared, reasoned exceptions — not a way to quiet the audit.
+ * A route, and optionally something to open on it first.
  *
- * A month grid is seven columns wide. At 320px the content box is 288px, so the
- * widest a day can be is 41px and no amount of padding work reaches 44: seven
- * 44px columns need 308px that do not exist. The honest fix is not to show a
- * month grid on a 320px screen at all, which is a different piece of work
- * (an agenda view) rather than a size tweak. Every other check still applies
- * here, and every width above this one is held to the floor.
+ * A surface that only exists after a tap is exactly where an undersized target
+ * hides: the quick-add sheet is the densest control strip in the app and a
+ * plain page load never renders it.
  */
-const NARROW_MONTH_GRID = {
-  width: 320,
-  path: '/app/calendar',
-  allow: /^target \d+×\d+: button "(יום|שבת)/,
-};
-const PATHS = ['/app/today', '/app/upcoming', '/app/inbox', '/app/calendar', '/app/settings/profile'];
+const PATHS = [
+  { path: '/app/today' },
+  { path: '/app/upcoming' },
+  { path: '/app/inbox' },
+  { path: '/app/calendar' },
+  { path: '/app/settings/profile' },
+  { path: '/app/settings/whatsapp' },
+  {
+    path: '/app/today',
+    label: '/app/today · composer',
+    open: (page) => page.getByRole('button', { name: 'חדשה' }).click(),
+  },
+];
 
 const user = await db.user.findUnique({ where: { email: 'demo@seder.app' } });
 if (!user) throw new Error('Seed first: npm run db:seed');
@@ -86,10 +90,22 @@ const AUDIT = (minTarget) => {
   const hidden = (el) =>
     getComputedStyle(el).visibility === 'hidden' || el.closest('[inert]') !== null;
 
+  // Content inside a horizontally scrolling strip is *meant* to run past the
+  // edge — that is what makes it a strip. The scroller itself is still checked,
+  // so a strip that is genuinely too wide for the screen is still caught; only
+  // its children get the pass.
+  const inScroller = (el) => {
+    for (let p = el.parentElement; p; p = p.parentElement) {
+      const overflow = getComputedStyle(p).overflowX;
+      if (overflow === 'auto' || overflow === 'scroll') return true;
+    }
+    return false;
+  };
+
   const wide = [];
   const limit = doc.clientWidth;
   for (const el of document.querySelectorAll('body *')) {
-    if (hidden(el)) continue;
+    if (hidden(el) || inScroller(el)) continue;
     const box = el.getBoundingClientRect();
     if (box.width === 0 || box.height === 0) continue;
     if (box.right > limit + 1 || box.left < -1) {
@@ -156,32 +172,27 @@ for (const width of WIDTHS) {
   ]);
   const page = await context.newPage();
 
-  for (const path of PATHS) {
+  for (const { path, label = path, open } of PATHS) {
     await page.goto(`${BASE}${path}`, { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => document.fonts.ready);
+    if (open) {
+      await open(page);
+      await page.waitForTimeout(400);
+    }
     const result = await page.evaluate(AUDIT, MIN_TARGET);
 
-    let problems = [];
+    const problems = [];
     for (const row of result.overflow) problems.push(`scrolls sideways: ${row.tag} by ${row.by}px`);
     for (const row of result.wide) problems.push(`outside the viewport: ${row.label} (${row.left}…${row.right})`);
     for (const row of result.small) problems.push(`target ${row.size}: ${row.label}`);
 
-    if (width === NARROW_MONTH_GRID.width && path === NARROW_MONTH_GRID.path) {
-      const before = problems.length;
-      problems = problems.filter((p) => !NARROW_MONTH_GRID.allow.test(p));
-      const allowed = before - problems.length;
-      // Announced, not swallowed: a suppressed check that says nothing reads as
-      // a passing one.
-      if (allowed) console.log(`  --   ${width}px ${path}: ${allowed} day cells below the floor (declared)`);
-    }
-
     if (problems.length) {
       failures += problems.length;
-      console.log(` FAIL  ${width}px ${path}`);
+      console.log(` FAIL  ${width}px ${label}`);
       for (const problem of problems.slice(0, 12)) console.log(`         ${problem}`);
       if (problems.length > 12) console.log(`         …and ${problems.length - 12} more`);
     } else {
-      console.log(`  ok   ${width}px ${path}`);
+      console.log(`  ok   ${width}px ${label}`);
     }
   }
 

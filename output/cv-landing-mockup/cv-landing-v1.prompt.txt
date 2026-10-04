@@ -1,0 +1,54 @@
+Use case: ui-mockup.
+Asset type: a finished high fidelity desktop landing page design mockup image, in Hebrew, for an Israeli professional CV/resume writing service.
+Primary request: Create ONE exceptionally polished, persuasive modern Israeli website mockup as a tall full-page flat screenshot. This is an original visual concept for a separate CV writing service, not a task management app. Entire layout reads right-to-left. Intended to guide a later responsive SEO and advertising landing page build. Render at the highest practical resolution, ideally 1800 x 2500 or similar tall 3:4 proportions, with crisp readable Hebrew and ample breathing room. No device frame, no presentation board, no browser chrome, no annotation, no watermark.
+
+Art direction: modern Israeli editorial design, confidently blue and white, premium professional service despite accessible prices. An electric Israeli cobalt #0649D9, deep navy #10264D, clean white #FFFFFF, a subtle very pale cool blue #F2F6FC. Flat solid colors, no gradients. Excellent modern Hebrew sans lettering with the character of Heebo/Rubik, very bold display headings, clear readable Hebrew body text. Hebrew has NO letter spacing. Carefully designed asymmetry and a precise grid, occasional thin cobalt rules, restrained 12px corners on pricing panels and form. A large clean headline, a compelling tangible CV document demonstration, two distinct pricing options and a visible lead form. Do not make a generic startup/SaaS dashboard or a template composed of many identical rounded cards. No stars, customer logos, testimonials, fabricated reviews, false interview/job guarantees, fake scarcity, countdowns, invented office addresses/phone numbers or credentials. Use only the two real offers supplied below.
+
+Composition and exact page content:
+1. Top white navigation, with a small crisp document icon and the text wordmark "קורות חיים" on the RIGHT. Navigation in the middle: "המסלולים" / "איך זה עובד" / "שאלות נפוצות". A small solid cobalt action button "בואו נתחיל" on the LEFT. One delicate pale divider below.
+2. Spacious hero, roughly the upper quarter of the page. On the RIGHT, enormous clean bold Hebrew headline on three balanced lines:
+"קורות חיים"
+"שעושים רושם."
+"במחיר שובר שוק."
+First two lines navy, final line cobalt. Make service and affordability immediately obvious. No eyebrow label above the headline.
+Below it a brief supporting paragraph, exact:
+"שדרוג קורות חיים קיימים או כתיבה מאפס,"
+"עם ניסוח מדויק ועיצוב נקי שמציגים אתכם במיטבכם."
+Primary cobalt button "לשדרוג ב־100 ₪" with a tasteful left-pointing arrow. Secondary understated text action "לכתיבה מאפס ב־350 ₪".
+On the LEFT of hero, a gorgeous life-size styled CV paper comparison with two overlapping white portrait pages, naturally offset and with subtle believable soft paper shadows against a pale blue art area. The before paper is smaller and behind, lightly gray, unstructured yet readable short lines. The after paper is the main visual, larger, perfectly organized with a cobalt document title, navy short Hebrew headings and a thin blue divider. The labels are "לפני" for the small paper and "אחרי" for the polished paper. On the foreground paper use "ישראל ישראלי" as an explicitly illustrative sample name, with headings "ניסיון מקצועי", "השכלה", "כישורים". No photo. Small unobtrusive caption below visual: "דוגמה להמחשה". The visual is of real printed resume paper, NOT a UI dashboard, NO charts, progress rings or metric widgets.
+3. Pricing section on white, generous space above section heading:
+"שני מסלולים. בחירה פשוטה."
+Two wide side-by-side pricing panels, right-to-left order, differentiated by meaningful offer rather than an equal generic card grid. The RIGHT panel is the main launch offer, solid cobalt blue with sharp white type. The LEFT panel is a light white/pale blue panel with navy type and a thin blue outline. Keep the price numerals and the ₪ symbol visually correct and clearly connected.
+RIGHT panel exact content:
+Small meaningful promotion label "מבצע השקה"
+Title "שדרוג קורות חיים"
+Large price "100 ₪"
+Alongside or below, smaller "במקום 150 ₪" with only the old 150 ₪ struck through.
+Description "יש קורות חיים? נותנים להם ניסוח ונראות חדשים."
+Three succinct benefit lines with consistent small check icons:
+"שיפור הניסוח והכתיבה"
+"עיצוב נקי ומקצועי"
+"שדרוג קורות החיים הקיימים"
+A prominent white button with cobalt text "אני רוצה לשדרג".
+LEFT panel exact content:
+Title "כתיבת קורות חיים מאפס"
+Large price "350 ₪"
+Description "בונים יחד קורות חיים שמספרים את הסיפור שלכם."
+Three benefit lines:
+"פגישה אישית אחד על אחד"
+"במשרד או מרחוק"
+"כתיבה ועיצוב מאפס"
+A navy/cobalt outlined button "לתיאום פגישה אישית".
+Do not invent deliverables, turnaround time, unlimited revisions, ATS certification, refund guarantees or whether VAT is included.
+4. A compact horizontal process strip without card boxes. Heading "מהניסיון שלכם לקורות חיים חדשים" and three RTL steps connected with a subtle line:
+"משאירים פרטים" -> "מדברים ומדייקים" -> "כותבים ומעצבים".
+Simple consistent thin line icons, no excessive explanatory text, no arbitrary decorative badges.
+5. Conversion section with a very pale blue full-width background. On the RIGHT a large navy heading:
+"הצעד הבא מתחיל כאן."
+Short supporting text:
+"משאירים פרטים ובוחרים את המסלול שמתאים לכם."
+On the LEFT a professionally styled compact lead form with clear Hebrew labels above each field: "שם מלא", "טלפון", and "המסלול שמעניין אותי". Show the selector value "שדרוג קורות חיים — 100 ₪" with a clean RTL dropdown caret. A simple checkbox line "קראתי את מדיניות הפרטיות". Large full-width cobalt submission button "דברו איתי על קורות החיים". Show no confirmation or successful send state, no invented contact details.
+6. Short FAQ area, clean white and navy, two elegant separated accordion rows with small plus icons at the logical end. Heading "כמה דברים שכדאי לדעת". Questions "מה ההבדל בין שדרוג לכתיבה מאפס?" and "אפשר להיפגש גם מרחוק?".
+7. A quiet narrow footer with the same "קורות חיים" wordmark and links "מדיניות פרטיות" / "נגישות".
+
+Quality constraints: all Hebrew spelling must be exact; every displayed price matches the offer, 100 ₪ discounted from 150 ₪ and 350 ₪ for writing from scratch with one-on-one office or remote session. Make the two offers and the next action readable within seconds. Text flows RTL, numbers remain coherent. Keep the final footer inside the image without cropping. Achieve the aesthetic quality of a professional Israeli design studio: confident typography, lots of intentional white space, tasteful tangible document composition, polished and trustworthy, visually distinctive.

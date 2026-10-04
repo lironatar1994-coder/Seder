@@ -1,7 +1,7 @@
 import 'server-only';
 import { randomBytes, createHash } from 'node:crypto';
 import { db } from '@/server/db';
-import { sendMail, appUrl } from '@/server/mail';
+import { sendMail, appUrl, emailHtml } from '@/server/mail';
 
 /** An hour is long enough to find the mail and short enough to limit exposure
  *  if the inbox is later compromised. */
@@ -33,9 +33,11 @@ export async function requestPasswordReset(email: string): Promise<void> {
 
   const live = await db.passwordResetToken.count({ where: { userId: user.id } });
   if (live >= MAX_LIVE_TOKENS) return;
+  const recent = await db.passwordResetToken.findFirst({ where: { userId: user.id, createdAt: { gt: new Date(Date.now() - 60_000) } } });
+  if (recent) return;
 
   const token = randomBytes(32).toString('base64url');
-  await db.passwordResetToken.create({
+  const issued = await db.passwordResetToken.create({
     data: {
       tokenHash: hashToken(token),
       userId: user.id,
@@ -45,9 +47,10 @@ export async function requestPasswordReset(email: string): Promise<void> {
 
   const link = `${appUrl()}/reset/${token}`;
 
-  await sendMail({
+  try { await sendMail({
     to: email,
     subject: 'איפוס סיסמה · סדר',
+    html: emailHtml('איפוס הסיסמה', `שלום ${user.name}, הקישור לאיפוס הסיסמה תקף לשעה אחת וניתן לשימוש פעם אחת.`, link, 'בחירת סיסמה חדשה'),
     text: [
       `שלום ${user.name},`,
       '',
@@ -59,7 +62,10 @@ export async function requestPasswordReset(email: string): Promise<void> {
       '',
       'סדר',
     ].join('\n'),
-  });
+  }); } catch {
+    await db.passwordResetToken.deleteMany({ where: { id: issued.id } });
+    console.error('[Seder] Password recovery delivery failed; token removed.');
+  }
 }
 
 export interface ResetTarget {
@@ -96,13 +102,15 @@ export async function completePasswordReset(
   target: ResetTarget,
   passwordHash: string,
 ): Promise<void> {
-  await db.$transaction([
-    db.user.update({
+  await db.$transaction(async (tx) => {
+    const consumed = await tx.passwordResetToken.deleteMany({ where: { id: target.tokenId, userId: target.userId, expiresAt: { gt: new Date() } } });
+    if (consumed.count !== 1) throw new Error('RESET_EXPIRED');
+    await tx.user.update({
       where: { id: target.userId },
       data: { passwordHash, failedLoginCount: 0, lockedUntil: null },
-    }),
-    db.session.deleteMany({ where: { userId: target.userId } }),
+    });
+    await tx.session.deleteMany({ where: { userId: target.userId } });
     // Burn every outstanding token, not just the one used.
-    db.passwordResetToken.deleteMany({ where: { userId: target.userId } }),
-  ]);
+    await tx.passwordResetToken.deleteMany({ where: { userId: target.userId } });
+  });
 }

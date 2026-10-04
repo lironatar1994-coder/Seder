@@ -31,15 +31,38 @@ model User {
   /// src/lib/constants.ts.
   defaultView String @default("today")
 
+  /// Israeli mobile in local form, "0541234567". Unique because an inbound
+  /// WhatsApp message has to resolve to exactly one account — two people
+  /// sharing a number would make "whose Inbox does this go to" unanswerable.
+  phone           String? @unique
+  /// Two switches, because they are two different consents. Letting the app
+  /// turn your messages into tasks is not the same as letting it message you,
+  /// and someone who wants reminders but files everything by hand — or the
+  /// reverse — had no way to say so while these were one flag.
+  ///
+  /// Both off until asked for: a number on file is not permission for either.
+  whatsappCapture   Boolean @default(false)
+  whatsappReminders Boolean @default(false)
+
+  /// The hour a reminder fires for a task that has a day but no time of its
+  /// own — 0–23, Israel time. One setting for the whole account rather than a
+  /// field on every task: "remind me about undated-time things in the morning"
+  /// is a habit, not a per-task decision, and asking for it every time would
+  /// be a question with the same answer forever.
+  reminderHour Int @default(8)
+
   sessions    Session[]
   projects    Project[]
   tasks       Task[]
   labels      Label[]
   resetTokens PasswordResetToken[]
+  comments    TaskComment[]
+  savedFilters SavedFilter[]
 
   /// Projects other people have let this user into.
   memberships   ProjectMember[]
   invitesSent   ProjectInvite[] @relation("InvitesSent")
+  whatsappLogs  WhatsappLog[]
   /// Tasks in shared projects handed to this user. Separate from `tasks`,
   /// which is authorship: the person who wrote a task and the person doing it
   /// are usually the same and sometimes are not.
@@ -188,6 +211,26 @@ model Task {
 
   completedAt DateTime?
 
+  /// When a WhatsApp reminder actually went out. A timestamp rather than a
+  /// date string, because the send loop needs to answer "how late is this
+  /// one?" and refuse the ones that are hours stale — a reminder for a 09:00
+  /// task delivered at 15:00 because the worker was down is worse than none.
+  remindedAt DateTime?
+
+  /// What reminder this task asked for, if it said anything.
+  ///
+  /// Three states in one nullable column, which is why it is a string and not
+  /// an Int: `null` means "whatever the account does by default" — the state
+  /// every existing row is already in, and the one that keeps following the
+  /// setting when it changes. `"off"` is an explicit no. Anything else is a
+  /// non-negative number of minutes before the moment the reminder is
+  /// anchored to: the task's own time when it has one, otherwise
+  /// `User.reminderHour` on the scheduled day.
+  ///
+  /// An Int could not tell "unset" from "at the exact time", and a second
+  /// boolean column to disambiguate would be two places for one fact.
+  reminder String?
+
   /// Repeat rule, serialised by lib/recurrence.ts ("weekly:1:0,3"). Null means
   /// a one-off. Completing a repeating task files a done copy in the Logbook
   /// and moves this row on to its next occurrence, so there is only ever one
@@ -219,6 +262,7 @@ model Task {
   parent   Task?       @relation("Subtasks", fields: [parentId], references: [id], onDelete: Cascade)
   subtasks Task[]      @relation("Subtasks")
   labels   TaskLabel[]
+  comments TaskComment[]
 
   @@index([userId, status, scheduledFor])
   @@index([userId, status, whenBucket])
@@ -231,6 +275,42 @@ model Task {
   /// "What is on my plate across every shared project" is the query the Today
   /// view runs for a collaborator.
   @@index([assigneeId, status])
+  /// The reminder sweep runs across every user at once, so it cannot use any
+  /// of the userId-prefixed indexes above.
+  @@index([status, scheduledFor, remindedAt])
+}
+
+/// Every WhatsApp message this app sent or acted on, and why it failed when it
+/// did.
+///
+/// The `error` column is the point. The system this replaces recorded a
+/// broadcast as `failed` and nothing else, so 27 of its 70 sends are
+/// unexplained and unfixable after the fact.
+model WhatsappLog {
+  id String @id @default(cuid())
+
+  /// Null for a message from a number that matches no account — worth keeping,
+  /// because "someone messaged us and we ignored them" is the thing you want
+  /// to see when a user says it did not work.
+  userId String?
+  /// Stored in local form, matching User.phone.
+  phone  String
+
+  /// IN | OUT
+  direction String
+  /// CAPTURE | REPLY | REMINDER
+  kind      String
+  body      String
+  /// sent | failed | ignored
+  status    String
+  error     String?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 model Label {
@@ -257,4 +337,25 @@ model TaskLabel {
 
   @@id([taskId, labelId])
   @@index([labelId])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([taskId, createdAt])
+}
+
+model SavedFilter {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  config    String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
 }

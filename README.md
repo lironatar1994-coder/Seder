@@ -6,7 +6,7 @@ Deploy from Windows with `./deploy.ps1`. The release script runs the checks, kee
 database outside the application directory, creates a database backup, swaps releases with
 rollback, applies Prisma migrations, configures nginx and HTTPS, and verifies the service locally.
 
-A personal task manager built the way Todoist and Things for Apple are built, in Hebrew,
+A personal and shared-project task manager inspired by Todoist and Things, in Hebrew,
 right-to-left from the ground up rather than translated.
 
 From **Todoist**: projects, priorities, labels, natural-language quick add, keyboard control.
@@ -15,6 +15,45 @@ separate from the day you plan to work on something, and a quiet surface with on
 moment — completing a task.
 
 ## Running it
+
+Requires Node.js 22.12 or newer.
+
+## Workspace and collaboration
+
+Today combines tasks, a seven-day outlook, upcoming deadlines and a resumable 25-minute focus
+timer. Lists can be searched, filtered by priority and sorted. `/app/filters` combines search,
+priority, date, project and assignee; named saved filters appear in the sidebar and remain private
+to their account. `/app/projects` shows personal and shared projects with task progress.
+
+Projects offer persistent list/board views, draggable sections and a keyboard-accessible move
+menu. Start from a blank project or a workflow, trip, launch or study template. Task comments
+are visible only to people with access to the task, and authors can delete their own comments.
+Invite friends from Share using a copyable link or an email invitation. Email invitations require
+the matching account address; signed-out recipients return to the invitation after registration
+or login. Owners can cancel invitations and remove members. Account deletion preserves work
+authored in another person's project.
+
+## Publishing from Windows
+
+```powershell
+.\deploy.ps1
+```
+
+The default run migrates a separate validation database, checks types, unit tests, contrast and
+browser flows, builds, commits and pushes the current branch to GitHub, then deploys that exact
+commit. The server builds the new release while the previous one stays online, briefly pauses
+writes for a consistent database backup and migrations, activates the release, and verifies the
+public release ID. Activation errors restore the previous app and database. The WhatsApp state
+and mail credentials stay in `/var/lib/seder`, outside Git and release directories.
+
+`-ValidateOnly` runs checks without publishing; `-SkipE2E` explicitly skips browser checks;
+`-SkipGithub` deploys the local committed source without pushing. Defaults are branch `main`
+and server `root@vee-app.co.il`. SSH and Git authentication must already work. Production mail
+settings live in `/var/lib/seder/secrets.env`: `RESEND_API_KEY` plus verified `MAIL_FROM`, or
+`SMTP_URL`. Database and previous-release backups remain under `/root/deployment-backups/seder`
+and `/root/Seder.previous-<release>`.
+
+## Local start
 
 Double-click **`run.cmd`**, or from a terminal:
 
@@ -118,6 +157,36 @@ thirty cells.
   of squeezing.
 
 Keyboard: `←` `→` move a period (left is forward), `T` today, `M` month, `W` week.
+
+### On a phone it is not a grid
+
+Seven columns of a 390px screen give each day about 50px, which is not enough
+for a title — so the phone used to show coloured dots and hide the work behind
+a tap. Neither reference ships a month grid on a phone:
+[Todoist](https://www.todoist.com/inspiration/todoist-upcoming-view) puts a week
+strip over a day-grouped agenda, and
+[Things](https://culturedcode.com/things/support/articles/4001304/) drops the
+grid entirely and lists days in order.
+
+So the phone gets a **week strip over an agenda**: seven day cells, Sunday on
+the right, each with the day number and up to three dots, sticky at the top;
+below it one section per day with **full task titles**, times and project
+chips, a per-day `+` that composes onto that date, and a tap that opens the
+same task editor the rest of the app uses. Both trees are in the DOM and chosen
+by CSS, so neither waits for hydration to appear.
+
+The strip is full-bleed on purpose. The column pads 16px a side, which at 320px
+would leave 41px per cell — under the touch floor. Bleeding into that padding
+buys back the 45px seven cells need, which is also why the chevrons sit on
+their own row: 7×44 + 2×44 does not fit in 320.
+
+Stepping past the loaded weeks navigates and carries `?d=`, so the strip opens
+on the day the chevron aimed at instead of snapping back to today.
+
+**The audit exception is gone.** `scripts/mobile-audit.mjs` used to carry a
+declared exception for this route, saying in its own comment that the honest
+fix was an agenda view rather than a size tweak. The calendar now passes clean
+at 320 / 390 / 430 with no exceptions in the file.
 
 The date picker — reachable from the detail panel and from a row's `⋯ → תאריך אחר…` — puts the
 common answers on top and a mini month below, with the selected day's Hebrew date in the footer.
@@ -224,15 +293,16 @@ configurable.
 - The token is re-checked on submit, not just when the page loaded, in case the form sat open past
   the expiry.
 
-**Delivery.** With `SMTP_URL` set the mail is sent for real. Without it — the normal state on a
-laptop — the message is printed to the server console rather than silently dropped, so the whole
-flow works locally with no mail provider. Set `MAIL_LOG_FILE` to also append messages to a file,
-which is how the tests read the link.
+**Delivery.** Configure `RESEND_API_KEY` and a verified `MAIL_FROM`, or `SMTP_URL`.
+Production rejects missing delivery configuration and removes a newly issued reset token if
+sending fails. Provider acceptance is logged with the message ID; inbox delivery is a separate
+provider event. Local development previews messages. Browser tests explicitly enable
+`MAIL_PREVIEW=1` and `MAIL_LOG_FILE`; a preview is never presented as a sent invitation.
 
 ```bash
-SMTP_URL="smtp://user:pass@smtp.example.com:587"   # omit for console delivery
+RESEND_API_KEY="re_..."                         # or configure SMTP_URL
 MAIL_FROM="סדר <no-reply@example.com>"
-APP_URL="https://seder.example.com"                # absolute links in emails
+APP_URL="https://lawebs.co.il/seder"             # absolute links in emails
 ```
 
 ## Logbook
@@ -672,14 +742,12 @@ its own direction. Email, time and date fields are forced to `dir="ltr"`. Numera
 
 ## Not built yet
 
-Saved filters, calendar sync, sharing, offline sync, multi-select bulk actions, dragging projects
-into a different sidebar order, renaming or reordering sections, email verification on sign-up, and
+Calendar sync, offline sync, dragging projects into a different sidebar order, reordering
+sections, email verification on sign-up, and
 a formal IS 5568 accessibility certification. The build meets the WCAG AA floor — contrast is encoded at the token layer, focus
 is always visible, `prefers-reduced-motion` is respected — but certification is its own pass.
 
-`bulkCompleteAction`, `bulkDeleteAction`, `reorderProjectAction` and `deleteSectionAction` exist in
-`src/server/` with no UI calling them. They are the server half of the features listed above;
-either wire them up or delete them.
+Project reordering is the remaining server action that still needs a sidebar interaction.
 
 ## Known warning
 

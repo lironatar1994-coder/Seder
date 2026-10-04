@@ -51,13 +51,13 @@ function Write-Fail { param([string]$Text) Write-Host "!!  $Text" -ForegroundCol
 
 $node = Get-Command node -ErrorAction SilentlyContinue
 if (-not $node) {
-    Write-Fail 'Node.js was not found on PATH. Install Node 20 or newer from https://nodejs.org and run this again.'
+    Write-Fail 'Node.js was not found on PATH. Install Node 22.12 or newer from https://nodejs.org and run this again.'
     exit 1
 }
 
-$nodeMajor = [int](& node --version).TrimStart('v').Split('.')[0]
-if ($nodeMajor -lt 20) {
-    Write-Fail "Node $nodeMajor is too old. This project needs Node 20 or newer."
+$nodeVersion = [version]((& node --version).TrimStart('v'))
+if ($nodeVersion -lt [version]'22.12.0') {
+    Write-Fail "Node $nodeVersion is too old. This project needs Node 22.12 or newer."
     exit 1
 }
 
@@ -112,6 +112,7 @@ if ($Fresh) {
 
 if (-not (Test-Path 'prisma/dev.db')) {
     Write-Step 'Setting up the database'
+    New-Item -ItemType File -Path 'prisma/dev.db' | Out-Null
     npx prisma generate
     if ($LASTEXITCODE -ne 0) { Write-Fail 'prisma generate failed.'; exit 1 }
 
@@ -126,12 +127,14 @@ if (-not (Test-Path 'prisma/dev.db')) {
     Write-Host '    Demo account:  demo@seder.app  /  demo1234' -ForegroundColor Green
     Write-Host ''
 } else {
-    Write-Skip 'Database already set up.'
+    Write-Step 'Applying pending database updates'
+    npx prisma migrate deploy
+    if ($LASTEXITCODE -ne 0) { Write-Fail 'prisma migrate failed.'; exit 1 }
 }
 
 # --- Build (production only) ------------------------------------------------
 
-$url = "http://localhost:$Port"
+$url = "http://localhost:$Port/seder"
 
 if ($Prod) {
     Write-Step 'Building for production'

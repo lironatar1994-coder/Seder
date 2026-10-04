@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DndContext,
   KeyboardSensor,
@@ -16,7 +17,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus } from 'lucide-react';
+import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { TaskDTO, TaskGroup } from '@/server/tasks/queries';
 import type { Priority } from '@/lib/constants';
@@ -66,6 +67,8 @@ export interface TaskListProps {
   reorderable?: boolean;
   /** The Logbook is a record, not a place to add work. */
   showComposer?: boolean;
+  /** Saved-filter screens already provide their own search and filter controls. */
+  showTools?: boolean;
   /** Off in the Logbook: most of the bar's verbs — complete, reschedule,
    *  prioritise — mean nothing to a task that is already done. */
   selectable?: boolean;
@@ -86,6 +89,7 @@ export function TaskList({
   empty,
   reorderable = true,
   showComposer = true,
+  showTools = true,
   selectable = true,
   collaborators,
   footer,
@@ -99,6 +103,13 @@ export function TaskList({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [sort, setSort] = useState('manual');
+  /** The row just added, while it is still tinted. */
+  const [landedId, setLandedId] = useState<string | null>(null);
+  /** A task saved but not yet returned by the server. */
+  const pendingAdd = useRef<{ id: string; landedIn?: string } | null>(null);
   const [, startTransition] = useTransition();
   const isPhone = useIsPhone();
   const { toast } = useToast();
@@ -135,9 +146,9 @@ export function TaskList({
     () =>
       groups.map((group) => ({
         ...group,
-        tasks: group.tasks.filter((t) => !removed.has(t.id)),
+        tasks: group.tasks.filter((t) => !removed.has(t.id) && (priorityFilter === 'all' || t.priority === Number(priorityFilter)) && (!search || `${t.title} ${t.notes ?? ''}`.toLowerCase().includes(search.toLowerCase()))).sort((a, b) => sort === 'priority' ? a.priority - b.priority : sort === 'title' ? a.title.localeCompare(b.title, 'he') : sort === 'date' ? (a.scheduledFor?.getTime() ?? Infinity) - (b.scheduledFor?.getTime() ?? Infinity) : 0),
       })),
-    [groups, removed],
+    [groups, removed, search, priorityFilter, sort],
   );
 
   const vocabulary = useMemo(
@@ -147,7 +158,8 @@ export function TaskList({
 
   const flat = useMemo(() => visibleGroups.flatMap((g) => g.tasks), [visibleGroups]);
   const isEmpty = flat.length === 0;
-  const openTask = flat.find((t) => t.id === openTaskId) ?? null;
+  const openTask = groups.flatMap((group) => group.tasks).find((t) => t.id === openTaskId) ?? null;
+  useEffect(() => { const params = new URLSearchParams(window.location.search); const id = params.get('task'); if (id && groups.some((group) => group.tasks.some((task) => task.id === id))) { setOpenTaskId(id); params.delete('task'); window.history.replaceState(null, '', window.location.pathname + (params.size ? `?${params}` : '')); } }, [groups]);
 
   /* Stepping through the list from inside the editor. The list is the only
      thing that knows the order, so it hands the editor a step function rather
@@ -170,6 +182,52 @@ export function TaskList({
       const next = new Set([...prev].filter((id) => live.has(id)));
       return next.size === prev.size ? prev : next;
     });
+  }, [groups]);
+
+  /* ------------------------------------------------------------ landing */
+
+  /* A new task used to be announced by a toast naming the view it went to,
+     because it might have gone anywhere — a task added from Today but dated
+     next week is not in the list you are looking at. When it *is*, the row
+     saying so beats a label saying so: it appears where it will live, tinted,
+     and settles. The toast is what happens when it went somewhere else.
+
+     Which of the two is not knowable at save time, only once the server sends
+     the list back, so the add is held here until then. */
+  const handleAdded = useCallback(
+    (id: string, landedIn?: string) => {
+      pendingAdd.current = { id, landedIn };
+      const timer = setTimeout(() => {
+        // Still waiting: the row is not in this view, so say where it is.
+        if (pendingAdd.current?.id !== id) return;
+        pendingAdd.current = null;
+        toast({ message: landedIn ? `נוספה ל${landedIn}` : 'נוספה משימה' });
+      }, 1200);
+      timers.current.add(timer);
+    },
+    [toast],
+  );
+
+  useEffect(() => {
+    const pending = pendingAdd.current;
+    if (!pending) return;
+    if (!groups.some((group) => group.tasks.some((task) => task.id === pending.id))) return;
+
+    pendingAdd.current = null;
+    setLandedId(pending.id);
+    // New tasks are ordered to the top of their group, which can still be below
+    // the fold in a long day.
+    requestAnimationFrame(() =>
+      document
+        .querySelector(`[data-task-id="${pending.id}"]`)
+        ?.scrollIntoView({ block: 'nearest' }),
+    );
+
+    const timer = setTimeout(
+      () => setLandedId((current) => (current === pending.id ? null : current)),
+      1300,
+    );
+    timers.current.add(timer);
   }, [groups]);
 
   /* ---------------------------------------------------------- selection */
@@ -589,13 +647,16 @@ export function TaskList({
 
   return (
     <div className="pb-24" data-testid="task-list">
+      {showTools && showComposer && groups.some((group) => group.tasks.length > 0) && <div className="task-toolbar"><label className="task-search"><Search className="size-4 shrink-0" aria-hidden /><input dir="auto" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="חיפוש ברשימה" placeholder="חיפוש ברשימה" />{search && <button type="button" aria-label="ניקוי חיפוש" onClick={() => setSearch('')}><X className="size-3.5" aria-hidden /></button>}</label><label className="sr-only" htmlFor="task-priority-filter">סינון לפי עדיפות</label><select id="task-priority-filter" value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}><option value="all">כל העדיפויות</option><option value="1">דחוף</option><option value="2">חשוב</option><option value="3">רגיל</option><option value="4">ללא עדיפות</option></select><label className="sr-only" htmlFor="task-sort">מיון משימות</label><select id="task-sort" value={sort} onChange={(event) => setSort(event.target.value)}><option value="manual">סדר ידני</option><option value="priority">לפי עדיפות</option><option value="date">לפי תאריך</option><option value="title">לפי שם</option></select></div>}
       {showComposer &&
         (composerOpen ? (
           <ComposerSlot phone={isPhone} onClose={() => setComposerOpen(false)}>
             <Composer
               context={context}
               vocabulary={vocabulary}
+              variant={isPhone ? 'sheet' : 'inline'}
               onClose={() => setComposerOpen(false)}
+              onAdded={handleAdded}
             />
           </ComposerSlot>
         ) : (
@@ -657,13 +718,14 @@ export function TaskList({
                           key={task.id}
                           task={task}
                           completing={completing.has(task.id)}
+                          landed={landedId === task.id}
                           selected={selectedId === task.id}
                           selecting={checkedIds.size > 0}
                           checked={checkedIds.has(task.id)}
                           onSelect={handleSelect}
                           hideProject={hideProject}
                           // Dragging and selecting compete for the same press.
-                          draggable={reorderable && checkedIds.size === 0}
+                          draggable={reorderable && checkedIds.size === 0 && sort === 'manual' && !search && priorityFilter === 'all'}
                           onToggle={handleToggle}
                           onOpen={(t) => {
                             setSelectedId(t.id);
@@ -749,7 +811,14 @@ function ComposerSlot({
 }) {
   if (!phone) return <div className="mb-4 animate-fade-up">{children}</div>;
 
-  return (
+  /* Portalled to the body, not merely `fixed`.
+     `main` carries `view-transition-name`, which creates a stacking context —
+     so a `z-50` sheet inside it is only z-50 *within main*, and the tab bar
+     (a sibling of main, z-30) paints over the sheet's submit button. Escaping
+     to the body is what the task editor and the day panel already do, for the
+     same reason. Safe to reach for `document` here: this branch only renders
+     once `useIsPhone` has resolved, which is after hydration. */
+  return createPortal(
     <>
       <button
         type="button"
@@ -757,17 +826,14 @@ function ComposerSlot({
         onClick={onClose}
         className="fixed inset-0 z-40 bg-scrim-soft md:hidden"
       />
-      <div
-        className={cn(
-          'animate-fade-up fixed inset-be-0 inset-s-0 inset-e-0 z-50 p-2 md:hidden',
-          // Above the keyboard, which the layout viewport shrinks for, and
-          // clear of the home indicator when it does not.
-          'pb-[max(0.5rem,env(safe-area-inset-bottom))]',
-        )}
-      >
+      {/* No padding: the sheet goes flush to the three edges and carries the
+          safe-area inset itself, so its own background covers the home
+          indicator rather than leaving a strip of the dimmed page under it. */}
+      <div className="animate-fade-up fixed inset-be-0 inset-s-0 inset-e-0 z-50 md:hidden">
         {children}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
 

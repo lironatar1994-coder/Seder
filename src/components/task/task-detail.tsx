@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Check, ChevronDown, ChevronUp, Flag, Plus, Repeat, Trash2, X } from 'lucide-react';
+import { Bell, Check, ChevronDown, ChevronUp, Flag, Plus, Repeat, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { TaskDTO } from '@/server/tasks/queries';
 import { PRIORITIES, PRIORITY_LABELS, swatchVar, type Priority } from '@/lib/constants';
@@ -21,6 +21,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/overlays';
 import { DatePickerPanel } from '@/components/calendar/date-picker';
+import {
+  hourLabel,
+  isReminderOff,
+  reminderLabel,
+  reminderOptionsFor,
+} from '@/lib/reminder';
+import { useReminderDefaults } from './reminder-defaults';
 import { describeStored, recurrencePresets } from '@/lib/recurrence';
 
 /** A stored date is UTC midnight, so slicing the ISO string is the calendar
@@ -40,6 +47,7 @@ import {
   updateTaskAction,
 } from '@/server/tasks/actions';
 import { useToast } from '@/components/ui/toast';
+import { TaskComments } from './task-comments';
 
 interface DetailProps {
   /** The task as the surrounding view currently knows it, or null once that
@@ -95,6 +103,7 @@ export function TaskDetail({
   const [draft, setDraft] = useState<TaskDTO | null>(null);
   const [, startTransition] = useTransition();
   const { toast } = useToast();
+  const reminderDefaults = useReminderDefaults();
 
   useEffect(() => {
     if (incoming) setDraft(incoming);
@@ -279,6 +288,70 @@ export function TaskDetail({
             />
           </PopoverContent>
         </Popover>
+      </MetaRow>
+
+      {/* Sits under the two date rows because it is about them: a reminder has
+          nothing to fire against until the task has a day. */}
+      <MetaRow label="תזכורת">
+        <Menu>
+          <MenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!task.scheduledFor}
+              className={cn(
+                'w-full justify-between',
+                task.scheduledFor &&
+                  !isReminderOff(task.reminder) &&
+                  task.reminder !== null &&
+                  'border-accent/40 bg-accent-soft text-accent',
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-1.5">
+                <Bell className="size-3.5 shrink-0" aria-hidden />
+                <span className="truncate">
+                  {task.scheduledFor
+                    ? reminderLabel(task.reminder, {
+                        hasTime: Boolean(task.scheduledTime),
+                        reminderHour: reminderDefaults.hour,
+                        defaultLead: reminderDefaults.lead,
+                      })
+                    : 'צריך תאריך'}
+                </span>
+              </span>
+            </Button>
+          </MenuTrigger>
+          <MenuContent className="w-60">
+            {reminderOptionsFor(Boolean(task.scheduledTime)).map((option) => (
+              <MenuItem
+                key={option.value ?? 'default'}
+                onSelect={() => {
+                  patch({ reminder: option.value });
+                  run(() => updateTaskAction({ id: task.id, reminder: option.value }));
+                }}
+              >
+                <span className="flex-1">
+                  {option.value === null
+                    ? reminderLabel(null, {
+                        hasTime: Boolean(task.scheduledTime),
+                        reminderHour: reminderDefaults.hour,
+                        defaultLead: reminderDefaults.lead,
+                      })
+                    : option.label}
+                </span>
+                {task.reminder === option.value && (
+                  <Check className="size-3.5 text-accent" aria-hidden />
+                )}
+              </MenuItem>
+            ))}
+          </MenuContent>
+        </Menu>
+        {task.scheduledFor && !task.scheduledTime && !isReminderOff(task.reminder) && (
+          <p className="text-xs leading-relaxed text-muted">
+            תגיע בוואטסאפ ב־{hourLabel(reminderDefaults.hour)}, יחד עם שאר המשימות של אותו יום.
+            השעה נקבעת בהגדרות.
+          </p>
+        )}
       </MetaRow>
 
       {shared && (
@@ -695,6 +768,7 @@ export function TaskDetail({
                   className="flex-1 bg-transparent py-1 text-sm outline-none placeholder:text-muted"
                 />
               </form>
+              <TaskComments key={task.id} taskId={task.id} />
             </div>
           </div>
         </DialogPrimitive.Content>

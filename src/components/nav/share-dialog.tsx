@@ -13,6 +13,7 @@ import {
   leaveProjectAction,
   removeMemberAction,
   revokeInvitesAction,
+  revokeInviteAction,
   type ShareState,
 } from '@/server/sharing/actions';
 
@@ -75,6 +76,7 @@ export function ShareDialog({
       }
       setLink(result.link ?? null);
       if (result.mailed) toast({ message: `ההזמנה נשלחה ל־${email}` });
+      if (result.mailError) toast({ message: result.mailError, tone: 'error' });
       setEmail('');
       await reload();
     });
@@ -180,7 +182,7 @@ export function ShareDialog({
                     </Button>
                   </div>
                   <p className="text-xs text-muted">
-                    הקישור תקף לשבוע ואפשר לשלוח אותו לכמה אנשים.
+                    בלי אימייל, הקישור פתוח למי שמקבל אותו. עם אימייל, רק החשבון המתאים יכול להצטרף. הקישור תקף לשבוע.
                   </p>
                 </div>
 
@@ -211,6 +213,9 @@ export function ShareDialog({
                 )}
 
                 {state.hasInvite && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">הזמנות פתוחות</h3>
+                    {state.invitations.map((invitation) => <div key={invitation.id} className="flex items-center gap-2 text-sm"><span className="min-w-0 flex-1 truncate"><bdi>{invitation.email ?? 'קישור הצטרפות'}</bdi></span><span className="shrink-0 text-xs text-muted">עד <time>{new Intl.DateTimeFormat('he-IL', { day: 'numeric', month: 'numeric' }).format(new Date(invitation.expiresAt))}</time></span><Button size="sm" variant="ghost" disabled={pending} onClick={() => startTransition(async () => { const result = await revokeInviteAction(projectId, invitation.id); if (result.ok) { setLink(null); await reload(); toast({ message: 'ההזמנה בוטלה' }); } else toast({ message: result.error ?? 'הביטול נכשל', tone: 'error' }); })}>ביטול</Button></div>)}
                   <button
                     type="button"
                     onClick={() =>
@@ -225,6 +230,7 @@ export function ShareDialog({
                   >
                     ביטול ההזמנות הפתוחות
                   </button>
+                  </div>
                 )}
               </section>
             ) : (

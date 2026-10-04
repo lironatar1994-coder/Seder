@@ -61,6 +61,8 @@ export function CommandPalette({
   const { toast } = useToast();
 
   useEffect(() => {
+    const search = () => setOpen(true);
+    window.addEventListener('seder:search', search);
     function onKeyDown(event: KeyboardEvent) {
       const mod = event.metaKey || event.ctrlKey;
       if (mod && event.key.toLowerCase() === 'k') {
@@ -74,7 +76,7 @@ export function CommandPalette({
       }
     }
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => { window.removeEventListener('keydown', onKeyDown); window.removeEventListener('seder:search', search); };
   }, [router]);
 
   // Reset on close, so the palette never reopens showing a stale search.

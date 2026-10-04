@@ -19,15 +19,10 @@ export function middleware(request: NextRequest) {
     if (!hasCookie) {
       const url = new URL(`${publicUrl}/login`);
       // Send them back where they were headed once they are in.
-      url.searchParams.set('next', pathname);
+      url.searchParams.set('next', pathname + request.nextUrl.search);
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
-  }
-
-  if ((pathname === '/login' || pathname === '/register') && hasCookie) {
-    const url = new URL(`${publicUrl}/app`);
-    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

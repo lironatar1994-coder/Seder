@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { db } from '@/server/db';
 import { requireUser } from '@/server/auth/session';
 import { projectCollaborators, projectRole } from '@/server/access';
-import { sendMail, appUrl } from '@/server/mail';
+import { sendMail, appUrl, emailHtml } from '@/server/mail';
 import { hashInviteToken } from '@/server/sharing/invites';
 import { emailSchema } from '@/lib/validation';
 
@@ -42,6 +42,7 @@ export interface ShareResult {
   link?: string;
   /** Whether it also went out by mail. */
   mailed?: boolean;
+  mailError?: string;
 }
 
 /**
@@ -69,7 +70,7 @@ export async function createInviteAction(
     return { ok: false, error: `אפשר לשתף עם עד ${MAX_MEMBERS} אנשים` };
   }
 
-  const address = email?.trim();
+  const address = email?.trim().toLowerCase();
   if (address) {
     const parsed = emailSchema.safeParse(address);
     if (!parsed.success) return { ok: false, error: 'כתובת האימייל לא תקינה' };
@@ -78,6 +79,8 @@ export async function createInviteAction(
   // Anything already expired is cleared on the way past, so the table does not
   // accumulate dead rows for a project that gets shared often.
   await db.projectInvite.deleteMany({ where: { projectId, expiresAt: { lt: new Date() } } });
+  const pendingInvites = await db.projectInvite.count({ where: { projectId } });
+  if (pendingInvites >= 20) return { ok: false, error: 'יש כבר 20 הזמנות פתוחות. אפשר לבטל הזמנות ישנות לפני יצירת הזמנה נוספת.' };
 
   const token = randomBytes(32).toString('base64url');
   await db.projectInvite.create({
@@ -93,10 +96,12 @@ export async function createInviteAction(
   const link = `${appUrl()}/app/join/${token}`;
 
   let mailed = false;
+  let mailError: string | undefined;
   if (address) {
-    await sendMail({
+    try { const delivery = await sendMail({
       to: address,
       subject: `${user.name} משתף אתכם ב״${project.name}״ · סדר`,
+      html: emailHtml(`הזמנה ל${project.name}`, `${user.name} הזמין אתכם לעבוד יחד. הקישור תקף לשבוע.`, link, 'הצטרפות לפרויקט'),
       text: [
         'שלום,',
         '',
@@ -109,12 +114,13 @@ export async function createInviteAction(
         '',
         'סדר',
       ].join('\n'),
-    });
-    mailed = true;
+    }); mailed = delivery.delivered;
+      if (!mailed) mailError = 'האימייל לא נשלח. אפשר להעתיק את קישור ההזמנה.';
+    } catch { mailError = 'שליחת האימייל נכשלה. אפשר להעתיק את קישור ההזמנה ולנסות שוב מאוחר יותר.'; }
   }
 
   refresh();
-  return { ok: true, link, mailed };
+  return { ok: true, link, mailed, mailError };
 }
 
 /** Withdraws every outstanding invitation to a project. */
@@ -163,14 +169,16 @@ async function detach(
   memberId: string,
   leaving: boolean,
 ): Promise<ShareResult> {
-  await db.projectMember.deleteMany({ where: { projectId, userId: memberId } });
+  await db.$transaction(async (tx) => {
+  await tx.projectMember.deleteMany({ where: { projectId, userId: memberId } });
 
   /* Their tasks stay; only their name comes off them. Removing somebody from a
      project must never delete work — and leaving the tasks assigned to a person
      who can no longer see them would strand them, invisible to everyone. */
-  await db.task.updateMany({
+  await tx.task.updateMany({
     where: { projectId, assigneeId: memberId },
     data: { assigneeId: null },
+  });
   });
 
   refresh();
@@ -183,6 +191,7 @@ export interface ShareState {
   /** Whether an invitation is currently outstanding. */
   hasInvite: boolean;
   isOwner: boolean;
+  invitations: { id: string; email: string | null; expiresAt: Date }[];
 }
 
 /** Everything the share dialog renders, in one call. */
@@ -196,5 +205,14 @@ export async function getShareStateAction(projectId: string): Promise<ShareState
     db.projectInvite.count({ where: { projectId, expiresAt: { gt: new Date() } } }),
   ]);
 
-  return { members, hasInvite: liveInvites > 0, isOwner: role === 'owner' };
+  const invitations = role === 'owner' ? await db.projectInvite.findMany({ where: { projectId, expiresAt: { gt: new Date() } }, select: { id: true, email: true, expiresAt: true }, orderBy: { createdAt: 'desc' } }) : [];
+  return { members, hasInvite: liveInvites > 0, isOwner: role === 'owner', invitations };
+}
+
+export async function revokeInviteAction(projectId: string, inviteId: string): Promise<ShareResult> {
+  const user = await requireUser();
+  if ((await projectRole(user.id, projectId)) !== 'owner') return { ok: false, error: 'אין הרשאה לבטל את ההזמנה' };
+  await db.projectInvite.deleteMany({ where: { id: inviteId, projectId } });
+  refresh();
+  return { ok: true };
 }

@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input, Label, FieldError } from '@/components/ui/field';
 import { Dialog, DialogContent, DialogFooter, DialogTrigger } from '@/components/ui/overlays';
 import { createProjectAction } from '@/server/organization/actions';
+import { PROJECT_TEMPLATES } from '@/lib/project-templates';
 
 export function NewProjectDialog({ trigger }: { trigger: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
+  const [template, setTemplate] = useState('blank');
   const [color, setColor] = useState<Swatch>('teal');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -20,7 +22,7 @@ export function NewProjectDialog({ trigger }: { trigger: React.ReactNode }) {
   function submit() {
     setError(null);
     startTransition(async () => {
-      const result = await createProjectAction({ name, color });
+      const result = await createProjectAction({ name, color }, template);
       if (!result.ok) {
         setError(result.error ?? 'לא הצלחנו ליצור את הפרויקט');
         return;
@@ -28,6 +30,7 @@ export function NewProjectDialog({ trigger }: { trigger: React.ReactNode }) {
       setOpen(false);
       setName('');
       setColor('teal');
+      setTemplate('blank');
       if (result.id) router.push(`/app/project/${result.id}`);
     });
   }
@@ -62,6 +65,7 @@ export function NewProjectDialog({ trigger }: { trigger: React.ReactNode }) {
             <FieldError>{error}</FieldError>
           </div>
 
+          <label className="filter-field">נקודת התחלה<select value={template} onChange={(event) => setTemplate(event.target.value)}>{PROJECT_TEMPLATES.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><span className="mt-1 text-xs font-normal text-muted">תבנית מוסיפה קטעים לפרויקט. המשימות נשארות בידיים שלכם.</span></label>
           <fieldset className="space-y-2">
             <legend className="text-sm font-semibold text-ink-2">צבע</legend>
             <div className="flex flex-wrap gap-2">

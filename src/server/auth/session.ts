@@ -10,6 +10,8 @@ export interface SessionUser {
   email: string;
   name: string;
   defaultView: string;
+  /** The hour an untimed task's reminder fires. */
+  reminderHour: number;
 }
 
 export interface CurrentSession {
@@ -62,7 +64,7 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
     select: {
       id: true,
       expiresAt: true,
-      user: { select: { id: true, email: true, name: true, defaultView: true } },
+      user: { select: { id: true, email: true, name: true, defaultView: true, reminderHour: true } },
     },
   });
 

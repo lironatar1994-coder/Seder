@@ -9,12 +9,34 @@ import { requireUser } from '@/server/auth/session';
 import { projectSchema, sectionSchema, labelSchema, fieldErrors } from '@/lib/validation';
 import { keyAfterLast, keyBetween } from '@/lib/ordering';
 import type { ActionResult } from '@/server/tasks/actions';
+import { PROJECT_TEMPLATES } from '@/lib/project-templates';
+import { keysBetween } from '@/lib/ordering';
 
 function refresh() {
   revalidatePath('/app', 'layout');
 }
 
-export async function createProjectAction(input: unknown): Promise<ActionResult> {
+export async function renameSectionAction(id: string, name: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const section = await db.section.findUnique({ where: { id }, select: { projectId: true } });
+  if (!section || !(await canUseProject(user.id, section.projectId))) return { ok: false, error: 'הקטע לא נמצא' };
+  const parsed = sectionSchema.safeParse({ projectId: section.projectId, name });
+  if (!parsed.success) return { ok: false, error: 'שם הקטע צריך להכיל בין 1 ל־80 תווים' };
+  await db.section.update({ where: { id }, data: { name: parsed.data.name } });
+  refresh(); return { ok: true };
+}
+
+export async function moveTaskToSectionAction(taskId: string, projectId: string, sectionId: string | null): Promise<ActionResult> {
+  const user = await requireUser();
+  if (!(await canUseProject(user.id, projectId))) return { ok: false, error: 'הפרויקט לא נמצא' };
+  const task = await db.task.findFirst({ where: { id: taskId, projectId, parentId: null }, select: { id: true } });
+  if (!task) return { ok: false, error: 'המשימה לא נמצאה בפרויקט הזה' };
+  if (sectionId && !(await db.section.findFirst({ where: { id: sectionId, projectId } }))) return { ok: false, error: 'הקטע לא נמצא בפרויקט הזה' };
+  await db.task.update({ where: { id: taskId }, data: { sectionId } });
+  refresh(); return { ok: true };
+}
+
+export async function createProjectAction(input: unknown, templateId = 'blank'): Promise<ActionResult> {
   const user = await requireUser();
   const parsed = projectSchema.safeParse(input);
   if (!parsed.success) {
@@ -28,7 +50,7 @@ export async function createProjectAction(input: unknown): Promise<ActionResult>
   });
 
   const project = await db.project.create({
-    data: { ...parsed.data, userId: user.id, position: keyAfterLast(siblings) },
+    data: { ...parsed.data, userId: user.id, position: keyAfterLast(siblings), sections: { create: (() => { const sections = PROJECT_TEMPLATES.find((template) => template.id === templateId)?.sections ?? []; const positions = keysBetween(null, null, sections.length); return sections.map((name, index) => ({ name, position: positions[index] })); })() } },
     select: { id: true },
   });
 

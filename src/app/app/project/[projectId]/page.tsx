@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/server/auth/session';
 import { getProjectView, getSidebarData } from '@/server/tasks/queries';
 import { swatchVar } from '@/lib/constants';
 import { ViewHeader } from '@/components/nav/view-header';
-import { TaskList } from '@/components/task/task-list';
+import { ProjectWorkspace } from '@/components/task/project-workspace';
 import { ProjectMenu } from '@/components/nav/project-menu';
 
 export async function generateMetadata({
@@ -37,7 +37,7 @@ export default async function ProjectPage({
   const remaining = data.progress.total - data.progress.done;
 
   return (
-    <>
+    <div data-wide>
       <ViewHeader
         title={data.project.name}
         accent={swatchVar(data.project.color)}
@@ -60,7 +60,8 @@ export default async function ProjectPage({
           />
         }
       />
-      <TaskList
+      <ProjectWorkspace
+        projectName={data.project.name}
         groups={data.groups}
         context={{ view: 'project', projectId: data.project.id }}
         projects={sidebar.projects}
@@ -72,6 +73,6 @@ export default async function ProjectPage({
           body: `אין עדיין משימות ב״${data.project.name}״. הוסיפו את הצעד הראשון.`,
         }}
       />
-    </>
+    </div>
   );
 }

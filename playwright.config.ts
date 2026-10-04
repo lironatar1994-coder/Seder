@@ -1,5 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
+import nextEnv from '@next/env';
+nextEnv.loadEnvConfig(process.cwd());
 
 /** The suite runs against a production build on its own port, not `next dev`.
  *  In dev, Fast Refresh recompiles routes on first hit and can land in the
@@ -46,6 +48,9 @@ export default defineConfig({
     url: `${ORIGIN}${BASE_PATH}/login`,
     env: {
       MAIL_LOG_FILE: MAIL_LOG,
+      MAIL_PREVIEW: '1',
+      SMTP_URL: '',
+      RESEND_API_KEY: '',
       APP_URL: `${ORIGIN}${BASE_PATH}`,
       NEXT_DIST_DIR: DIST_DIR,
     },

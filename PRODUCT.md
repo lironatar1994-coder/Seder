@@ -19,7 +19,7 @@ page around them.
 
 ## Product Purpose
 
-סדר is a personal task manager written in Hebrew, right-to-left from the ground up. It exists
+סדר is a personal and shared-project task manager written in Hebrew, right-to-left from the ground up. It exists
 so an Israeli can capture, plan and finish work without translating their own thinking.
 Success is a visitor signing up for a free account and typing their first task in Hebrew.
 
@@ -42,7 +42,7 @@ Concretely, and not truthfully copyable by a translated competitor:
 
 ## Operating Context
 
-Views: תיבה נכנסת, היום, בקרוב, בכל עת, מתישהו, יומן, plus projects, labels and a calendar
+Views: תיבה נכנסת, היום, בקרוב, בכל עת, מתישהו, יומן, מסננים, plus a project directory, labels and a calendar
 (month and week). Two independent axes: **where** (filed into a project, or Inbox) and **when**
 (scheduled with a date / בכל עת / מתישהו), with an optional deadline on top.
 
@@ -60,7 +60,12 @@ hues.
 - Colour is a token system in `src/app/globals.css` using `light-dark()`; components never
   reference a raw colour. Amber means time pressure and red means priority 1 — neither may be
   reused for anything else.
-- Free account, email + password, with password reset. No pricing, no plans, no team features.
+- Free account, email + password, with password reset through Resend or SMTP.
+- Shared projects have invitation links, email-bound invitations, assignment and comments.
+  Owners can revoke invitations and remove members. Personal tasks stay private.
+- Project boards support sections, dragging and an accessible move menu, plus starting templates.
+- Saved filters combine title/notes, priority, date, project and responsibility. Today includes
+  a seven-day outlook and a 25-minute focus timer. This is planning data, not a productivity score.
 - Production: lawebs.co.il/seder.
 
 ## Brand Commitments
@@ -79,7 +84,7 @@ hues.
 
 **Absent, and must not be fabricated:** user counts, customer logos, testimonials, reviews,
 press, ratings, uptime figures, funding, awards, pricing tiers, mobile apps, integrations,
-an API, offline sync, or collaboration.
+an external public API, offline sync, or features beyond those implemented above.
 
 ## Product Principles
 

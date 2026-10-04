@@ -664,6 +664,119 @@
   overflow: hidden;
 }
 
+/* ---------------------------------------------------------------------------
+   Quick add — the parse, drawn onto the sentence itself.
+
+   The composer used to print the raw syntax as grey punctuation and then
+   repeat every value as a pill underneath, so the task was on screen twice and
+   neither copy was the clean one. Now the field colours what it understood in
+   place: one line, and the line is the task.
+
+   Mechanically the field is two layers. A transparent <input> sits over a
+   mirror that repeats the same string with the parsed spans wrapped. That only
+   holds while the two agree character for character, which is the constraint
+   behind every rule below.
+--------------------------------------------------------------------------- */
+
+/* Block padding and a spread shadow, never inline padding: horizontal padding
+   would push every glyph after it and the mirror would drift out of register
+   with the input standing behind it. Block padding and box-shadow both paint
+   outside the line box without moving anything. */
+.qa-token {
+  border-radius: var(--radius-sm);
+  padding-block: 0.125rem;
+  background: var(--qa-bg);
+  color: var(--qa-fg);
+  /* 1px, not 2. Two tokens are separated by one space — about 4px — and a 2px
+     bleed on each side closed that to nothing, so "ביום חמישי בשעה 20:00" read
+     as one long band rather than a day and an hour you can take out
+     separately. */
+  box-shadow: 0 0 0 1px var(--qa-bg);
+  animation: seder-recognise 200ms var(--ease-spring) both;
+  /* The one thing on the mirror that answers a press — the layer itself stays
+     transparent to the pointer so a tap anywhere else still lands a caret. */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Lit rather than outlined while it holds the caret. The composer is a white
+   card among white rows, and a hairline is not enough to say which one is the
+   place you write.
+
+   Here rather than as a `focus-within:` utility because the resting shadow is
+   one too, and between two single-class rules for the same property the winner
+   is whichever Tailwind emitted last — which is the resting one. */
+.composer-card {
+  transition:
+    box-shadow 160ms var(--ease-out-soft),
+    border-color 160ms var(--ease-out-soft);
+}
+
+.composer-card:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    var(--shadow-row);
+}
+
+/* Says it is an object rather than a word, without moving anything: an inline
+   ring is drawn outside the line box, the same way the fill is. */
+.qa-token:hover {
+  box-shadow:
+    0 0 0 1px var(--qa-bg),
+    0 0 0 2px color-mix(in oklab, var(--qa-fg) 40%, transparent);
+}
+
+/* The sigil is the one part of the token the highlight already says. `#` is
+   noise once the word is wearing the project's colour. */
+.qa-sigil {
+  opacity: 0.5;
+}
+
+/* Recognition. Typing "מחר" and having the app understand it is the whole
+   pitch of this product, and until now nothing moved when it happened.
+   The pill inflates out of the word on a spring — the only overshoot in the
+   app besides completion.
+
+   Spread, not transform: a transform needs `display: inline-block`, and an
+   atomic inline is a single neutral object to the bidi algorithm, which would
+   reorder the mirror differently from the input on a mixed Hebrew/Latin line.
+
+   It plays on mount and never again, which is why the spans are keyed by what
+   the parser understood rather than by where it sits in the string. Keyed by
+   position, typing a title in front of a finished "מחר" would re-key the span
+   on every keystroke and the pill would pulse the whole way. */
+@keyframes seder-recognise {
+  from {
+    box-shadow: 0 0 0 -1px var(--qa-bg);
+  }
+}
+
+/* The input's own glyphs are transparent, so an opaque selection band would
+   cover the mirror and select-all would blank the field. */
+.qa-input::selection {
+  background: color-mix(in oklab, var(--accent) 26%, transparent);
+}
+
+/* Where it landed.
+   A new task used to be announced by a toast in the corner, because the row
+   itself might be anywhere — or nowhere. When it is on screen, the row saying
+   so is better than a label saying so: the tint fades and leaves the list. No
+   fill mode, so the row goes back to its own hover and selection colours the
+   moment it is over. */
+@keyframes seder-landed {
+  from {
+    background-color: var(--accent-soft);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.row-landed {
+  animation: seder-landed 1200ms var(--ease-out-soft);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -925,3 +1038,57 @@
   background: var(--muted);
   background-clip: content-box;
 }
+/* Seder workspace: quiet content, decisive capture, planning in the margin. */
+.workspace-bar { min-block-size: 4.25rem; padding-inline: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-block-end: 1px solid var(--line); background: var(--surface); }
+.workspace-content { padding-block-end: 2rem; }
+@media (max-width: 767px) { .workspace-bar { display: none; } }
+.rail-add { display: flex; align-items: center; gap: .65rem; inline-size: 100%; min-block-size: 2.75rem; border-radius: .65rem; padding-inline: .75rem; background: var(--rail-ink); color: var(--rail); font-weight: 700; }
+.rail-add:hover { filter: brightness(.94); }
+.rail-search { display: flex; align-items: center; gap: .65rem; inline-size: 100%; min-block-size: 2.5rem; margin-block-start: .5rem; border-radius: .6rem; padding-inline: .75rem; color: var(--rail-muted); }
+.rail-search:hover { background: var(--rail-hover); color: var(--rail-ink); }
+.today-workspace { display: grid; gap: 2.5rem; align-items: start; }
+.today-insights { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.5rem; padding-block-end: 3rem; }
+.insight-section { padding-block: .25rem 1.25rem; }
+.focus-session { background: var(--accent-soft); border-radius: 1rem; padding: 1.25rem; }
+.week-outlook { display: flex; gap: .5rem; block-size: 7.5rem; margin-block-start: 1.25rem; }
+.week-outlook-day { min-inline-size: 0; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: end; gap: .5rem; color: var(--muted); }
+.week-outlook-track { display: flex; align-items: end; inline-size: 100%; block-size: 4rem; background: var(--surface-2); border-radius: .35rem; overflow: hidden; }
+.week-outlook-track > span { inline-size: 100%; background: var(--line-strong); border-radius: .35rem; }
+.week-outlook-today { color: var(--accent); font-weight: 700; }
+.week-outlook-today .week-outlook-track > span { background: var(--accent); }
+.week-outlook-day:hover .week-outlook-track > span { background: var(--accent); }
+.task-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; padding-block: .75rem; margin-block-end: .65rem; border-block: 1px solid var(--line); color: var(--muted); }
+.task-search { display: flex; align-items: center; gap: .5rem; flex: 1; min-inline-size: 8rem; }
+.task-search input { background: transparent; inline-size: 100%; min-inline-size: 0; font-size: .875rem; outline-offset: 4px; }
+.task-toolbar select { min-block-size: 2.25rem; max-inline-size: 45%; padding-inline: .35rem; border-radius: .4rem; font-size: .8125rem; background: transparent; color: var(--ink-2); }
+[data-testid='task-list'] section > ul { background: var(--surface); border-radius: .75rem; padding: .25rem; }
+[data-task-id] + [data-task-id]::before { content: ''; position: absolute; inset-block-start: 0; inset-inline: 2.5rem 1rem; block-size: 1px; background: var(--line); }
+[data-task-id] { min-block-size: 3.5rem; }
+.filter-chip { display: inline-flex; align-items: center; gap: .4rem; min-block-size: 2.5rem; padding-inline: 1rem; border-radius: .6rem; background: var(--surface); color: var(--ink-2); font-size: .875rem; }
+.filter-chip:hover { background: var(--surface-2); }
+.filter-chip-active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.filter-builder { display: grid; gap: 1rem; padding: 1.25rem; background: var(--surface); border-radius: .9rem; }
+.filter-field { display: flex; flex-direction: column; gap: .35rem; font-size: .8125rem; font-weight: 600; color: var(--ink-2); }
+.filter-field select { min-inline-size: 0; inline-size: 100%; min-block-size: 2.75rem; border: 1px solid var(--line-strong); border-radius: .5rem; padding-inline: .6rem; background: var(--surface); color: var(--ink); font-size: .875rem; font-weight: 400; }
+.project-workspace-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-block: .5rem 1.5rem; padding-block: .75rem; border-block: 1px solid var(--line); }
+.view-switch { display: flex; gap: .25rem; padding: .25rem; background: var(--surface-2); border-radius: .65rem; }
+.view-switch button { display: flex; align-items: center; gap: .5rem; min-block-size: 2.25rem; padding-inline: .9rem; border-radius: .45rem; color: var(--muted); font-size: .875rem; }
+.view-switch button[aria-pressed='true'] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 2px 5px var(--shadow-tint-1); }
+.project-board { display: flex; gap: 1rem; overflow-x: auto; align-items: start; padding-block: .25rem 3rem; min-block-size: 24rem; scroll-snap-type: x proximity; }
+.board-column { flex: 0 0 19rem; inline-size: 19rem; min-block-size: 20rem; padding: .75rem; border-radius: .9rem; background: var(--surface-2); scroll-snap-align: start; transition: background 150ms ease-out; }
+.board-column-over { background: var(--accent-soft); }
+.board-card { position: relative; padding: 1rem; border-radius: .7rem; background: var(--surface); box-shadow: 0 2px 5px var(--shadow-tint-1); }
+.board-card-dragging { z-index: 20; opacity: .85; box-shadow: var(--shadow-pop); }
+.board-grip { cursor: grab; }
+.board-grip:active { cursor: grabbing; }
+.board-empty { padding: 1.5rem .5rem; }
+.board-new-section { flex: 0 0 16rem; padding: 1rem; border: 1px dashed var(--line-strong); border-radius: .9rem; }
+.project-directory { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,17rem),1fr)); gap: 1rem; padding-block-end: 4rem; }
+.project-directory-item { padding: 1.5rem; background: var(--surface); border-radius: 1rem; transition: background 150ms ease-out; }
+.project-directory-item:hover { background: var(--accent-soft); }
+.project-directory-progress { block-size: .25rem; margin-block-start: 1.5rem; border-radius: 1rem; background: var(--line); overflow: hidden; }
+.project-directory-progress span { display: block; block-size: 100%; border-radius: inherit; }
+@media (min-width:1280px) { .today-workspace { grid-template-columns: minmax(0,1fr) 17rem; gap: 3rem; } .today-insights { grid-template-columns: 1fr; gap: 1.75rem; border-inline-start: 1px solid var(--line); padding-inline-start: 1.75rem; } }
+@media (max-width:767px) { .today-workspace { gap: 1rem; } .today-insights { grid-template-columns: 1fr; } .today-workspace [data-testid='task-list'] { padding-block-end: 1.5rem; } .task-search { flex-basis: 100%; min-block-size: 2rem; } .task-toolbar select { flex: 1; max-inline-size: none; min-block-size: 2.5rem; } .board-column { flex-basis: min(19rem,calc(100vw - 3rem)); inline-size: min(19rem,calc(100vw - 3rem)); } .project-workspace-toolbar { gap: .5rem; } .view-switch button { padding-inline: .7rem; } }
+@media (min-width:768px) { :root[data-rail='collapsed'] .rail-capture { padding-inline: .5rem; } :root[data-rail='collapsed'] .rail-add, :root[data-rail='collapsed'] .rail-search { inline-size: 3.25rem; padding-inline: 1rem; } }
+@media (prefers-reduced-motion:reduce) { .board-column, .project-directory-item { transition:none; } }

@@ -132,7 +132,12 @@ export async function deleteAccountAction(
 
   // Every relation cascades from User, so this takes the projects, tasks,
   // labels, sessions and reset tokens with it.
-  await db.user.delete({ where: { id: user.id } });
+  await db.$transaction(async (tx) => {
+    // A member's account deletion must preserve the team's work.
+    const joinedProjects = await tx.project.findMany({ where: { userId: { not: user.id }, tasks: { some: { userId: user.id } } }, select: { id: true, userId: true } });
+    for (const project of joinedProjects) await tx.task.updateMany({ where: { userId: user.id, projectId: project.id }, data: { userId: project.userId } });
+    await tx.user.delete({ where: { id: user.id } });
+  });
   await destroyCurrentSession();
 
   redirect('/?deleted=1');

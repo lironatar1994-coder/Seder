@@ -18,3 +18,10 @@ tsconfig.tsbuildinfo
 /playwright/.cache/
 /screenshots/
 e2e-mail.log
+
+.live-snapshot/
+.*snapshot.tar.gz
+.env.production
+.env.production.*
+.impeccable/review/
+.local-artifacts/

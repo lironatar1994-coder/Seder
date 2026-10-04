@@ -44,6 +44,9 @@ export interface TaskRowProps {
   task: TaskDTO;
   /** Mid-completion: plays the strike and collapse before the row leaves. */
   completing?: boolean;
+  /** Just added from the composer: holds the accent for a moment so you can see
+   *  where the task you typed went. */
+  landed?: boolean;
   /** The keyboard cursor — one row at a time, independent of the selection. */
   selected?: boolean;
   /** A selection exists, so every row offers a way into it. */
@@ -73,6 +76,7 @@ export interface TaskRowProps {
 export const TaskRow = memo(function TaskRow({
   task,
   completing = false,
+  landed = false,
   selected = false,
   selecting = false,
   checked = false,
@@ -124,6 +128,7 @@ export const TaskRow = memo(function TaskRow({
             : 'hover:bg-surface',
         isDragging && 'row-lift z-10',
         completing && 'row-collapse',
+        landed && 'row-landed',
       )}
     >
       {selecting && onSelect && (

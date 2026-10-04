@@ -8,6 +8,9 @@
 import { PrismaClient } from '@prisma/client';
 import { hash } from '@node-rs/argon2';
 import { generateNKeysBetween } from 'fractional-indexing';
+import nextEnv from '@next/env';
+
+nextEnv.loadEnvConfig(process.cwd());
 
 const db = new PrismaClient();
 

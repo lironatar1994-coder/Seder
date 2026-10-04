@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   BookCheck,
   CalendarDays,
@@ -20,6 +20,10 @@ import {
   Tag,
   Users,
   X,
+  Search,
+  SlidersHorizontal,
+  FolderKanban,
+  Bookmark,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { VIEWS, swatchVar, type ViewSlug } from '@/lib/constants';
@@ -37,6 +41,7 @@ import { RollingNumber } from '@/components/ui/rolling-number';
 import { useRail } from './use-rail';
 import { ThemeToggle } from './theme-toggle';
 import { NewProjectDialog } from './new-project-dialog';
+import { requestCompose } from '@/components/task/compose-bus';
 
 const VIEW_ICONS: Record<ViewSlug, typeof Inbox> = {
   inbox: Inbox,
@@ -58,6 +63,8 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
   const [open, setOpen] = useState(false);
   const [, startTransition] = useTransition();
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { collapsed, toggle } = useRail();
 
   return (
@@ -136,6 +143,11 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
           </div>
         </div>
 
+        <div className="rail-capture px-3 pb-4 pt-2">
+          <button type="button" className="rail-add" onClick={() => { setOpen(false); if (!requestCompose()) router.push('/app/inbox?compose=1'); }}><Plus className="size-5 shrink-0" aria-hidden /><span className="rail-label">הוספת משימה</span></button>
+          <button type="button" className="rail-search" onClick={() => { setOpen(false); window.dispatchEvent(new Event('seder:search')); }}><Search className="size-4 shrink-0" aria-hidden /><span className="rail-label flex-1 text-start">חיפוש</span><kbd className="rail-label num text-xs">Ctrl K</kbd></button>
+        </div>
+
         <nav
           aria-label="ניווט ראשי"
           className="scroll-quiet flex-1 overflow-y-auto px-2 pb-4"
@@ -169,6 +181,12 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
               );
             })}
           </ul>
+
+          <div className="mt-3 border-bs border-[var(--rail-line)] pt-3">
+            <NavLink href="/app/filters" active={pathname === '/app/filters' && !searchParams.get('id')}><SlidersHorizontal className="size-4 shrink-0" aria-hidden /><span className="rail-label">מסננים</span></NavLink>
+            <NavLink href="/app/projects" active={pathname === '/app/projects'}><FolderKanban className="size-4 shrink-0" aria-hidden /><span className="rail-label">כל הפרויקטים</span></NavLink>
+          </div>
+          {data.savedFilters.length > 0 && <><Section title="מסננים שמורים" /><ul className="space-y-0.5">{data.savedFilters.map((filter) => <li key={filter.id}><NavLink href={`/app/filters?id=${filter.id}`} active={pathname === '/app/filters' && searchParams.get('id') === filter.id}><Bookmark className="size-3.5 shrink-0" aria-hidden /><span className="rail-label truncate">{filter.name}</span></NavLink></li>)}</ul></>}
 
           <Section
             title="פרויקטים"
@@ -302,6 +320,8 @@ function currentPlace(pathname: string, data: SidebarData): string {
   if (view) return view.label;
   if (pathname.startsWith('/app/calendar')) return 'לוח שנה';
   if (pathname.startsWith('/app/settings')) return 'הגדרות';
+  if (pathname.startsWith('/app/filters')) return 'מסננים';
+  if (pathname.startsWith('/app/projects')) return 'פרויקטים';
 
   const projectId = pathname.match(/^\/app\/project\/([^/]+)/)?.[1];
   if (projectId) return data.projects.find((p) => p.id === projectId)?.name ?? 'פרויקט';

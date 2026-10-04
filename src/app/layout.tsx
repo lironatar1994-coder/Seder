@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
-import { Assistant, Frank_Ruhl_Libre, Inter } from 'next/font/google';
 import { DirectionProvider } from '@radix-ui/react-direction';
 import { ToastProvider } from '@/components/ui/toast';
 import { VisitorSignal } from '@/components/analytics/visitor-signal';
+import './fonts.css';
 import './globals.css';
 
 /* Three roles, three faces.
@@ -10,26 +10,6 @@ import './globals.css';
    lockup and view titles, never for UI chrome.
    Assistant carries the interface: Hebrew-first, clean at 14–16px.
    Inter is a numerals-only utility face, tabular, for dates, times and counts. */
-const frank = Frank_Ruhl_Libre({
-  subsets: ['hebrew', 'latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-frank',
-  display: 'swap',
-});
-
-const assistant = Assistant({
-  subsets: ['hebrew', 'latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-assistant',
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-inter',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'סדר — ניהול משימות',
@@ -76,7 +56,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="he"
       dir="rtl"
       suppressHydrationWarning
-      className={`${frank.variable} ${assistant.variable} ${inter.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />

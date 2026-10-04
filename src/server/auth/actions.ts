@@ -19,6 +19,7 @@ import {
 } from '@/server/auth/reset';
 import { MAX_FAILED_LOGINS, LOGIN_LOCK_MS } from '@/lib/constants';
 import { keysBetween } from '@/lib/ordering';
+import { safeAuthRedirect } from '@/lib/auth-redirect';
 
 export interface AuthFormState {
   errors?: Record<string, string>;
@@ -63,7 +64,7 @@ export async function registerAction(
 
   await seedStarterContent(userId);
   await createSession(userId);
-  redirect('/app');
+  redirect(safeAuthRedirect(formData.get('next')));
 }
 
 export async function loginAction(
@@ -120,7 +121,7 @@ export async function loginAction(
   }
 
   await createSession(user.id);
-  redirect('/app');
+  redirect(safeAuthRedirect(formData.get('next')));
 }
 
 export interface ResetFormState {
@@ -175,7 +176,11 @@ export async function resetPasswordAction(
     return { errors: { _: 'הקישור פג או כבר נוצל. אפשר לבקש קישור חדש' } };
   }
 
-  await completePasswordReset(target, await hashPassword(parsed.data));
+  try { await completePasswordReset(target, await hashPassword(parsed.data)); }
+  catch (error) {
+    if (error instanceof Error && error.message === 'RESET_EXPIRED') return { errors: { _: 'הקישור פג או כבר נוצל. אפשר לבקש קישור חדש' } };
+    throw error;
+  }
   redirect('/login?reset=1');
 }
 
