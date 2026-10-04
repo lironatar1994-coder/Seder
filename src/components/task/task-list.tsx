@@ -50,6 +50,8 @@ import { BulkBar, bulkDeleteCopy } from './bulk-bar';
 import { useIsPhone } from '@/components/ui/use-is-phone';
 import { registerComposer } from './compose-bus';
 import type { WhenSelection } from './when-menu';
+import { todayTaskGroups } from '@/lib/today-tasks';
+import { useTaskNow } from './task-clock';
 
 /** How long the completion animation runs before the row is actually removed
  *  and the write is sent. Matches .strike-line + .row-collapse in globals.css. */
@@ -121,6 +123,9 @@ export function TaskList({
   const isPhone = useIsPhone();
   const { toast } = useToast();
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const now = useTaskNow();
+  const currentGroups = useMemo<TaskGroup[]>(() => context.view === 'today'
+    ? todayTaskGroups(groups.flatMap(group => group.tasks), now) : groups, [groups, context.view, now]);
 
   // One task list owns the view header's display control. Keep its state beside
   // the list, while placing the control in the same row as the page title.
@@ -157,11 +162,11 @@ export function TaskList({
   // the animation finishing and revalidation arriving.
   const visibleGroups = useMemo(
     () =>
-      groups.map((group) => ({
+      currentGroups.map((group) => ({
         ...group,
         tasks: group.tasks.filter((t) => !removed.has(t.id) && (priorityFilter === 'all' || t.priority === Number(priorityFilter)) && (!search || `${t.title} ${t.notes ?? ''}`.toLowerCase().includes(search.toLowerCase()))).sort((a, b) => sort === 'priority' ? a.priority - b.priority : sort === 'title' ? a.title.localeCompare(b.title, 'he') : sort === 'date' ? (a.scheduledFor?.getTime() ?? Infinity) - (b.scheduledFor?.getTime() ?? Infinity) : 0),
       })),
-    [groups, removed, search, priorityFilter, sort],
+    [currentGroups, removed, search, priorityFilter, sort],
   );
 
   const vocabulary = useMemo(
@@ -724,7 +729,7 @@ export function TaskList({
           <SortableContext items={flat.map((t) => t.id)} strategy={verticalListSortingStrategy}>
             {visibleGroups.map((group) =>
               group.tasks.length === 0 && group.key === 'loose' ? null : (
-                <section key={group.key} className="mb-6">
+                <section key={group.key} data-task-group={group.key} className="task-group mb-5">
                   {group.title && (
                     <GroupHeading
                       title={group.title}

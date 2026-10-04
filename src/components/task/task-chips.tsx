@@ -1,7 +1,10 @@
+'use client';
+
 import { CalendarDays, Clock, Flag, ListChecks, Repeat } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { describeStored } from '@/lib/recurrence';
-import { relativeDayLabel, isOverdue, today } from '@/lib/dates';
+import { relativeDayLabel, isOverdue, isScheduleOverdue, today } from '@/lib/dates';
+import { useTaskNow } from './task-clock';
 import { swatchVar, PRIORITY_LABELS, type Priority } from '@/lib/constants';
 
 /** Scheduled day (and time), reading as a person would say it. */
@@ -19,8 +22,10 @@ export function WhenChip({
 }) {
   // A completed task cannot be late. Leaving it red says the opposite of what
   // the tick next to it says.
-  const overdue = !muted && isOverdue(date);
-  if (compact && !time && relativeDayLabel(date, today()) === 'היום') return null;
+  const now = useTaskNow();
+  const dayLabel = relativeDayLabel(date, today(now));
+  const overdue = !muted && isScheduleOverdue(date, time, now);
+  if (compact && !time && dayLabel === 'היום') return null;
   return (
     <span
       className={cn(
@@ -29,7 +34,7 @@ export function WhenChip({
       )}
     >
       {!compact && <CalendarDays className="size-3.5 shrink-0" aria-hidden />}
-      {(!compact || relativeDayLabel(date, today()) !== 'היום') && relativeDayLabel(date, today())}
+      {(!compact || dayLabel !== 'היום') ? dayLabel : overdue ? 'באיחור' : null}
       {time && (
         <>
           {!compact && <Clock className="ms-0.5 size-3 shrink-0" aria-hidden />}
@@ -44,7 +49,8 @@ export function WhenChip({
 /** Deadline. Amber is reserved for this and for overdue — nothing else in the
  *  interface uses it, so the colour always means "time pressure". */
 export function DeadlineChip({ date, muted }: { date: Date; muted?: boolean }) {
-  const overdue = !muted && isOverdue(date);
+  const now = useTaskNow();
+  const overdue = !muted && isOverdue(date, today(now));
   return (
     <span
       className={cn(
@@ -59,7 +65,7 @@ export function DeadlineChip({ date, muted }: { date: Date; muted?: boolean }) {
     >
       <Flag className="size-3 shrink-0" aria-hidden />
       {overdue ? 'עבר המועד · ' : 'עד '}
-      {relativeDayLabel(date, today())}
+      {relativeDayLabel(date, today(now))}
     </span>
   );
 }

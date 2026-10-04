@@ -108,3 +108,27 @@ accessible order arrows, text/icon choice, Save and restore defaults. Store vali
 preferences per account, not per device. More preserves every hidden picker and selected
 hidden-field count. Wrap the field row at phone widths. This supersedes the minimal
 Date/Project/More default described above while preserving its real picker behavior.
+
+Today refinement (2026-10-04, user phone capture 1000190986.jpg): reduce phone row
+padding from 0.9rem to 0.5rem, group spacing to 1rem and header padding to 0.75rem/1rem.
+Preserve title sizes, completion controls and 44px open-task touch targets. Elapsed
+scheduled hours on the current Israeli day join באיחור with a red hour label;
+day-only tasks and current-day deadlines remain current. One minute clock serves
+labels and grouping, updates on phone wake/focus, and refreshes at the Israeli day
+boundary. Display changes do not complete, move dates or discard a composer draft.
+
+Bounded rendered pass: desktop, phone 320/390/576, dark mode and elapsed-hour state
+captured in .local-artifacts/today-spacing-*.png and inspected together. The two
+focused browser cases verify minute progression, editing back to a future hour,
+focus updates, preserved draft/status, compact row geometry and no horizontal
+overflow. Eight timing unit cases cover deadlines, manual order and Israeli clock
+changes. The detector reports only inherited spring-easing and composer radius
+advisories outside this change; all eight accents pass contrast in both modes.
+Production deployment and live checks are separate gates in the release logs.
+Pre-release validation: 342 unit cases passed on the separate validation database.
+All 95 browser scenarios passed across the regression run and focused reruns;
+the existing mobile smoke selector now explicitly targets the page H1 because
+current/overdue grouping can also render a Today H2. No app behavior was changed
+to satisfy that selector. Logs: today-spacing-regression.log,
+today-spacing-regression-selector.log, today-time-e2e.log and
+today-time-mobile-e2e.log in .local-artifacts/.

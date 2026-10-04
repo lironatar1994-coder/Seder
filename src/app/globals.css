@@ -995,13 +995,14 @@
 .mobile-add:hover { background: var(--accent-hover); }
 @media (min-width:768px) { .mobile-add { display: none; } }
 @media (max-width:767px) {
-  .view-heading { padding-block: 1rem 1.25rem; }
+  .view-heading { padding-block: .75rem 1rem; }
   .workspace-content { padding-inline: 1.25rem; }
   .view-heading > div { gap: .5rem; }
   .rail-header { padding-block-start: max(1rem,env(safe-area-inset-top)); }
   .drawer { inline-size: 100%; inset-block-end: var(--tab-bar); border-inline-end: 0; }
   .rail a, .rail-search, .rail-add { min-block-size: 2.75rem; }
-  .task-row { padding-block: .9rem; }
+  .task-row { padding-block: .5rem; min-block-size: 2.75rem; }
+  .task-group { margin-block-end: 1rem; }
   [data-task-properties] { background: var(--paper); padding-block: .65rem; }
   .task-property { display: grid; grid-template-columns: 5.5rem minmax(0,1fr); align-items: baseline; column-gap: .75rem; padding-block: .15rem; }
   .task-property > label { font-size: .875rem; }

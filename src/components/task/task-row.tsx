@@ -164,11 +164,10 @@ export const TaskRow = memo(function TaskRow({
           }
           onOpen(task);
         }}
-        // A one-line task gives this button 31px of height. Rather than pad the
-        // row — which would cost a visible task on every screen — the target
-        // grows over the row's own padding, which is dead space anyway.
+        // Compact rows retain a full touch target, including one-line tasks.
         className={cn(
           'relative min-w-0 flex-1 text-start',
+          '[@media(pointer:coarse)]:min-h-11',
           "before:absolute before:inset-x-0 before:content-['']",
           '[@media(pointer:coarse)]:before:-inset-y-2',
         )}

@@ -10,6 +10,7 @@ import {
 } from '@/server/access';
 import { today, addDays, dayStartInstant, toDayStart } from '@/lib/dates';
 import type { Priority, ViewSlug, WhenBucket } from '@/lib/constants';
+import { todayTaskGroups } from '@/lib/today-tasks';
 
 /**
  * One projection for every task the client renders, so the shape is identical
@@ -110,7 +111,8 @@ export interface ViewData {
 }
 
 export async function getViewTasks(userId: string, view: ViewSlug): Promise<ViewData> {
-  const base = today();
+  const now = new Date();
+  const base = today(now);
 
   /* The standing views are "my plate": everything I can see, minus work that
      is explicitly someone else's. A shared task nobody has claimed shows for
@@ -145,25 +147,7 @@ export async function getViewTasks(userId: string, view: ViewSlug): Promise<View
       ]);
 
       const tasks = open.map(toDTO);
-      // Anything still open from a previous day is separated out — it needs a
-      // decision, not another silent day at the bottom of the list.
-      const overdue = tasks.filter(
-        (t) =>
-          (t.scheduledFor && t.scheduledFor.getTime() < base.getTime()) ||
-          (t.deadline && t.deadline.getTime() < base.getTime()),
-      );
-      const overdueIds = new Set(overdue.map((t) => t.id));
-      const rest = tasks.filter((t) => !overdueIds.has(t.id));
-
-      const groups: TaskGroup[] = [];
-      if (overdue.length) {
-        groups.push({
-          key: 'overdue',
-          title: 'באיחור',
-          tasks: overdue,
-        });
-      }
-      groups.push({ key: 'today', title: overdue.length ? 'היום' : null, tasks: rest });
+      const groups = todayTaskGroups(tasks, now);
 
       return { groups, progress: { done: doneToday, total: doneToday + tasks.length } };
     }

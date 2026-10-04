@@ -163,3 +163,16 @@ export function isOverdue(date: Date | null | undefined, base: Date = today()): 
   if (!date) return false;
   return toDayStart(date).getTime() < base.getTime();
 }
+
+/** A day-only task stays current until midnight. A timed task becomes late
+ * after its displayed minute has passed, using the same Israeli wall clock
+ * conversion as reminders (including winter/summer clock changes). */
+export function isScheduleOverdue(date: Date | null | undefined, time?: string | null, now: Date = new Date()): boolean {
+  if (!date) return false;
+  const base = today(now);
+  const day = toDayStart(date);
+  if (day.getTime() < base.getTime()) return true;
+  if (day.getTime() !== base.getTime() || !time || !isValidTime(time)) return false;
+  const instant = wallTimeInstant(day, time);
+  return Boolean(instant && instant.getTime() < Math.floor(now.getTime() / 60_000) * 60_000);
+}

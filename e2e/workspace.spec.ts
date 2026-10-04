@@ -150,7 +150,7 @@ test('mobile task-first layout keeps capture, Browse and display options reachab
   for (const width of [320, 390, 576]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto(at('/app/today'));
-    await expect(page.getByRole('heading', { name: 'היום', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'היום', exact: true, level: 1 })).toBeVisible();
     await expect(page.getByRole('progressbar')).toHaveCount(0);
     await expect(page.getByLabel('חיפוש ברשימה')).toHaveCount(0);
     const firstTask = await page.locator('[data-task-id]').first().boundingBox();
@@ -173,6 +173,6 @@ test('mobile task-first layout keeps capture, Browse and display options reachab
     await expect(page.getByRole('navigation', { name: 'ניווט מהיר', exact: true })).toBeInViewport();
     await expect(page.getByRole('button', { name: 'הוספת משימה', exact: true })).toBeInViewport();
     await page.getByRole('navigation', { name: 'ניווט מהיר', exact: true }).getByRole('link', { name: 'היום', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'היום', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'היום', exact: true, level: 1 })).toBeVisible();
   }
 });

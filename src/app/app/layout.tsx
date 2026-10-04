@@ -8,6 +8,7 @@ import { CommandPalette } from '@/components/nav/command-palette';
 import { ViewTransitions } from '@/components/nav/view-transitions';
 import { ReminderDefaultsProvider } from '@/components/task/reminder-defaults';
 import { ComposerPreferencesProvider } from '@/components/task/composer-preferences';
+import { TaskClockProvider } from '@/components/task/task-clock';
 import { readComposerPreferences } from '@/lib/composer-preferences';
 import { envNumber } from '@/lib/env';
 import { WorkspaceBar } from '@/components/nav/workspace-bar';
@@ -52,9 +53,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             A page that is a grid rather than prose — the calendar — opts out by
             marking its root `data-wide`. */}
         <div className="workspace-content mx-auto w-full max-w-[50rem] px-4 has-[[data-wide]]:max-w-[82rem] md:px-8">
-          <ComposerPreferencesProvider value={readComposerPreferences(whatsappUser.composerPreferences)}>
-            <ReminderDefaultsProvider value={reminderDefaults}>{children}</ReminderDefaultsProvider>
-          </ComposerPreferencesProvider>
+          <TaskClockProvider initialMinute={Math.floor(Date.now() / 60_000) * 60_000}>
+            <ComposerPreferencesProvider value={readComposerPreferences(whatsappUser.composerPreferences)}>
+              <ReminderDefaultsProvider value={reminderDefaults}>{children}</ReminderDefaultsProvider>
+            </ComposerPreferencesProvider>
+          </TaskClockProvider>
         </div>
         {/* The tab bar is fixed, so the column owes it a floor to scroll to.
             Without this the last task sits under the bar and cannot be read,
