@@ -23,6 +23,7 @@ async function add(page: Page, text: string) {
 
 test('list search, priority filters, sorting, and focus timer work', async ({ page }) => {
   await register(page); await add(page, 'להגיש הצעה היום !1'); await add(page, 'לקרוא מסמך היום !3');
+  await page.getByRole('button', { name: 'תצוגת הרשימה', exact: true }).click();
   await page.getByLabel('חיפוש ברשימה').fill('מסמך');
   await expect(page.getByTestId('task-list').getByText('לקרוא מסמך', { exact: true })).toBeVisible();
   await expect(page.getByTestId('task-list').getByText('להגיש הצעה', { exact: true })).toBeHidden();
@@ -32,6 +33,13 @@ test('list search, priority filters, sorting, and focus timer work', async ({ pa
   await expect(page.getByTestId('task-list').getByText('לקרוא מסמך', { exact: true })).toBeHidden();
   await page.getByLabel('סינון לפי עדיפות').selectOption('all');
   await page.getByLabel('מיון משימות').selectOption('title');
+  await page.getByLabel('חיפוש ברשימה').fill('הצעה');
+  await page.getByLabel('סינון לפי עדיפות').selectOption('1');
+  await page.getByRole('button', { name: 'הצגת המשימות', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'חיפוש: הצעה · עדיפות: דחוף · מיון: שם', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'איפוס תצוגה', exact: true }).click();
+  await expect(page.getByTestId('task-list').getByText('לקרוא מסמך', { exact: true })).toBeVisible();
+  await page.goto(at('/app/focus'));
   await page.getByRole('button', { name: 'התחלת מיקוד' }).click();
   await expect(page.getByRole('button', { name: 'השהיה' })).toBeVisible();
   await page.reload(); await expect(page.getByRole('button', { name: 'השהיה' })).toBeVisible();
@@ -135,4 +143,36 @@ test('today, filters, projects and board stay inside a phone viewport in both th
     }
   }
   expect(errors).toEqual([]);
+});
+
+test('mobile task-first layout keeps capture, Browse and display options reachable', async ({ page }) => {
+  await register(page); await add(page, 'להכין מצגת היום בשעה 15:30'); await add(page, 'לעבור על התוכנית היום');
+  for (const width of [320, 390, 576]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto(at('/app/today'));
+    await expect(page.getByRole('heading', { name: 'היום', exact: true })).toBeVisible();
+    await expect(page.getByRole('progressbar')).toHaveCount(0);
+    await expect(page.getByLabel('חיפוש ברשימה')).toHaveCount(0);
+    const firstTask = await page.locator('[data-task-id]').first().boundingBox();
+    expect(firstTask!.y).toBeLessThan(160);
+    await expect(page.getByRole('button', { name: 'התחלת מיקוד' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'הוספת משימה', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'תפריט', exact: true }).click();
+    await expect(page.getByRole('link', { name: 'מיקוד ותכנון', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'הגדרות', exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('button', { name: 'תפריט', exact: true })).toBeFocused();
+    await page.getByRole('button', { name: 'תצוגת הרשימה', exact: true }).click();
+    await page.getByLabel('חיפוש ברשימה').fill('מצגת');
+    await page.getByRole('button', { name: 'הצגת המשימות', exact: true }).click();
+    await expect(page.getByText('לעבור על התוכנית', { exact: true })).toBeHidden();
+    await page.getByRole('button', { name: 'איפוס תצוגה', exact: true }).click();
+    await expect(page.getByText('לעבור על התוכנית', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.goto(at('/app/settings/appearance'));
+    await expect(page.getByRole('navigation', { name: 'ניווט מהיר', exact: true })).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'הוספת משימה', exact: true })).toBeInViewport();
+    await page.getByRole('navigation', { name: 'ניווט מהיר', exact: true }).getByRole('link', { name: 'היום', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'היום', exact: true })).toBeVisible();
+  }
 });

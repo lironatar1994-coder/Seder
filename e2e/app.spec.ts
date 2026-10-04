@@ -274,7 +274,7 @@ test.describe('settings', () => {
     expect(await accentOf()).not.toBe(green);
 
     // The default accent is the absence of an attribute, like "system".
-    await page.getByRole('radio', { name: 'אינדיגו' }).click();
+    await page.getByRole('radio', { name: 'אדום', exact: true }).click();
     await page.reload();
     await expect(page.locator('html')).not.toHaveAttribute('data-accent', /.*/);
   });
@@ -600,8 +600,11 @@ test.describe('tasks', () => {
     await addTask(page, 'להגיש דוח היום עד מחר');
 
     const row = list(page).locator('li').filter({ hasText: 'להגיש דוח' });
-    await expect(row).toContainText('היום');
     await expect(row).toContainText('עד מחר');
+    await row.getByRole('button', { name: 'פתיחת להגיש דוח', exact: true }).click();
+    const detail = page.getByRole('dialog');
+    await expect(detail.getByRole('group', { name: 'מתוזמן ל', exact: true }).getByRole('button', { name: 'היום', exact: true })).toBeVisible();
+    await expect(detail.getByRole('group', { name: 'מועד הגשה', exact: true }).getByRole('button', { name: 'מחר', exact: true })).toBeVisible();
   });
 
   test('the detail panel edits notes and adds a checklist item', async ({ page }) => {
@@ -1356,16 +1359,14 @@ test.describe('rtl', () => {
     await expect(page.getByText('לא נמצא כלום.')).toBeVisible();
   });
 
-  test('the day rail reflects today’s progress', async ({ page }) => {
+  test('today shows completed count without a progress rail', async ({ page }) => {
     await register(page);
     await addTask(page, 'משימה ראשונה היום');
     await addTask(page, 'משימה שנייה היום');
 
-    const rail = page.getByRole('progressbar');
-    await expect(rail).toHaveAttribute('aria-valuenow', '0');
-    await expect(rail).toHaveAttribute('aria-valuemax', '2');
+    await expect(page.getByRole('progressbar')).toHaveCount(0);
 
     await page.getByRole('checkbox', { name: /סימון כהושלם: משימה ראשונה/ }).click();
-    await expect(rail).toHaveAttribute('aria-valuenow', '1');
+    await expect(page.getByLabel('הושלמו 1 מתוך 2 משימות היום')).toBeVisible();
   });
 });

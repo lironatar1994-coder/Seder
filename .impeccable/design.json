@@ -1,312 +1,312 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-04T09:26:16.000Z",
+  "generatedAt": "2026-10-04T10:35:35.413Z",
   "title": "Design System: סדר",
   "extensions": {
     "colorMeta": {
       "paper": {
         "role": "neutral",
-        "displayName": "Cool Paper",
-        "canonical": "light-dark(oklch(97.4% calc(var(--accent-c) * 0.045) var(--accent-h)), oklch(14.5% calc(var(--accent-c-dark) * 0.06) var(--accent-h)))",
+        "displayName": "White Task Canvas",
+        "canonical": "light-dark(oklch(100% 0 0), oklch(16% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.00855 268)",
-          "oklch(26% 0.00855 268)",
-          "oklch(38% 0.00855 268)",
-          "oklch(49% 0.00855 268)",
-          "oklch(61% 0.00855 268)",
-          "oklch(72% 0.00855 268)",
-          "oklch(84% 0.00855 268)",
-          "oklch(95% 0.00855 268)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "surface": {
         "role": "neutral",
-        "displayName": "White Work Surface",
-        "canonical": "light-dark(oklch(100% 0 0), oklch(19.5% 0.009 268))",
+        "displayName": "Work Surface",
+        "canonical": "light-dark(oklch(100% 0 0), oklch(20% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0 268)",
-          "oklch(26% 0 268)",
-          "oklch(38% 0 268)",
-          "oklch(49% 0 268)",
-          "oklch(61% 0 268)",
-          "oklch(72% 0 268)",
-          "oklch(84% 0 268)",
-          "oklch(95% 0 268)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "surface-2": {
         "role": "neutral",
-        "displayName": "Quiet Layer",
-        "canonical": "light-dark(oklch(95.8% 0.005 265), oklch(24% 0.01 268))",
+        "displayName": "Quiet Gray Layer",
+        "canonical": "light-dark(oklch(97% 0 0), oklch(24% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.005 265)",
-          "oklch(26% 0.005 265)",
-          "oklch(38% 0.005 265)",
-          "oklch(49% 0.005 265)",
-          "oklch(61% 0.005 265)",
-          "oklch(72% 0.005 265)",
-          "oklch(84% 0.005 265)",
-          "oklch(95% 0.005 265)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "surface-sunk": {
         "role": "neutral",
         "displayName": "Recessed Layer",
-        "canonical": "light-dark(oklch(94.6% 0.006 265), oklch(11.5% 0.007 268))",
+        "canonical": "light-dark(oklch(95% 0 0), oklch(13% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.006 265)",
-          "oklch(26% 0.006 265)",
-          "oklch(38% 0.006 265)",
-          "oklch(49% 0.006 265)",
-          "oklch(61% 0.006 265)",
-          "oklch(72% 0.006 265)",
-          "oklch(84% 0.006 265)",
-          "oklch(95% 0.006 265)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "ink": {
         "role": "neutral",
-        "displayName": "Ink",
-        "canonical": "light-dark(oklch(17.5% 0.008 270), oklch(93% 0.005 268))",
+        "displayName": "Primary Ink",
+        "canonical": "light-dark(oklch(23% 0 0), oklch(93% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.008 270)",
-          "oklch(26% 0.008 270)",
-          "oklch(38% 0.008 270)",
-          "oklch(49% 0.008 270)",
-          "oklch(61% 0.008 270)",
-          "oklch(72% 0.008 270)",
-          "oklch(84% 0.008 270)",
-          "oklch(95% 0.008 270)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "ink-2": {
         "role": "neutral",
         "displayName": "Secondary Ink",
-        "canonical": "light-dark(oklch(33.5% 0.014 265), oklch(78% 0.011 268))",
+        "canonical": "light-dark(oklch(38% 0 0), oklch(80% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.014 265)",
-          "oklch(26% 0.014 265)",
-          "oklch(38% 0.014 265)",
-          "oklch(49% 0.014 265)",
-          "oklch(61% 0.014 265)",
-          "oklch(72% 0.014 265)",
-          "oklch(84% 0.014 265)",
-          "oklch(95% 0.014 265)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "muted": {
         "role": "neutral",
-        "displayName": "Muted Ink",
-        "canonical": "light-dark(oklch(47.5% 0.019 265), oklch(63% 0.016 268))",
+        "displayName": "Supporting Ink",
+        "canonical": "light-dark(oklch(49% 0 0), oklch(68% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.019 265)",
-          "oklch(26% 0.019 265)",
-          "oklch(38% 0.019 265)",
-          "oklch(49% 0.019 265)",
-          "oklch(61% 0.019 265)",
-          "oklch(72% 0.019 265)",
-          "oklch(84% 0.019 265)",
-          "oklch(95% 0.019 265)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "line": {
         "role": "neutral",
         "displayName": "Hairline",
-        "canonical": "light-dark(oklch(91.5% 0.005 265), oklch(25.5% 0.01 268))",
+        "canonical": "light-dark(oklch(93% 0 0), oklch(30% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.005 265)",
-          "oklch(26% 0.005 265)",
-          "oklch(38% 0.005 265)",
-          "oklch(49% 0.005 265)",
-          "oklch(61% 0.005 265)",
-          "oklch(72% 0.005 265)",
-          "oklch(84% 0.005 265)",
-          "oklch(95% 0.005 265)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "line-strong": {
         "role": "neutral",
-        "displayName": "Control Outline",
-        "canonical": "light-dark(oklch(84% 0.011 265), oklch(33% 0.013 268))",
+        "displayName": "Control Boundary",
+        "canonical": "light-dark(oklch(76% 0 0), oklch(43% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.011 265)",
-          "oklch(26% 0.011 265)",
-          "oklch(38% 0.011 265)",
-          "oklch(49% 0.011 265)",
-          "oklch(61% 0.011 265)",
-          "oklch(72% 0.011 265)",
-          "oklch(84% 0.011 265)",
-          "oklch(95% 0.011 265)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "rail": {
-        "role": "primary",
-        "displayName": "Indigo Rail",
-        "canonical": "light-dark(oklch(28% calc(var(--accent-c) * 0.32) var(--accent-h)), oklch(11.5% calc(var(--accent-c-dark) * 0.28) var(--accent-h)))",
+        "role": "neutral",
+        "displayName": "Pale Navigation",
+        "canonical": "light-dark(oklch(98% 0 0), oklch(20% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.0608 268)",
-          "oklch(26% 0.0608 268)",
-          "oklch(38% 0.0608 268)",
-          "oklch(49% 0.0608 268)",
-          "oklch(61% 0.0608 268)",
-          "oklch(72% 0.0608 268)",
-          "oklch(84% 0.0608 268)",
-          "oklch(95% 0.0608 268)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "rail-ink": {
-        "role": "primary",
-        "displayName": "Rail Ink",
-        "canonical": "light-dark(oklch(96% calc(var(--accent-c) * 0.05) var(--accent-h)), oklch(93% calc(var(--accent-c-dark) * 0.04) var(--accent-h)))",
+        "role": "neutral",
+        "displayName": "Navigation Ink",
+        "canonical": "light-dark(oklch(27% 0 0), oklch(93% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.0095 268)",
-          "oklch(26% 0.0095 268)",
-          "oklch(38% 0.0095 268)",
-          "oklch(49% 0.0095 268)",
-          "oklch(61% 0.0095 268)",
-          "oklch(72% 0.0095 268)",
-          "oklch(84% 0.0095 268)",
-          "oklch(95% 0.0095 268)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "rail-muted": {
-        "role": "primary",
-        "displayName": "Rail Secondary Ink",
-        "canonical": "light-dark(oklch(74% calc(var(--accent-c) * 0.14) var(--accent-h)), oklch(66% calc(var(--accent-c-dark) * 0.12) var(--accent-h)))",
+        "role": "neutral",
+        "displayName": "Supporting Navigation Ink",
+        "canonical": "light-dark(oklch(48% 0 0), oklch(68% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.0266 268)",
-          "oklch(26% 0.0266 268)",
-          "oklch(38% 0.0266 268)",
-          "oklch(49% 0.0266 268)",
-          "oklch(61% 0.0266 268)",
-          "oklch(72% 0.0266 268)",
-          "oklch(84% 0.0266 268)",
-          "oklch(95% 0.0266 268)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "rail-line": {
-        "role": "primary",
-        "displayName": "Rail Divider",
-        "canonical": "light-dark(oklch(35% calc(var(--accent-c) * 0.3) var(--accent-h)), oklch(19% calc(var(--accent-c-dark) * 0.25) var(--accent-h)))",
+        "role": "neutral",
+        "displayName": "Navigation Hairline",
+        "canonical": "light-dark(oklch(93% 0 0), oklch(30% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.057 268)",
-          "oklch(26% 0.057 268)",
-          "oklch(38% 0.057 268)",
-          "oklch(49% 0.057 268)",
-          "oklch(61% 0.057 268)",
-          "oklch(72% 0.057 268)",
-          "oklch(84% 0.057 268)",
-          "oklch(95% 0.057 268)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "rail-hover": {
-        "role": "primary",
-        "displayName": "Rail Hover",
-        "canonical": "light-dark(oklch(33.5% calc(var(--accent-c) * 0.34) var(--accent-h)), oklch(16.5% calc(var(--accent-c-dark) * 0.3) var(--accent-h)))",
+        "role": "neutral",
+        "displayName": "Navigation Hover",
+        "canonical": "light-dark(oklch(95% 0 0), oklch(24% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.0646 268)",
-          "oklch(26% 0.0646 268)",
-          "oklch(38% 0.0646 268)",
-          "oklch(49% 0.0646 268)",
-          "oklch(61% 0.0646 268)",
-          "oklch(72% 0.0646 268)",
-          "oklch(84% 0.0646 268)",
-          "oklch(95% 0.0646 268)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "rail-active": {
         "role": "primary",
-        "displayName": "Rail Current",
-        "canonical": "light-dark(oklch(39% calc(var(--accent-c) * 0.45) var(--accent-h)), oklch(22% calc(var(--accent-c-dark) * 0.42) var(--accent-h)))",
+        "displayName": "Current Destination Wash",
+        "canonical": "light-dark(oklch(95% calc(var(--accent-c) * 0.12) var(--accent-h)), oklch(25% calc(var(--accent-c-dark) * 0.25) var(--accent-h)))",
         "tonalRamp": [
-          "oklch(15% 0.0855 268)",
-          "oklch(26% 0.0855 268)",
-          "oklch(38% 0.0855 268)",
-          "oklch(49% 0.0855 268)",
-          "oklch(61% 0.0855 268)",
-          "oklch(72% 0.0855 268)",
-          "oklch(84% 0.0855 268)",
-          "oklch(95% 0.0855 268)"
+          "oklch(15% 0.0204 28)",
+          "oklch(26% 0.0204 28)",
+          "oklch(38% 0.0204 28)",
+          "oklch(49% 0.0204 28)",
+          "oklch(61% 0.0204 28)",
+          "oklch(72% 0.0204 28)",
+          "oklch(84% 0.0204 28)",
+          "oklch(95% 0.0204 28)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "accent": {
         "role": "primary",
-        "displayName": "Action Indigo",
-        "canonical": "light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(70% var(--accent-c-dark) var(--accent-h)))",
+        "displayName": "Action Red",
+        "canonical": "light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h)))",
         "tonalRamp": [
-          "oklch(15% 0.19 268)",
-          "oklch(26% 0.19 268)",
-          "oklch(38% 0.19 268)",
-          "oklch(49% 0.19 268)",
-          "oklch(61% 0.19 268)",
-          "oklch(72% 0.19 268)",
-          "oklch(84% 0.19 268)",
-          "oklch(95% 0.19 268)"
+          "oklch(15% 0.17 28)",
+          "oklch(26% 0.17 28)",
+          "oklch(38% 0.17 28)",
+          "oklch(49% 0.17 28)",
+          "oklch(61% 0.17 28)",
+          "oklch(72% 0.17 28)",
+          "oklch(84% 0.17 28)",
+          "oklch(95% 0.17 28)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "accent-hover": {
         "role": "primary",
         "displayName": "Action Hover",
         "canonical": "light-dark(oklch(44% var(--accent-c) var(--accent-h)), oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h)))",
         "tonalRamp": [
-          "oklch(15% 0.19 268)",
-          "oklch(26% 0.19 268)",
-          "oklch(38% 0.19 268)",
-          "oklch(49% 0.19 268)",
-          "oklch(61% 0.19 268)",
-          "oklch(72% 0.19 268)",
-          "oklch(84% 0.19 268)",
-          "oklch(95% 0.19 268)"
+          "oklch(15% 0.17 28)",
+          "oklch(26% 0.17 28)",
+          "oklch(38% 0.17 28)",
+          "oklch(49% 0.17 28)",
+          "oklch(61% 0.17 28)",
+          "oklch(72% 0.17 28)",
+          "oklch(84% 0.17 28)",
+          "oklch(95% 0.17 28)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "accent-soft": {
         "role": "primary",
         "displayName": "Action Wash",
-        "canonical": "light-dark(oklch(94.5% calc(var(--accent-c) * 0.14) var(--accent-h)), oklch(24% calc(var(--accent-c-dark) * 0.38) var(--accent-h)))",
+        "canonical": "light-dark(oklch(95% calc(var(--accent-c) * 0.12) var(--accent-h)), oklch(25% calc(var(--accent-c-dark) * 0.25) var(--accent-h)))",
         "tonalRamp": [
-          "oklch(15% 0.0266 268)",
-          "oklch(26% 0.0266 268)",
-          "oklch(38% 0.0266 268)",
-          "oklch(49% 0.0266 268)",
-          "oklch(61% 0.0266 268)",
-          "oklch(72% 0.0266 268)",
-          "oklch(84% 0.0266 268)",
-          "oklch(95% 0.0266 268)"
+          "oklch(15% 0.0204 28)",
+          "oklch(26% 0.0204 28)",
+          "oklch(38% 0.0204 28)",
+          "oklch(49% 0.0204 28)",
+          "oklch(61% 0.0204 28)",
+          "oklch(72% 0.0204 28)",
+          "oklch(84% 0.0204 28)",
+          "oklch(95% 0.0204 28)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "on-accent": {
-        "role": "primary",
+        "role": "neutral",
         "displayName": "Action Foreground",
-        "canonical": "light-dark(oklch(100% 0 0), oklch(14.5% 0.008 268))",
+        "canonical": "light-dark(oklch(100% 0 0), oklch(14% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0 268)",
-          "oklch(26% 0 268)",
-          "oklch(38% 0 268)",
-          "oklch(49% 0 268)",
-          "oklch(61% 0 268)",
-          "oklch(72% 0 268)",
-          "oklch(84% 0 268)",
-          "oklch(95% 0 268)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "flag": {
         "role": "secondary",
@@ -322,7 +322,7 @@
           "oklch(84% 0.128 58)",
           "oklch(95% 0.128 58)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "flag-soft": {
         "role": "secondary",
@@ -338,7 +338,7 @@
           "oklch(84% 0.024 75)",
           "oklch(95% 0.024 75)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "p1": {
         "role": "secondary",
@@ -354,11 +354,11 @@
           "oklch(84% 0.17 27)",
           "oklch(95% 0.17 27)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "p2": {
         "role": "secondary",
-        "displayName": "Priority Amber",
+        "displayName": "Important Amber",
         "canonical": "light-dark(oklch(50% 0.128 58), oklch(76% 0.13 70))",
         "tonalRamp": [
           "oklch(15% 0.128 58)",
@@ -370,11 +370,11 @@
           "oklch(84% 0.128 58)",
           "oklch(95% 0.128 58)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "p3": {
         "role": "secondary",
-        "displayName": "Priority Indigo",
+        "displayName": "Normal Priority Indigo",
         "canonical": "light-dark(oklch(50% 0.19 268), oklch(70% 0.155 272))",
         "tonalRamp": [
           "oklch(15% 0.19 268)",
@@ -386,371 +386,504 @@
           "oklch(84% 0.19 268)",
           "oklch(95% 0.19 268)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "p4": {
-        "role": "secondary",
-        "displayName": "Priority Gray",
-        "canonical": "light-dark(oklch(59.5% 0.015 265), oklch(59% 0.014 268))",
+        "role": "neutral",
+        "displayName": "Unprioritized Ring",
+        "canonical": "light-dark(oklch(59% 0 0), oklch(65% 0 0))",
         "tonalRamp": [
-          "oklch(15% 0.015 265)",
-          "oklch(26% 0.015 265)",
-          "oklch(38% 0.015 265)",
-          "oklch(49% 0.015 265)",
-          "oklch(61% 0.015 265)",
-          "oklch(72% 0.015 265)",
-          "oklch(84% 0.015 265)",
-          "oklch(95% 0.015 265)"
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "swatch-teal": {
         "role": "secondary",
         "displayName": "Project Teal",
         "canonical": "light-dark(#0d9488, #2dd4bf)",
         "tonalRamp": [
-          "oklch(15% 0.14 180)",
-          "oklch(26% 0.14 180)",
-          "oklch(38% 0.14 180)",
-          "oklch(49% 0.14 180)",
-          "oklch(61% 0.14 180)",
-          "oklch(72% 0.14 180)",
-          "oklch(84% 0.14 180)",
-          "oklch(95% 0.14 180)"
+          "oklch(15% 0.10384 184.70)",
+          "oklch(26% 0.10384 184.70)",
+          "oklch(38% 0.10384 184.70)",
+          "oklch(49% 0.10384 184.70)",
+          "oklch(61% 0.10384 184.70)",
+          "oklch(72% 0.10384 184.70)",
+          "oklch(84% 0.10384 184.70)",
+          "oklch(95% 0.10384 184.70)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "swatch-clay": {
         "role": "secondary",
         "displayName": "Project Clay",
         "canonical": "light-dark(#ea580c, #fb923c)",
         "tonalRamp": [
-          "oklch(15% 0.17 45)",
-          "oklch(26% 0.17 45)",
-          "oklch(38% 0.17 45)",
-          "oklch(49% 0.17 45)",
-          "oklch(61% 0.17 45)",
-          "oklch(72% 0.17 45)",
-          "oklch(84% 0.17 45)",
-          "oklch(95% 0.17 45)"
+          "oklch(15% 0.19433 41.12)",
+          "oklch(26% 0.19433 41.12)",
+          "oklch(38% 0.19433 41.12)",
+          "oklch(49% 0.19433 41.12)",
+          "oklch(61% 0.19433 41.12)",
+          "oklch(72% 0.19433 41.12)",
+          "oklch(84% 0.19433 41.12)",
+          "oklch(95% 0.19433 41.12)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "swatch-plum": {
         "role": "secondary",
         "displayName": "Project Plum",
         "canonical": "light-dark(#7c3aed, #a78bfa)",
         "tonalRamp": [
-          "oklch(15% 0.2 300)",
-          "oklch(26% 0.2 300)",
-          "oklch(38% 0.2 300)",
-          "oklch(49% 0.2 300)",
-          "oklch(61% 0.2 300)",
-          "oklch(72% 0.2 300)",
-          "oklch(84% 0.2 300)",
-          "oklch(95% 0.2 300)"
+          "oklch(15% 0.24659 293.01)",
+          "oklch(26% 0.24659 293.01)",
+          "oklch(38% 0.24659 293.01)",
+          "oklch(49% 0.24659 293.01)",
+          "oklch(61% 0.24659 293.01)",
+          "oklch(72% 0.24659 293.01)",
+          "oklch(84% 0.24659 293.01)",
+          "oklch(95% 0.24659 293.01)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "swatch-moss": {
         "role": "secondary",
         "displayName": "Project Moss",
         "canonical": "light-dark(#16a34a, #4ade80)",
         "tonalRamp": [
-          "oklch(15% 0.17 145)",
-          "oklch(26% 0.17 145)",
-          "oklch(38% 0.17 145)",
-          "oklch(49% 0.17 145)",
-          "oklch(61% 0.17 145)",
-          "oklch(72% 0.17 145)",
-          "oklch(84% 0.17 145)",
-          "oklch(95% 0.17 145)"
+          "oklch(15% 0.16991 149.21)",
+          "oklch(26% 0.16991 149.21)",
+          "oklch(38% 0.16991 149.21)",
+          "oklch(49% 0.16991 149.21)",
+          "oklch(61% 0.16991 149.21)",
+          "oklch(72% 0.16991 149.21)",
+          "oklch(84% 0.16991 149.21)",
+          "oklch(95% 0.16991 149.21)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "swatch-slate": {
         "role": "secondary",
         "displayName": "Project Slate",
         "canonical": "light-dark(#64748b, #94a3b8)",
         "tonalRamp": [
-          "oklch(15% 0.025 255)",
-          "oklch(26% 0.025 255)",
-          "oklch(38% 0.025 255)",
-          "oklch(49% 0.025 255)",
-          "oklch(61% 0.025 255)",
-          "oklch(72% 0.025 255)",
-          "oklch(84% 0.025 255)",
-          "oklch(95% 0.025 255)"
+          "oklch(15% 0.04072 257.42)",
+          "oklch(26% 0.04072 257.42)",
+          "oklch(38% 0.04072 257.42)",
+          "oklch(49% 0.04072 257.42)",
+          "oklch(61% 0.04072 257.42)",
+          "oklch(72% 0.04072 257.42)",
+          "oklch(84% 0.04072 257.42)",
+          "oklch(95% 0.04072 257.42)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       },
       "swatch-rose": {
         "role": "secondary",
         "displayName": "Project Rose",
         "canonical": "light-dark(#e11d48, #fb7185)",
         "tonalRamp": [
-          "oklch(15% 0.21 15)",
-          "oklch(26% 0.21 15)",
-          "oklch(38% 0.21 15)",
-          "oklch(49% 0.21 15)",
-          "oklch(61% 0.21 15)",
-          "oklch(72% 0.21 15)",
-          "oklch(84% 0.21 15)",
-          "oklch(95% 0.21 15)"
+          "oklch(15% 0.22204 17.58)",
+          "oklch(26% 0.22204 17.58)",
+          "oklch(38% 0.22204 17.58)",
+          "oklch(49% 0.22204 17.58)",
+          "oklch(61% 0.22204 17.58)",
+          "oklch(72% 0.22204 17.58)",
+          "oklch(84% 0.22204 17.58)",
+          "oklch(95% 0.22204 17.58)"
         ],
-        "rampPurpose": "Synthesized inspection ramp for the default indigo appearance; canonical CSS tokens, not these ramp steps, govern the interface."
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Modal Scrim",
+        "canonical": "light-dark(oklch(20% 0.02 268 / 0.45), oklch(8% 0.01 268 / 0.65))",
+        "tonalRamp": [
+          "oklch(15% 0.02 268)",
+          "oklch(26% 0.02 268)",
+          "oklch(38% 0.02 268)",
+          "oklch(49% 0.02 268)",
+          "oklch(61% 0.02 268)",
+          "oklch(72% 0.02 268)",
+          "oklch(84% 0.02 268)",
+          "oklch(95% 0.02 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
+      },
+      "scrim-soft": {
+        "role": "neutral",
+        "displayName": "Soft Scrim",
+        "canonical": "light-dark(oklch(20% 0.02 268 / 0.3), oklch(8% 0.01 268 / 0.45))",
+        "tonalRamp": [
+          "oklch(15% 0.02 268)",
+          "oklch(26% 0.02 268)",
+          "oklch(38% 0.02 268)",
+          "oklch(49% 0.02 268)",
+          "oklch(61% 0.02 268)",
+          "oklch(72% 0.02 268)",
+          "oklch(84% 0.02 268)",
+          "oklch(95% 0.02 268)"
+        ],
+        "rampPurpose": "Synthesized inspection ramp for the light/default red appearance, not additional interface tokens."
       }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Today Display",
-        "purpose": "Desktop weekday lockup; reduces to 2rem on mobile."
+      "headline": {
+        "displayName": "headline",
+        "purpose": "Implemented authenticated interface role."
+      },
+      "headline-mobile": {
+        "displayName": "headline-mobile",
+        "purpose": "Implemented authenticated interface role."
+      },
+      "display-heading": {
+        "displayName": "display-heading",
+        "purpose": "Implemented authenticated interface role."
       },
       "title": {
-        "displayName": "View Title",
-        "purpose": "View and project identity."
+        "displayName": "title",
+        "purpose": "Implemented authenticated interface role."
       },
       "body": {
-        "displayName": "Hebrew Interface",
-        "purpose": "Task titles and readable prose."
+        "displayName": "body",
+        "purpose": "Implemented authenticated interface role."
+      },
+      "task-title": {
+        "displayName": "task-title",
+        "purpose": "Implemented authenticated interface role."
+      },
+      "control": {
+        "displayName": "control",
+        "purpose": "Implemented authenticated interface role."
       },
       "label": {
-        "displayName": "Control Label",
-        "purpose": "Concise field and control labels."
+        "displayName": "label",
+        "purpose": "Implemented authenticated interface role."
       },
       "metadata": {
-        "displayName": "Supporting Metadata",
-        "purpose": "Compact task and navigation context."
+        "displayName": "metadata",
+        "purpose": "Implemented authenticated interface role."
+      },
+      "app-wordmark": {
+        "displayName": "app-wordmark",
+        "purpose": "Current app rail wordmark, following the Assistant app override."
+      },
+      "editorial-display": {
+        "displayName": "editorial-display",
+        "purpose": "Public editorial display; outside the app replacement review."
       },
       "numerals": {
-        "displayName": "Stable Numerals",
-        "purpose": "Tabular figures inside isolated LTR islands."
+        "displayName": "numerals",
+        "purpose": "Tabular, direction-isolated numeric islands."
       }
+    },
+    "accentAxes": [
+      {
+        "name": "red",
+        "hue": 28,
+        "chromaLight": 0.17,
+        "chromaDark": 0.13,
+        "default": true
+      },
+      {
+        "name": "indigo",
+        "hue": 268,
+        "chromaLight": 0.19,
+        "chromaDark": 0.155,
+        "default": false
+      },
+      {
+        "name": "violet",
+        "hue": 300,
+        "chromaLight": 0.17,
+        "chromaDark": 0.145,
+        "default": false
+      },
+      {
+        "name": "blue",
+        "hue": 245,
+        "chromaLight": 0.16,
+        "chromaDark": 0.135,
+        "default": false
+      },
+      {
+        "name": "teal",
+        "hue": 195,
+        "chromaLight": 0.11,
+        "chromaDark": 0.1,
+        "default": false
+      },
+      {
+        "name": "green",
+        "hue": 150,
+        "chromaLight": 0.13,
+        "chromaDark": 0.13,
+        "default": false
+      },
+      {
+        "name": "pink",
+        "hue": 355,
+        "chromaLight": 0.19,
+        "chromaDark": 0.14,
+        "default": false
+      },
+      {
+        "name": "graphite",
+        "hue": 268,
+        "chromaLight": 0.022,
+        "chromaDark": 0.016,
+        "default": false
+      }
+    ],
+    "appearance": {
+      "defaultMode": "light",
+      "defaultAccent": "red",
+      "modes": [
+        "light",
+        "dark",
+        "system"
+      ],
+      "groundIndependentOfAccent": true
+    },
+    "shadowTints": {
+      "shadow-tint-1": "light-dark(oklch(20% 0.02 268 / 0.06), oklch(0% 0 0 / 0.4))",
+      "shadow-tint-2": "light-dark(oklch(20% 0.03 268 / 0.26), oklch(0% 0 0 / 0.7))",
+      "shadow-tint-3": "light-dark(oklch(20% 0.03 268 / 0.08), oklch(0% 0 0 / 0.45))",
+      "shadow-tint-4": "light-dark(oklch(20% 0.03 268 / 0.32), oklch(0% 0 0 / 0.6))"
     },
     "shadows": [
       {
         "name": "row",
         "value": "0 1px 2px var(--shadow-tint-1)",
-        "purpose": "Shallow controls and small work surfaces."
+        "purpose": "Filled buttons and capture."
       },
       {
-        "name": "card",
-        "value": "0 2px 5px var(--shadow-tint-1)",
-        "purpose": "Board cards and selected project view segment."
-      },
-      {
-        "name": "pop",
+        "name": "popover",
         "value": "0 12px 32px -14px var(--shadow-tint-2), 0 2px 6px -2px var(--shadow-tint-3)",
-        "purpose": "Popovers, sheets and lifted work."
+        "purpose": "Overlays and lifted work."
       },
       {
-        "name": "panel",
+        "name": "panel-edge",
         "value": "-18px 0 40px -28px var(--shadow-tint-4)",
-        "purpose": "RTL detail-panel edge; physical offset mirrors for LTR."
+        "purpose": "Reading-direction panel edge, mirrored where required."
+      },
+      {
+        "name": "mobile-add",
+        "value": "0 4px 12px var(--shadow-tint-2)",
+        "purpose": "Separate mobile capture action."
+      },
+      {
+        "name": "board-card",
+        "value": "0 2px 5px var(--shadow-tint-1)",
+        "purpose": "Project cards and current view segment."
       }
     ],
     "motion": [
       {
-        "name": "control-color",
-        "value": "120ms cubic-bezier(0.22, 1, 0.36, 1)",
-        "purpose": "Shared button, field and rail state transitions."
+        "name": "ease-out-soft",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Quiet interface state and completion timing."
       },
       {
-        "name": "board-target",
-        "value": "150ms ease-out",
-        "purpose": "Board target and project directory hover transitions."
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.34, 1.4, 0.64, 1)",
+        "purpose": "Existing bounded recognition feedback."
       },
       {
-        "name": "rail-slide",
-        "value": "420ms var(--ease-slide)",
-        "purpose": "The exact sampled linear spring lives in globals.css; retain that source token."
+        "name": "ease-slide",
+        "value": "linear(\r\n    0, 0.0018, 0.0069, 0.0152, 0.0265, 0.0407, 0.0576, 0.0771, 0.0991, 0.1234,\r\n    0.1499, 0.1785, 0.209, 0.2413, 0.2753, 0.3108, 0.3477, 0.3859, 0.4252,\r\n    0.4655, 0.5067, 0.5486, 0.591, 0.6339, 0.677, 0.7203, 0.7635, 0.8065,\r\n    0.8492, 0.8914, 0.9329, 0.9736, 1.0132, 1.0263, 1.0378, 1.0476, 1.0558,\r\n    1.0623, 1.0673, 1.0708, 1.0729, 1.0736, 1.0731, 1.0715, 1.0688, 1.0652,\r\n    1.0608, 1.0557, 1.05, 1.0438, 1.0373, 1.0305, 1.0236, 1.0167, 1.0098,\r\n    1.0031, 0.9997, 0.9985, 0.9979, 0.9977, 0.9979, 0.9984, 0.9991, 1\r\n  )",
+        "purpose": "Existing sampled rail/current-marker spring."
       },
       {
-        "name": "reduced-motion",
-        "value": "prefers-reduced-motion: reduce",
-        "purpose": "Animations and transitions become effectively instant, preserving readable end states."
+        "name": "duration-slide",
+        "value": "420ms",
+        "purpose": "Rail width and current marker."
+      },
+      {
+        "name": "color-transition",
+        "value": "120ms",
+        "purpose": "Buttons, list rows and ordinary state changes."
+      },
+      {
+        "name": "completion-strike",
+        "value": "220ms",
+        "purpose": "Reading-direction title strike."
+      },
+      {
+        "name": "completion-collapse",
+        "value": "260ms, 180ms delay",
+        "purpose": "Completed list-row removal."
+      },
+      {
+        "name": "parser-recognition",
+        "value": "200ms",
+        "purpose": "Newly recognized sentence token."
       }
     ],
     "breakpoints": [
       {
-        "name": "desktop-navigation",
+        "name": "app-desktop",
         "value": "768px"
       },
       {
-        "name": "today-planning-margin",
+        "name": "wide-planning",
         "value": "1280px"
       }
     ],
-    "appearance": {
-      "defaultBrightness": "light",
-      "brightnessModes": [
-        "light",
-        "dark",
-        "system"
-      ],
-      "accents": [
-        "indigo",
-        "violet",
-        "blue",
-        "teal",
-        "green",
-        "pink",
-        "graphite"
-      ],
-      "source": "src/app/globals.css",
-      "rampPolicy": "Ramps are synthesized preview metadata, not new implementation tokens."
+    "accessibility": {
+      "focus": "2px solid var(--accent), 2px offset",
+      "reducedMotion": "Suppress animation and transition; preserve immediate end state.",
+      "taskTitleFloor": "16px",
+      "hebrewLetterSpacing": "normal"
     },
-    "scope": {
-      "systemBoundary": "Authenticated workspace and shared incumbent tokens",
-      "surfaceBrief": ".impeccable/surfaces/src-app-app-layout-tsx.md",
-      "inheritedLandingBrief": ".impeccable/surfaces/src-app-page-tsx.md",
-      "whatsappSurfaceBrief": ".impeccable/surfaces/src-components-nav-whatsapp-introduction-tsx.md",
-      "shippingRasters": "The earlier task-workspace release created no generated rasters; its preserved landing shots are inherited captures with synthetic demo tasks. The WhatsApp extension adds one generated reminder demonstration, reused in the introduction and settings.",
-      "whatsappRaster": {
-        "source": "design/assets/whatsapp-reminder-preview.png",
-        "sourceProvenance": "Exact generation prompt embedded in the source raster and retained in design/assets/whatsapp-reminder-preview.prompt.txt.",
-        "shipping": "public/images/whatsapp-reminder-preview.webp",
-        "shippingProvenance": "public/images/whatsapp-reminder-preview.webp.json",
-        "shippingBytes": 42844,
-        "label": "Synthetic reminder demonstration, visibly labeled as an illustration in both uses."
-      },
-      "whatsappReview": {
-        "captures": [
-          ".impeccable/review/whatsapp/desktop.png",
-          ".impeccable/review/whatsapp/mobile.png",
-          ".impeccable/review/whatsapp/user-320-dark.png",
-          ".impeccable/review/whatsapp/settings-desktop.png",
-          ".impeccable/review/whatsapp/settings-mobile.png"
-        ],
-        "disposition": "ship",
-        "scope": "Verdict pass scored the offline-notice semantic-color fix resolved; it is not a whole-surface or live-delivery certification.",
-        "liveLimit": "At the 2026-10-04 review, production was LOGGED_OUT. Live delivery requires a service-phone QR scan and remains unverified."
-      }
+    "provenance": {
+      "source": "src/app/globals.css and current source components",
+      "authority": "User-pinned Todoist canon; code-led replacement after explicit rejection.",
+      "seed": "95c8c208",
+      "assignedCandidateOverridden": 5,
+      "research": "design/todoist-research.md",
+      "fullReview": ".local-artifacts/todoist-finish-review.md",
+      "scopedFixVerdict": ".local-artifacts/todoist-finish-verdict.md",
+      "reviewScope": "Authenticated replacement and two scored fixes; production deployment and public landing are not certified by this documentation.",
+      "shippingRasters": "No new raster in this code-led replacement. Existing blue identity and WhatsApp illustration/provenance are preserved."
     }
   },
   "components": [
     {
-      "name": "Primary Button",
+      "name": "Button / primary",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Shared primary action at the default control size.",
-      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-btn-primary\">שמירה</button>",
-      "css": ".ds-btn-primary{font-family:var(--font-assistant),'Assistant',sans-serif;font-size:1rem;font-weight:600;border-radius:.625rem;min-height:2.75rem;padding:0 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:background-color 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);background:var(--accent);color:var(--on-accent);border:0;box-shadow:var(--shadow-row);}.ds-btn-primary:hover{background:var(--accent-hover);}.ds-btn-primary:active{filter:brightness(.98)}.ds-btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-btn-primary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-btn-primary{transition:none}}"
+      "description": "Shared primary action at the normal 44px control size.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-button-primary\">הצגת המשימות</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:none;background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));color:var(--on-accent, light-dark(oklch(100% 0 0), oklch(14% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);box-shadow:0 1px 2px var(--shadow-tint-1,light-dark(oklch(20% 0.02 268 / 0.06), oklch(0% 0 0 / 0.4)));}.ds-button-primary:hover{background:var(--accent-hover, light-dark(oklch(44% var(--accent-c) var(--accent-h)), oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h))));}.ds-button-primary:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-primary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none}}"
     },
     {
-      "name": "Secondary Button",
+      "name": "Button / secondary",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Shared secondary action at the default control size.",
-      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-btn-secondary\">שיתוף הפרויקט</button>",
-      "css": ".ds-btn-secondary{font-family:var(--font-assistant),'Assistant',sans-serif;font-size:1rem;font-weight:600;border-radius:.625rem;min-height:2.75rem;padding:0 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:background-color 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);}.ds-btn-secondary:hover{background:var(--surface-2);}.ds-btn-secondary:active{filter:brightness(.98)}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-btn-secondary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-btn-secondary{transition:none}}"
+      "description": "Shared secondary action at the normal 44px control size.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-button-secondary\">ביטול</button>",
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:1px solid var(--line-strong, light-dark(oklch(76% 0 0), oklch(43% 0 0)));background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-secondary:hover{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)));}.ds-button-secondary:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-secondary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none}}"
     },
     {
-      "name": "Ghost Button",
+      "name": "Button / ghost",
       "kind": "button",
       "refersTo": "button-ghost",
-      "description": "Shared ghost action at the default control size.",
-      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-btn-ghost\">ביטול</button>",
-      "css": ".ds-btn-ghost{font-family:var(--font-assistant),'Assistant',sans-serif;font-size:1rem;font-weight:600;border-radius:.625rem;min-height:2.75rem;padding:0 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:background-color 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);background:transparent;color:var(--ink-2);border:0;}.ds-btn-ghost:hover{background:var(--surface-2);color:var(--ink);}.ds-btn-ghost:active{filter:brightness(.98)}.ds-btn-ghost:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-btn-ghost:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-btn-ghost{transition:none}}"
+      "description": "Shared ghost action at the normal 44px control size.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-button-ghost\">איפוס תצוגה</button>",
+      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:none;background:transparent;color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-ghost:hover{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));}.ds-button-ghost:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-ghost:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none}}"
     },
     {
-      "name": "Danger Button",
+      "name": "Button / danger",
       "kind": "button",
       "refersTo": "button-danger",
-      "description": "Shared danger action at the default control size.",
-      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-btn-danger\">מחיקת קטע</button>",
-      "css": ".ds-btn-danger{font-family:var(--font-assistant),'Assistant',sans-serif;font-size:1rem;font-weight:600;border-radius:.625rem;min-height:2.75rem;padding:0 1rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:background-color 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);background:var(--surface);color:var(--p1);border:1px solid color-mix(in oklab,var(--p1) 30%,transparent);}.ds-btn-danger:hover{background:color-mix(in oklab,var(--p1) 8%,transparent);}.ds-btn-danger:active{filter:brightness(.98)}.ds-btn-danger:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-btn-danger:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-btn-danger{transition:none}}"
+      "description": "Shared danger action at the normal 44px control size.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-button-danger\">מחיקת משימה</button>",
+      "css": ".ds-button-danger{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:1px solid color-mix(in oklab,var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))) 30%,transparent);background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-danger:hover{background:color-mix(in oklab,var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))) 8%,transparent);}.ds-button-danger:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-danger:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition:none}}"
     },
     {
-      "name": "Hebrew Field",
+      "name": "Input",
       "kind": "input",
       "refersTo": "input",
-      "description": "Body-sized field with automatic text direction and semantic invalid state.",
-      "html": "<input class=\"ds-input\" dir=\"auto\" aria-label=\"שם המסנן\" placeholder=\"למשל: משימות לשבוע הזה\" />",
-      "css": ".ds-input{display:block;width:100%;font-family:var(--font-assistant),Assistant,sans-serif;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:.625rem;padding:.625rem .75rem;text-align:start;caret-color:var(--accent);transition:border-color 120ms}.ds-input::placeholder{color:var(--muted);opacity:1}.ds-input:hover{border-color:var(--muted)}.ds-input:focus{border-color:var(--accent)}.ds-input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-input[aria-invalid=true]{border-color:var(--p1)}@media(pointer:coarse){.ds-input{min-height:2.75rem}}@media(prefers-reduced-motion:reduce){.ds-input{transition:none}}"
+      "description": "Direction-aware shared field with strong boundary, visible focus and invalid state.",
+      "html": "<label dir=\"rtl\" class=\"ds-input-label\">שם המשימה<input dir=\"auto\" class=\"ds-input\" placeholder=\"למשל: להכין את המצגת\"/></label>",
+      "css": ".ds-input-label{display:block;color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:.875rem;font-weight:600}.ds-input{display:block;width:100%;margin-block-start:.4rem;border:1px solid var(--line-strong, light-dark(oklch(76% 0 0), oklch(43% 0 0)));background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));border-radius:.625rem;padding:.625rem .75rem;font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;text-align:start;caret-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));transition:border-color 120ms ease-out}.ds-input::placeholder{color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)));opacity:1}.ds-input:hover{border-color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)))}.ds-input:focus{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-input:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-input[aria-invalid=true]{border-color:var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20)))}.ds-input:disabled{opacity:.5}@media(pointer:coarse){.ds-input{min-height:2.75rem}}@media(prefers-reduced-motion:reduce){.ds-input{transition:none}}"
     },
     {
-      "name": "Rail Navigation",
+      "name": "Current navigation row",
       "kind": "nav",
-      "description": "Full-row hover and current-place state on the dark navigation material.",
-      "html": "<nav dir=\"rtl\" class=\"ds-rail\" aria-label=\"תצוגות\"><a class=\"ds-nav\" href=\"#today\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><path d=\"M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z\"/></svg><span>היום</span><span class=\"ds-nav-count\">6</span></a><a class=\"ds-nav\" href=\"#upcoming\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" aria-hidden=\"true\"><path d=\"M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z\"/></svg><span>בקרוב</span><span class=\"ds-nav-count\">4</span></a></nav>",
-      "css": ".ds-rail{width:14rem;padding:.5rem;background:var(--rail);border-radius:.625rem;font-family:var(--font-assistant),Assistant,sans-serif}.ds-nav{display:flex;align-items:center;gap:.625rem;padding:.5rem .75rem;border-radius:.625rem;font-size:.875rem;color:var(--rail-muted);text-decoration:none;transition:color 120ms,background-color 120ms}.ds-nav:hover{background:var(--rail-hover);color:var(--rail-ink)}.ds-nav[aria-current=page]{background:var(--rail-active);color:var(--rail-ink);font-weight:600}.ds-nav-count{margin-inline-start:auto;font-family:var(--font-inter),Inter,sans-serif;direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}.ds-nav:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-nav:active{background:var(--rail-active)}@media(prefers-reduced-motion:reduce){.ds-nav{transition:none}}"
+      "refersTo": "navigation-current",
+      "description": "The neutral rail retains an accent wash only for the current destination.",
+      "html": "<nav dir=\"rtl\" class=\"ds-nav\" aria-label=\"ניווט ראשי\"><a href=\"#today\" class=\"ds-nav-row\" aria-current=\"page\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M6.35 17.65l-1.42 1.42M19.07 4.93l-1.42 1.42\"/></svg><span class=\"ds-nav-label\">היום</span><bdi class=\"ds-nav-count\">5</bdi></a><a href=\"#upcoming\" class=\"ds-nav-row\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M16 3v4M8 3v4M3 11h18\"/></svg><span class=\"ds-nav-label\">בקרוב</span><bdi class=\"ds-nav-count\">2</bdi></a></nav>",
+      "css": ".ds-nav{background:var(--rail, light-dark(oklch(98% 0 0), oklch(20% 0 0)));padding:.5rem;max-width:16rem;font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;}.ds-nav-row{display:flex;align-items:center;gap:.625rem;padding:.5rem .75rem;border-radius:.625rem;color:var(--rail-muted, light-dark(oklch(48% 0 0), oklch(68% 0 0)));text-decoration:none;font-size:.875rem;transition:background 120ms ease-out,color 120ms ease-out}.ds-nav-label{flex:1}.ds-nav-count{font-family:var(--font-num,Inter, ui-sans-serif, system-ui, sans-serif);font-variant-numeric:tabular-nums;font-size:.8125rem;font-weight:400}.ds-nav-row:hover{background:var(--rail-hover, light-dark(oklch(95% 0 0), oklch(24% 0 0)));color:var(--rail-ink, light-dark(oklch(27% 0 0), oklch(93% 0 0)))}.ds-nav-row[aria-current=page]{background:var(--rail-active, light-dark(oklch(95% calc(var(--accent-c) * 0.12) var(--accent-h)), oklch(25% calc(var(--accent-c-dark) * 0.25) var(--accent-h))));color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));font-weight:600}.ds-nav-row:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}@media(pointer:coarse){.ds-nav-row{min-height:2.75rem}}@media(prefers-reduced-motion:reduce){.ds-nav-row{transition:none}}"
     },
     {
-      "name": "Filter Choice",
+      "name": "Deadline chip",
       "kind": "chip",
-      "refersTo": "filter-chip",
-      "description": "White quick-filter choice with an accent wash for the active route.",
-      "html": "<nav dir=\"rtl\" class=\"ds-filter-set\" aria-label=\"מסננים מהירים\"><a href=\"#mine\" aria-current=\"page\" class=\"ds-filter\">באחריותי</a><a href=\"#week\" class=\"ds-filter\">השבוע הקרוב</a></nav>",
-      "css": ".ds-filter-set{display:flex;flex-wrap:wrap;gap:.5rem}.ds-filter{display:inline-flex;align-items:center;min-height:2.5rem;padding:0 1rem;border-radius:.6rem;background:var(--surface);color:var(--ink-2);font-family:var(--font-assistant),Assistant,sans-serif;font-size:.875rem;text-decoration:none}.ds-filter:hover{background:var(--surface-2)}.ds-filter[aria-current=page]{background:var(--accent-soft);color:var(--accent);font-weight:700}.ds-filter:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-filter:active{background:var(--accent-soft)}"
+      "refersTo": "deadline-chip",
+      "description": "Written due-date metadata and flag use amber; overdue changes both wording and urgency color.",
+      "html": "<span dir=\"rtl\" class=\"ds-deadline\" title=\"מועד הגשה\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 22V3M4 3c4-3 8 3 12 0v9c-4 3-8-3-12 0\"/></svg>עד מחר</span>",
+      "css": ".ds-deadline{display:inline-flex;align-items:center;gap:.25rem;padding:0 .25rem;border-radius:.25rem;background:var(--flag-soft, light-dark(oklch(96% 0.024 75), oklch(24% 0.035 70)));color:var(--flag, light-dark(oklch(50% 0.128 58), oklch(76% 0.13 70)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:.8125rem;font-weight:600}.ds-deadline[data-overdue=true]{background:color-mix(in oklab,var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))) 10%,transparent);color:var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20)))}"
     },
     {
-      "name": "Task Group",
+      "name": "Board card",
       "kind": "card",
-      "refersTo": "task-surface",
-      "description": "Flat white work surface with restrained separators and priority-colored completion controls.",
-      "html": "<div dir=\"rtl\" class=\"ds-tasks\"><div class=\"ds-task\"><button class=\"ds-task-check\" type=\"button\" role=\"checkbox\" aria-checked=\"false\" aria-label=\"סימון כהושלם: לסיים את המצגת\"></button><button class=\"ds-task-open\" type=\"button\">לסיים את המצגת<span class=\"ds-task-meta\">היום · עבודה <span class=\"ds-deadline\">עד מחר</span></span></button></div><div class=\"ds-task\"><button class=\"ds-task-check\" type=\"button\" role=\"checkbox\" aria-checked=\"false\" aria-label=\"סימון כהושלם: לקנות לחם\"></button><button class=\"ds-task-open\" type=\"button\">לקנות לחם<span class=\"ds-task-meta\">היום · בית</span></button></div></div>",
-      "css": ".ds-tasks{padding:.25rem;border-radius:.75rem;background:var(--surface);color:var(--ink);font-family:var(--font-assistant),Assistant,sans-serif}.ds-task{position:relative;display:flex;gap:.75rem;min-height:3.5rem;padding:.75rem;align-items:start;border-radius:.625rem}.ds-task+.ds-task:before{content:\"\";position:absolute;inset-block-start:0;inset-inline:2.5rem 1rem;height:1px;background:var(--line)}.ds-task:hover{background:var(--surface-2)}.ds-task-check{flex:none;width:1.25rem;height:1.25rem;margin-top:.125rem;background:transparent;border:2px solid var(--p1);border-radius:.375rem;cursor:pointer}.ds-task-check:hover{border-color:var(--accent)}.ds-task-check:active{background:var(--accent-soft)}.ds-task-open{flex:1;border:0;background:transparent;font:inherit;font-size:1rem;line-height:1.375;color:inherit;text-align:start;cursor:pointer}.ds-task-meta{display:block;font-size:.8125rem;color:var(--muted);margin-top:.25rem;line-height:1.6}.ds-deadline{background:var(--flag-soft);color:var(--flag);padding:0 .25rem;border-radius:.25rem}.ds-task-check:focus-visible,.ds-task-open:focus-visible{outline:2px solid var(--accent);outline-offset:2px}"
+      "refersTo": "board-card",
+      "description": "The existing project-board work container; its title, completion and explicit move control remain functional roles.",
+      "html": "<article dir=\"rtl\" class=\"ds-board-card\"><div class=\"ds-board-head\"><button type=\"button\" role=\"checkbox\" aria-checked=\"false\" aria-label=\"סימון כהושלם: להכין את המצגת\" class=\"ds-board-circle\"></button><button type=\"button\" class=\"ds-board-title\" dir=\"auto\">להכין את המצגת</button></div><p class=\"ds-board-note\">לעבור על הסיכום לפני הפגישה.</p><label class=\"ds-board-move\">העברה לקטע<select aria-label=\"העברת המשימה לקטע\"><option>בביצוע</option><option>מוכן</option></select></label></article>",
+      "css": ".ds-board-card{position:relative;padding:1rem;border-radius:.7rem;background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));box-shadow:0 2px 5px var(--shadow-tint-1,light-dark(oklch(20% 0.02 268 / 0.06), oklch(0% 0 0 / 0.4)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;}.ds-board-head{display:flex;align-items:start;gap:.5rem}.ds-board-circle{margin-top:.25rem;width:1.25rem;height:1.25rem;flex-shrink:0;border-radius:9999px;border:2px solid var(--p4, light-dark(oklch(59% 0 0), oklch(65% 0 0)));background:transparent;cursor:pointer}.ds-board-circle:hover{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-board-circle[aria-checked=true]{background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-board-title{min-width:0;flex:1;border:0;padding:0;background:transparent;color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;line-height:1.375;text-align:start;cursor:pointer}.ds-board-note{margin-block:.5rem 0;margin-inline-start:1.75rem;color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)));font-size:.875rem}.ds-board-move{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.75rem;padding-top:.5rem;border-top:1px solid var(--line, light-dark(oklch(93% 0 0), oklch(30% 0 0)));font-size:.8125rem;color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)))}.ds-board-move select{min-height:2.25rem;max-width:60%;padding-inline:.5rem;border:0;border-radius:.375rem;background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:.8125rem}.ds-board-circle:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-board-title:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-board-move select:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px}"
     },
     {
-      "name": "Board Card",
-      "kind": "card",
-      "description": "Liftable project task card, with explicit movement control and restrained depth.",
-      "html": "<article dir=\"rtl\" class=\"ds-board-card\"><button class=\"ds-board-title\" type=\"button\">לסיים את המצגת</button><p class=\"ds-board-note\">שקף סיכום ועוד שני נתונים.</p><label class=\"ds-board-move\">העברה לקטע<select aria-label=\"העברת המשימה לקטע\"><option>בביצוע</option><option>הושלם</option></select></label></article>",
-      "css": ".ds-board-card{padding:1rem;border-radius:.7rem;background:var(--surface);color:var(--ink);box-shadow:0 2px 5px var(--shadow-tint-1);font-family:var(--font-assistant),Assistant,sans-serif;max-width:17rem}.ds-board-title{padding:0;background:transparent;border:0;color:var(--ink);font-family:inherit;font-size:1rem;font-weight:600;line-height:1.375;text-align:start;cursor:pointer}.ds-board-title:hover{color:var(--accent)}.ds-board-note{font-size:.875rem;color:var(--muted);line-height:1.5;margin:.5rem 0 .75rem}.ds-board-move{display:flex;justify-content:space-between;align-items:center;gap:.5rem;border-block-start:1px solid var(--line);padding-top:.5rem;font-size:.8125rem;color:var(--muted)}.ds-board-move select{min-height:2.25rem;max-width:60%;border:0;border-radius:.375rem;padding:0 .5rem;background:var(--surface);color:var(--ink-2);font-family:inherit;font-size:.8125rem}.ds-board-move select:hover{background:var(--surface-2)}.ds-board-title:focus-visible,.ds-board-move select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-board-title:active{color:var(--accent-hover)}"
-    },
-    {
-      "name": "Project View Switch",
+      "name": "Task row and completion circle",
       "kind": "custom",
-      "description": "Recessed list/board control with a lightly raised pressed segment.",
-      "html": "<div dir=\"rtl\" class=\"ds-switch\" role=\"group\" aria-label=\"תצוגת הפרויקט\"><button type=\"button\" aria-pressed=\"true\">רשימה</button><button type=\"button\" aria-pressed=\"false\">לוח</button></div>",
-      "css": ".ds-switch{display:inline-flex;gap:.25rem;padding:.25rem;border-radius:.65rem;background:var(--surface-2);font-family:var(--font-assistant),Assistant,sans-serif}.ds-switch button{min-height:2.25rem;padding:0 .9rem;border:0;border-radius:.45rem;background:transparent;color:var(--muted);font-family:inherit;font-size:.875rem;cursor:pointer}.ds-switch button:hover{color:var(--ink)}.ds-switch button[aria-pressed=true]{background:var(--surface);color:var(--ink);font-weight:700;box-shadow:0 2px 5px var(--shadow-tint-1)}.ds-switch button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.ds-switch button:active{background:var(--accent-soft)}"
+      "refersTo": "task-row",
+      "description": "Flat title-led list row with a 20px round completion control, sparse time metadata and neutral hover.",
+      "html": "<div dir=\"rtl\" class=\"ds-task-row\"><button type=\"button\" role=\"checkbox\" aria-checked=\"false\" aria-description=\"עדיפות: ללא עדיפות\" aria-label=\"סימון כהושלם: להתקשר למשרד\" class=\"ds-task-circle\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 12 2 2 4-4\"/></svg></button><button type=\"button\" class=\"ds-task-open\" aria-label=\"פתיחת להתקשר למשרד\"><span dir=\"auto\" class=\"ds-task-title\">להתקשר למשרד</span><span dir=\"ltr\" class=\"ds-task-time\">10:00</span></button></div>",
+      "css": ".ds-task-row{position:relative;display:flex;align-items:start;gap:.75rem;border:1px solid transparent;padding:.75rem 0;min-height:3.5rem;font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;transition:background 120ms ease-out}.ds-task-row:before{content:'';position:absolute;inset-block-start:0;inset-inline:2rem 0;height:1px;background:var(--line, light-dark(oklch(93% 0 0), oklch(30% 0 0)))}.ds-task-row:hover,.ds-task-row:focus-within{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)))}.ds-task-circle{position:relative;margin-top:.125rem;display:grid;place-items:center;width:1.25rem;height:1.25rem;flex-shrink:0;border:1.5px solid var(--p4, light-dark(oklch(59% 0 0), oklch(65% 0 0)));border-radius:9999px;background:transparent;color:var(--on-accent, light-dark(oklch(100% 0 0), oklch(14% 0 0)));cursor:pointer;transition:border-color 120ms ease-out,background 120ms ease-out}.ds-task-circle svg{opacity:0;stroke-width:3.5}.ds-task-circle:hover{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-task-circle[aria-checked=true]{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-task-circle[aria-checked=true] svg{opacity:1}.ds-task-circle[aria-checked=true]+.ds-task-open .ds-task-title{color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)));text-decoration:line-through}.ds-task-open{position:relative;min-width:0;flex:1;padding:0;border:0;background:transparent;text-align:start;cursor:pointer;font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;}.ds-task-title{display:block;overflow-wrap:break-word;font-size:1rem;line-height:1.375;color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)))}.ds-task-time{display:block;margin-top:.25rem;font-family:var(--font-num,Inter, ui-sans-serif, system-ui, sans-serif);font-variant-numeric:tabular-nums;unicode-bidi:isolate;font-size:.8125rem;color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)))}.ds-task-circle:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-task-open:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}@media(pointer:coarse){.ds-task-circle:before{content:'';position:absolute;inset:-.75rem}.ds-task-open:before{content:'';position:absolute;inset-inline:0;inset-block:-.5rem}}@media(max-width:767px){.ds-task-row{padding-block:.9rem}}@media(prefers-reduced-motion:reduce){.ds-task-row,.ds-task-circle{transition:none}}"
+    },
+    {
+      "name": "Separate mobile Add",
+      "kind": "button",
+      "refersTo": "mobile-add",
+      "description": "52px circular capture action, distinct from the four mobile navigation destinations.",
+      "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-mobile-add\" aria-label=\"הוספת משימה\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button>",
+      "css": ".ds-mobile-add{display:grid;place-items:center;width:3.25rem;height:3.25rem;border:0;border-radius:50%;background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));color:var(--on-accent, light-dark(oklch(100% 0 0), oklch(14% 0 0)));box-shadow:0 4px 12px var(--shadow-tint-2,light-dark(oklch(20% 0.03 268 / 0.26), oklch(0% 0 0 / 0.7)));cursor:pointer;transition:background 120ms ease-out}.ds-mobile-add:hover{background:var(--accent-hover, light-dark(oklch(44% var(--accent-c) var(--accent-h)), oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h))))}.ds-mobile-add:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}@media(prefers-reduced-motion:reduce){.ds-mobile-add{transition:none}}"
     }
   ],
   "narrative": {
     "northStar": "A clear place for Hebrew work",
-    "overview": "This records the built, inherited visual world: a dark indigo navigation rail beside cool paper and white task surfaces. It supports Hebrew capture, planning and shared projects with familiar task-manager affordances. Dense working content stays legible; color and display type establish orientation without competing with tasks.\n\nThe interface is Hebrew-first and RTL. Assistant carries everyday controls, Frank Ruhl Libre gives the wordmark and view titles their character, and Inter keeps numbers stable. The default appearance is light; explicit dark and system modes use the same semantic structure. Seven accent choices change the navigation and action family while urgency colors remain fixed.",
+    "overview": "A clear Hebrew task canvas follows the operating grammar the user pinned from Todoist: white work, pale gray navigation, short sans headings, flat rows and round completion controls. The app is quiet at rest. Tasks carry the reading weight; navigation and attributes explain place and state without becoming the main content.\n\nThis records the implemented replacement of 2026-10-04. The user rejected the lavender ground, dark indigo rail, large serif date, progress rail, crowded permanent filters and supporting cards on Today. The app uses Assistant throughout its working hierarchy, including its current live rail wordmark. Frank Ruhl Libre remains the public editorial face; the existing blue identity image remains an identity asset rather than the action accent.\n\nThe authority is the user-pinned, code-led Todoist canon in design/todoist-research.md, not assigned candidate 5. Its recorded seed is 95c8c208, also emitted by src/app/layout.tsx. The signed-out public landing retains its independent editorial composition and is outside this replacement finish review. Shared global tokens apply there, but app composition rules do not turn its headings into the authenticated hierarchy.",
     "keyCharacteristics": [
-      "Tasks lead; planning information supports them from a margin or follows them on small screens.",
-      "Cool tonal surfaces, gentle corners and restrained elevation.",
-      "Hebrew display titles paired with a practical interface face and isolated numerals.",
-      "A stable navigation frame, explicit state and visible capture affordances."
+      "A neutral task canvas, flat rows and brief metadata.",
+      "Hebrew sans hierarchy, normal letter spacing and isolated tabular numerals.",
+      "Controls on demand, with active conditions explained in the working view.",
+      "Four mobile destinations and a separate capture action.",
+      "Completion is the main feedback moment; reduced motion is immediate."
     ],
     "rules": [
       {
-        "name": "The Stable Meaning Rule",
-        "body": "Appearance changes action and navigation color; priority, deadline and project identities remain separately named semantic families.",
+        "name": "Neutral Ground",
+        "body": "Accent choice may change actions and selected-state washes; it must not tint the work canvas, base navigation, text ramp or dividers.",
         "section": "colors"
       },
       {
-        "name": "The Hebrew Reading Rule",
-        "body": "Preserve RTL reading order, normal Hebrew letter spacing and isolated LTR islands for times, dates, shortcuts and counts. User-entered task and project titles resolve with `dir=\"auto\"`.",
+        "name": "Stable Meaning",
+        "body": "Keep action, priority, deadline and project tokens separate. Default action red and urgency red coexist; text, icons and accessible labels explain their different meanings.",
+        "section": "colors"
+      },
+      {
+        "name": "Hebrew Reading",
+        "body": "Use Assistant for app headings and controls, normal Hebrew letter spacing, and isolated LTR islands for times, dates, shortcuts and counts. User-entered free text resolves with dir=\"auto\".",
         "section": "typography"
       },
       {
-        "name": "The Task First Rule",
-        "body": "Capture and working tasks retain the first useful viewport. Planning panels move after tasks on mobile rather than consuming that viewport.",
-        "section": "layout"
-      },
-      {
-        "name": "The Grounded Depth Rule",
-        "body": "Keep resting task groups flat; use elevation to distinguish a floating control, a popover or an object being moved.",
+        "name": "Flat Work",
+        "body": "Task rows stay flat at rest. Elevation identifies an overlay, capture surface or item being dragged; it does not turn the task collection into a deck of cards.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "**Do** inherit the semantic color tokens in both themes and retain the rail's local neutral remapping.",
-      "**Do** keep Hebrew task titles readable, metadata subordinate and task controls explicitly labeled.",
-      "**Do** preserve separate visual meanings for schedule, deadline, priority, project and completion.",
-      "**Do** keep mobile capture reachable and clear fixed navigation with the shared safe-area spacing.",
-      "**Do** use quiet surface layering before adding shadows, and honor reduced motion."
+      "Do use semantic CSS tokens and preserve their canonical light-dark() / OKLCH values.",
+      "Do keep task titles readable at 16px and keep supporting metadata subordinate.",
+      "Do make every active search, priority and sort condition visible after Display closes, with a reset action.",
+      "Do preserve separate schedule and deadline semantics in every view.",
+      "Do keep touch targets generous without enlarging the task glyphs or creating horizontal page overflow.",
+      "Do retain keyboard access, accessible control names and immediate reduced-motion end states.",
+      "Do preserve the public landing editorial role and image provenance when touching shared styles."
     ],
     "donts": [
-      "**Don't** introduce raw component colors that bypass appearance and semantic state tokens.",
-      "**Don't** letter-space Hebrew or allow mixed dates, times and shortcuts to reorder punctuation.",
-      "**Don't** turn Today planning data into a productivity score or place it ahead of mobile tasks.",
-      "**Don't** reuse urgency styling as a decorative accent or infer project identity from the action hue.",
-      "**Don't** make hovering or dragging the only way to reach a task action."
+      "Don't restore the rejected lavender ground, dark accent rail, serif Today date, progress rail, permanent Today filter form or Today insight cards.",
+      "Don't make Add a fifth mobile destination or duplicate the mobile navigation toolbar.",
+      "Don't repeat Today as metadata on every Today task; show its scheduled time when present.",
+      "Don't use a swatch or red alone to communicate priority, lateness, an error or destructive intent.",
+      "Don't replace real task, collaboration or service state with fabricated customer content or delivery proof.",
+      "Don't treat the scoped fix verdict, local captures or documentation as proof of production deployment or the unreviewed landing."
     ]
   }
 }

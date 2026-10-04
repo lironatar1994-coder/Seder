@@ -49,7 +49,7 @@ const PATHS = [
   {
     path: '/app/today',
     label: '/app/today · composer',
-    open: (page) => page.getByRole('button', { name: 'חדשה' }).click(),
+    open: (page) => page.getByRole('button', { name: 'הוספת משימה', exact: true }).click(),
   },
 ];
 

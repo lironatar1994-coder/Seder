@@ -1,211 +1,69 @@
 @import 'tailwindcss';
 
-/* Appearance is two axes, both absent-means-default: `data-theme` on <html>
-   (missing = light) and `data-accent` (missing = indigo).
+/* Todoist-inspired operating surface. Neutrals never inherit an accent hue.
+   Light is the default; explicit dark and system modes remain available. */
+:root, [data-accent='red'] { --accent-h: 28; --accent-c: 0.17; --accent-c-dark: 0.13; }
+[data-accent='indigo'] { --accent-h: 268; --accent-c: 0.19; --accent-c-dark: 0.155; }
+[data-accent='violet'] { --accent-h: 300; --accent-c: 0.17; --accent-c-dark: 0.145; }
+[data-accent='blue'] { --accent-h: 245; --accent-c: 0.16; --accent-c-dark: 0.135; }
+[data-accent='teal'] { --accent-h: 195; --accent-c: 0.11; --accent-c-dark: 0.1; }
+[data-accent='green'] { --accent-h: 150; --accent-c: 0.13; --accent-c-dark: 0.13; }
+[data-accent='pink'] { --accent-h: 355; --accent-c: 0.19; --accent-c-dark: 0.14; }
+[data-accent='graphite'] { --accent-h: 268; --accent-c: 0.022; --accent-c-dark: 0.016; }
 
-   The product's default brightness is light on every device, not "whatever the
-   OS is set to". Following the OS is still available, but it is now an explicit
-   choice — `data-theme='system'` — rather than the resting state.
-
-   Components never reference a raw colour, only the token names below, so a
-   theme is a value swap with no component branching anywhere. */
-/* ---------------------------------------------------------------------------
-   Accent themes.
-
-   One hue per theme rather than seven hand-picked palettes. Lightness and
-   chroma are fixed by the base tiers below, so every accent inherits the
-   contrast behaviour that was tuned once — a new theme is a number, not a
-   tuning session. Chroma drops on the hues where sRGB cannot hold 0.19 without
-   clipping, which would quietly shift lightness and with it the contrast.
-
-   Amber and red are deliberately absent: amber means "time pressure" and red
-   means "highest priority" everywhere in this app, and an accent wearing either
-   would break a meaning the rest of the interface relies on.
---------------------------------------------------------------------------- */
-:root,
-[data-accent='indigo'] {
-  --accent-h: 268;
-  --accent-c: 0.19;
-  --accent-c-dark: 0.155;
-}
-
-[data-accent='violet'] {
-  --accent-h: 300;
-  --accent-c: 0.17;
-  --accent-c-dark: 0.145;
-}
-
-[data-accent='blue'] {
-  --accent-h: 245;
-  --accent-c: 0.16;
-  --accent-c-dark: 0.135;
-}
-
-[data-accent='teal'] {
-  --accent-h: 195;
-  --accent-c: 0.11;
-  --accent-c-dark: 0.1;
-}
-
-[data-accent='green'] {
-  --accent-h: 150;
-  --accent-c: 0.13;
-  --accent-c-dark: 0.13;
-}
-
-[data-accent='pink'] {
-  --accent-h: 355;
-  --accent-c: 0.19;
-  --accent-c-dark: 0.14;
-}
-
-/* Monochrome: the accent still carries state, just without a colour opinion. */
-[data-accent='graphite'] {
-  --accent-h: 268;
-  --accent-c: 0.022;
-  --accent-c-dark: 0.016;
-}
-
-/* ---------------------------------------------------------------------------
-   Design tokens.
-
-   One declaration per token, both themes inside it. `light-dark()` picks by the
-   element's `color-scheme`, so the three tiers this used to need — light,
-   dark-by-media-query, dark-by-attribute — collapse into the selectors at the
-   bottom that do nothing but set `color-scheme`.
-
-   Each token is declared twice: a bare hex first, for engines without
-   `light-dark()`, then the real pair. Those engines get the light theme, which
-   is the safe degradation.
-
-   Adding a token is one line. Changing a colour is one edit.
---------------------------------------------------------------------------- */
 :root {
-  /* One keyword: with no explicit choice the page is light, whatever the device
-     prefers. `light-dark()` and every native control — scrollbars, date
-     pickers — follow this, so nothing is left resolving against the OS. */
   color-scheme: light;
-
-  /* surfaces — cool near-neutrals, not warm greys. A blue-cast ground is what
-     makes the accent read as deliberate rather than as a stray colour. Dark is
-     not the light theme inverted: the ground is a deep blue-black and surfaces
-     step up in small increments. */
-  /* The ground carries the accent hue rather than a fixed grey. It is a
-     whisper — under 1% chroma — but it is why choosing "green" changes the mood
-     of the whole app instead of recolouring six buttons. Every near-white SaaS
-     app shares the same #f8f9fa; this one's ground belongs to whoever is
-     using it. */
-  --paper: #f6f6fb;
-  --paper: light-dark(
-    oklch(97.4% calc(var(--accent-c) * 0.045) var(--accent-h)),
-    oklch(14.5% calc(var(--accent-c-dark) * 0.06) var(--accent-h))
-  );
+  --paper: #ffffff;
+  --paper: light-dark(oklch(100% 0 0), oklch(16% 0 0));
   --surface: #ffffff;
-  --surface: light-dark(oklch(100% 0 0), oklch(19.5% 0.009 268));
-  --surface-2: #f1f3f6;
-  --surface-2: light-dark(oklch(95.8% 0.005 265), oklch(24% 0.01 268));
-  --surface-sunk: #edeff3;
-  --surface-sunk: light-dark(oklch(94.6% 0.006 265), oklch(11.5% 0.007 268));
-
-  /* text — every one clears 4.5:1 on all three surfaces, in both themes */
-  --ink: #0f1115;
-  --ink: light-dark(oklch(17.5% 0.008 270), oklch(93% 0.005 268));
-  --ink-2: #383d47;
-  --ink-2: light-dark(oklch(33.5% 0.014 265), oklch(78% 0.011 268));
-  --muted: #5c6373;
-  --muted: light-dark(oklch(47.5% 0.019 265), oklch(63% 0.016 268));
-
-  /* lines */
-  --line: #e3e6ec;
-  --line: light-dark(oklch(91.5% 0.005 265), oklch(25.5% 0.01 268));
-  --line-strong: #cad0da;
-  --line-strong: light-dark(oklch(84% 0.011 265), oklch(33% 0.013 268));
-
-  /* ---------------------------------------------------------------- rail
-     The sidebar is a dark, low-chroma slab of the accent hue, against a light
-     content area. Slack, Superhuman and Todoist's own coloured themes all do
-     some version of this, and the reason it works is not decoration: a screen
-     that is one flat light field gives the eye nothing to orient by, so the
-     navigation and the work read as the same material. A dark rail makes the
-     content the lit surface.
-
-     Its own token family rather than reusing the surface ramp, because these
-     invert: on the rail, "muted" is a *lighter* grey, not a darker one, and
-     `--accent-soft` — a pale wash meant for white — would be a hole in it. */
-  --rail: #262a3d;
-  --rail: light-dark(
-    oklch(28% calc(var(--accent-c) * 0.32) var(--accent-h)),
-    oklch(11.5% calc(var(--accent-c-dark) * 0.28) var(--accent-h))
-  );
-  --rail-ink: #f2f2f7;
-  --rail-ink: light-dark(
-    oklch(96% calc(var(--accent-c) * 0.05) var(--accent-h)),
-    oklch(93% calc(var(--accent-c-dark) * 0.04) var(--accent-h))
-  );
-  /* Secondary text on the rail. Clears 4.5:1 on `--rail` in both themes — the
-     contrast audit checks this pair the same way it checks the light ones. */
-  --rail-muted: #a9adc4;
-  --rail-muted: light-dark(
-    oklch(74% calc(var(--accent-c) * 0.14) var(--accent-h)),
-    oklch(66% calc(var(--accent-c-dark) * 0.12) var(--accent-h))
-  );
-  --rail-line: #363b52;
-  --rail-line: light-dark(
-    oklch(35% calc(var(--accent-c) * 0.3) var(--accent-h)),
-    oklch(19% calc(var(--accent-c-dark) * 0.25) var(--accent-h))
-  );
-  /* Hover and current-page grounds: steps *up* from the rail, since it is the
-     dark end here. The current page is the brighter of the two. */
-  --rail-hover: #32374d;
-  --rail-hover: light-dark(
-    oklch(33.5% calc(var(--accent-c) * 0.34) var(--accent-h)),
-    oklch(16.5% calc(var(--accent-c-dark) * 0.3) var(--accent-h))
-  );
-  --rail-active: #3d4463;
-  --rail-active: light-dark(
-    oklch(39% calc(var(--accent-c) * 0.45) var(--accent-h)),
-    oklch(22% calc(var(--accent-c-dark) * 0.42) var(--accent-h))
-  );
-
-  /* accent — agency, completion, focus. Hue comes from the accent theme above;
-     lightness and chroma from whichever side of this pair applies. The accent
-     moves the opposite way to the ground in dark, which is why its foreground
-     flips to a dark glyph. */
-  --accent: #4b5bd7;
-  --accent: light-dark(
-    oklch(50% var(--accent-c) var(--accent-h)),
-    oklch(70% var(--accent-c-dark) var(--accent-h))
-  );
-  --accent-hover: #3d4cc4;
-  --accent-hover: light-dark(
-    oklch(44% var(--accent-c) var(--accent-h)),
-    oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h))
-  );
-  --accent-soft: #edeffe;
-  --accent-soft: light-dark(
-    oklch(94.5% calc(var(--accent-c) * 0.14) var(--accent-h)),
-    oklch(24% calc(var(--accent-c-dark) * 0.38) var(--accent-h))
-  );
+  --surface: light-dark(oklch(100% 0 0), oklch(20% 0 0));
+  --surface-2: #f5f5f5;
+  --surface-2: light-dark(oklch(97% 0 0), oklch(24% 0 0));
+  --surface-sunk: #eeeeee;
+  --surface-sunk: light-dark(oklch(95% 0 0), oklch(13% 0 0));
+  --ink: #202020;
+  --ink: light-dark(oklch(23% 0 0), oklch(93% 0 0));
+  --ink-2: #444444;
+  --ink-2: light-dark(oklch(38% 0 0), oklch(80% 0 0));
+  --muted: #666666;
+  --muted: light-dark(oklch(49% 0 0), oklch(68% 0 0));
+  --line: #e8e8e8;
+  --line: light-dark(oklch(93% 0 0), oklch(30% 0 0));
+  --line-strong: #b0b0b0;
+  --line-strong: light-dark(oklch(76% 0 0), oklch(43% 0 0));
+  --rail: #f9f9f9;
+  --rail: light-dark(oklch(98% 0 0), oklch(20% 0 0));
+  --rail-ink: #303030;
+  --rail-ink: light-dark(oklch(27% 0 0), oklch(93% 0 0));
+  --rail-muted: #646464;
+  --rail-muted: light-dark(oklch(48% 0 0), oklch(68% 0 0));
+  --rail-line: #e8e8e8;
+  --rail-line: light-dark(oklch(93% 0 0), oklch(30% 0 0));
+  --rail-hover: #eeeeee;
+  --rail-hover: light-dark(oklch(95% 0 0), oklch(24% 0 0));
+  --rail-active: #fbeeee;
+  --rail-active: light-dark(oklch(95% calc(var(--accent-c) * 0.12) var(--accent-h)), oklch(25% calc(var(--accent-c-dark) * 0.25) var(--accent-h)));
+  --accent: #b83d32;
+  --accent: light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h)));
+  --accent-hover: #9f3028;
+  --accent-hover: light-dark(oklch(44% var(--accent-c) var(--accent-h)), oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h)));
+  --accent-soft: #fbeeee;
+  --accent-soft: light-dark(oklch(95% calc(var(--accent-c) * 0.12) var(--accent-h)), oklch(25% calc(var(--accent-c-dark) * 0.25) var(--accent-h)));
   --on-accent: #ffffff;
-  --on-accent: light-dark(oklch(100% 0 0), oklch(14.5% 0.008 268));
-
-  /* flag — time pressure only: deadlines and overdue. Warm on purpose, so it
-     cannot be mistaken for the accent at a glance. */
+  --on-accent: light-dark(oklch(100% 0 0), oklch(14% 0 0));
+  /* Priority and date state always carry accessible labels as well as color. */
   --flag: #ad4f08;
   --flag: light-dark(oklch(50% 0.128 58), oklch(76% 0.13 70));
   --flag-soft: #fdf2e3;
   --flag-soft: light-dark(oklch(96% 0.024 75), oklch(24% 0.035 70));
-
-  /* priority ramp — fixed, never the accent: switching theme must not restyle
-     a flag, and an amber accent would collide with p2. */
   --p1: #b91c1c;
   --p1: light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20));
   --p2: #ad4f08;
   --p2: light-dark(oklch(50% 0.128 58), oklch(76% 0.13 70));
   --p3: #4b5bd7;
   --p3: light-dark(oklch(50% 0.19 268), oklch(70% 0.155 272));
-  --p4: #7f8695;
-  --p4: light-dark(oklch(59.5% 0.015 265), oklch(59% 0.014 268));
+  --p4: #808080;
+  --p4: light-dark(oklch(59% 0 0), oklch(65% 0 0));
 
   /* project swatches — vivid enough to tell apart at dot size */
   --swatch-teal: #0d9488;
@@ -377,7 +235,7 @@
      the three cannot drift apart. Zero from `md` up, where there is no tab
      bar, which is what lets those components use it unconditionally. */
   :root {
-    --tab-bar: calc(3.25rem + env(safe-area-inset-bottom));
+    --tab-bar: calc(3.75rem + env(safe-area-inset-bottom));
   }
 
   @media (width >= 48rem) {
@@ -1042,7 +900,7 @@
 .workspace-bar { min-block-size: 4.25rem; padding-inline: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-block-end: 1px solid var(--line); background: var(--surface); }
 .workspace-content { padding-block-end: 2rem; }
 @media (max-width: 767px) { .workspace-bar { display: none; } }
-.rail-add { display: flex; align-items: center; gap: .65rem; inline-size: 100%; min-block-size: 2.75rem; border-radius: .65rem; padding-inline: .75rem; background: var(--rail-ink); color: var(--rail); font-weight: 700; }
+.rail-add { display: flex; align-items: center; gap: .65rem; inline-size: 100%; min-block-size: 2.75rem; border-radius: .4rem; padding-inline: .75rem; color: var(--accent); font-weight: 600; }
 .rail-add:hover { filter: brightness(.94); }
 .rail-search { display: flex; align-items: center; gap: .65rem; inline-size: 100%; min-block-size: 2.5rem; margin-block-start: .5rem; border-radius: .6rem; padding-inline: .75rem; color: var(--rail-muted); }
 .rail-search:hover { background: var(--rail-hover); color: var(--rail-ink); }
@@ -1059,10 +917,10 @@
 .week-outlook-day:hover .week-outlook-track > span { background: var(--accent); }
 .task-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; padding-block: .75rem; margin-block-end: .65rem; border-block: 1px solid var(--line); color: var(--muted); }
 .task-search { display: flex; align-items: center; gap: .5rem; flex: 1; min-inline-size: 8rem; }
-.task-search input { background: transparent; inline-size: 100%; min-inline-size: 0; font-size: .875rem; outline-offset: 4px; }
+.task-search input { background: transparent; inline-size: 100%; min-inline-size: 0; font-size: 1rem; outline-offset: 4px; }
 .task-toolbar select { min-block-size: 2.25rem; max-inline-size: 45%; padding-inline: .35rem; border-radius: .4rem; font-size: .8125rem; background: transparent; color: var(--ink-2); }
-[data-testid='task-list'] section > ul { background: var(--surface); border-radius: .75rem; padding: .25rem; }
-[data-task-id] + [data-task-id]::before { content: ''; position: absolute; inset-block-start: 0; inset-inline: 2.5rem 1rem; block-size: 1px; background: var(--line); }
+[data-testid='task-list'] section > ul { background: transparent; padding: 0; }
+[data-task-id] + [data-task-id]::before { content: ''; position: absolute; inset-block-start: 0; inset-inline: 2rem 0; block-size: 1px; background: var(--line); }
 [data-task-id] { min-block-size: 3.5rem; }
 .filter-chip { display: inline-flex; align-items: center; gap: .4rem; min-block-size: 2.5rem; padding-inline: 1rem; border-radius: .6rem; background: var(--surface); color: var(--ink-2); font-size: .875rem; }
 .filter-chip:hover { background: var(--surface-2); }
@@ -1088,7 +946,45 @@
 .project-directory-item:hover { background: var(--accent-soft); }
 .project-directory-progress { block-size: .25rem; margin-block-start: 1.5rem; border-radius: 1rem; background: var(--line); overflow: hidden; }
 .project-directory-progress span { display: block; block-size: 100%; border-radius: inherit; }
-@media (min-width:1280px) { .today-workspace { grid-template-columns: minmax(0,1fr) 17rem; gap: 3rem; } .today-insights { grid-template-columns: 1fr; gap: 1.75rem; border-inline-start: 1px solid var(--line); padding-inline-start: 1.75rem; } }
+@media (min-width:1280px) { .today-insights { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 2rem; } }
 @media (max-width:767px) { .today-workspace { gap: 1rem; } .today-insights { grid-template-columns: 1fr; } .today-workspace [data-testid='task-list'] { padding-block-end: 1.5rem; } .task-search { flex-basis: 100%; min-block-size: 2rem; } .task-toolbar select { flex: 1; max-inline-size: none; min-block-size: 2.5rem; } .board-column { flex-basis: min(19rem,calc(100vw - 3rem)); inline-size: min(19rem,calc(100vw - 3rem)); } .project-workspace-toolbar { gap: .5rem; } .view-switch button { padding-inline: .7rem; } }
 @media (min-width:768px) { :root[data-rail='collapsed'] .rail-capture { padding-inline: .5rem; } :root[data-rail='collapsed'] .rail-add, :root[data-rail='collapsed'] .rail-search { inline-size: 3.25rem; padding-inline: 1rem; } }
 @media (prefers-reduced-motion:reduce) { .board-column, .project-directory-item { transition:none; } }
+
+
+/* App-wide operating grammar: public editorial type is independent. */
+[data-app-shell] .display, [role='dialog'] .display { font-family: var(--font-sans); font-weight: 600; }
+.view-heading { padding-block: 1.5rem 1.25rem; }
+.view-heading button { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
+.view-heading button::before { inset: 0; }
+.workspace-bar { min-block-size: 3rem; border-block-end: 0; background: var(--paper); }
+.workspace-content:not(:has([data-wide])) { max-inline-size: 52rem; }
+.task-row:hover, .task-row:focus-within { background: var(--surface-2); }
+.task-metadata:empty { display: none; }
+.list-display-panel { padding: 1rem; }
+.list-display-panel .task-search { border: 1px solid var(--line-strong); border-radius: .4rem; min-block-size: 2.75rem; padding-inline: .65rem; }
+.list-display-field { display: flex; flex-direction: column; gap: .4rem; margin-block-start: 1rem; font-size: .875rem; color: var(--ink-2); }
+.list-display-field select { min-block-size: 2.75rem; inline-size: 100%; padding-inline: .65rem; border: 1px solid var(--line-strong); border-radius: .4rem; background: var(--surface); color: var(--ink); font-size: 1rem; }
+.task-property { padding-block: .4rem; }
+.task-property > label { display: block; color: var(--muted); }
+.task-property-value > button, .task-property-value > select { border-color: transparent; background: transparent; box-shadow: none; padding-inline: 0; font-weight: 400; }
+.task-property-value > button:hover, .task-property-value > select:hover { background: var(--surface-2); }
+.task-property-value p { margin-block-start: .35rem; }
+.mobile-tab { display: flex; inline-size: 100%; min-block-size: 3.75rem; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; }
+.tab-bar { padding-block-end: env(safe-area-inset-bottom); }
+.mobile-add { position: fixed; z-index: 30; inset-inline-end: 1.25rem; inset-block-end: calc(var(--tab-bar) + 1rem); display: grid; place-items: center; inline-size: 3.25rem; block-size: 3.25rem; border-radius: 50%; background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 12px var(--shadow-tint-2); transition: background 120ms ease-out; }
+.mobile-add:hover { background: var(--accent-hover); }
+@media (min-width:768px) { .mobile-add { display: none; } }
+@media (max-width:767px) {
+  .view-heading { padding-block: 1rem 1.25rem; }
+  .workspace-content { padding-inline: 1.25rem; }
+  .view-heading > div { gap: .5rem; }
+  .rail-header { padding-block-start: max(1rem,env(safe-area-inset-top)); }
+  .drawer { inline-size: 100%; inset-block-end: var(--tab-bar); border-inline-end: 0; }
+  .rail a, .rail-search, .rail-add { min-block-size: 2.75rem; }
+  .task-row { padding-block: .9rem; }
+  [data-task-properties] { background: var(--paper); padding-block: .65rem; }
+  .task-property { display: grid; grid-template-columns: 5.5rem minmax(0,1fr); align-items: baseline; column-gap: .75rem; padding-block: .15rem; }
+  .task-property > label { font-size: .875rem; }
+  .task-property-value > button, .task-property-value > select { min-block-size: 2.75rem; font-size: 1rem; }
+}

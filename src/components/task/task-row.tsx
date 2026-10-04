@@ -32,7 +32,6 @@ import type { Collaborator } from '@/server/access';
 import {
   DeadlineChip,
   LabelChip,
-  PriorityFlag,
   ProjectChip,
   RepeatChip,
   SubtaskChip,
@@ -119,7 +118,7 @@ export const TaskRow = memo(function TaskRow({
       data-task-id={task.id}
       data-checked={checked || undefined}
       className={cn(
-        'group relative flex items-start gap-3 rounded-lg border border-transparent px-2 py-2.5',
+        'task-row group relative flex items-start gap-3 border border-transparent py-3',
         'transition-colors duration-120',
         checked
           ? 'border-accent/40 bg-accent-soft'
@@ -204,12 +203,12 @@ export const TaskRow = memo(function TaskRow({
           </span>
         )}
 
-        <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="task-metadata mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
           {task.scheduledFor && (
-            <WhenChip date={task.scheduledFor} time={task.scheduledTime} muted={done} />
+            <WhenChip date={task.scheduledFor} time={task.scheduledTime} muted={done} compact />
           )}
           {task.deadline && <DeadlineChip date={task.deadline} muted={done} />}
-          {task.recurrence && <RepeatChip rule={task.recurrence} />}
+          {task.recurrence && <RepeatChip rule={task.recurrence} compact />}
           {!hideProject && task.project && (
             <ProjectChip name={task.project.name} color={task.project.color} />
           )}
@@ -231,7 +230,6 @@ export const TaskRow = memo(function TaskRow({
             className="me-0.5"
           />
         )}
-        <PriorityFlag priority={task.priority} />
         <Menu>
           <MenuTrigger asChild>
             <IconButton
@@ -241,7 +239,7 @@ export const TaskRow = memo(function TaskRow({
               // button — and it is the only way to schedule, move, prioritise
               // or delete a task from the list.
               className={cn(
-                'transition-opacity data-[state=open]:opacity-100 focus-visible:opacity-100',
+                'hidden md:inline-flex transition-opacity data-[state=open]:opacity-100 focus-visible:opacity-100',
                 '[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100',
               )}
             >
@@ -351,7 +349,7 @@ function SelectBox({
       aria-label={`בחירת ${task.title}`}
       onClick={(event) => onSelect(task, event.shiftKey ? 'range' : 'toggle')}
       className={cn(
-        'relative mt-1 inline-flex size-4 shrink-0 items-center justify-center rounded-full border',
+        'relative mt-1 inline-flex size-4 shrink-0 items-center justify-center rounded-sm border',
         'transition-colors duration-150',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         "before:absolute before:content-[''] [@media(pointer:coarse)]:before:-inset-3.5",
@@ -403,7 +401,7 @@ function Checkbox({
         ? 'border-p2'
         : task.priority === 3
           ? 'border-p3'
-          : 'border-line-strong';
+          : 'border-p4';
 
   return (
     <button
@@ -411,9 +409,11 @@ function Checkbox({
       role="checkbox"
       aria-checked={filled}
       aria-label={filled ? `ביטול השלמה: ${task.title}` : `סימון כהושלם: ${task.title}`}
+      aria-description={`עדיפות: ${PRIORITY_LABELS[task.priority]}`}
+      title={PRIORITY_LABELS[task.priority]}
       onClick={() => onToggle(task, !done)}
       className={cn(
-        'relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-md border-2',
+        'relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px]',
         'transition-colors duration-120',
         // A 20px box is right for the row's density and wrong for a thumb. The
         // target extends past it on touch only; completing the wrong task is

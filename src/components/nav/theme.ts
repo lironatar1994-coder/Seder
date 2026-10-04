@@ -17,6 +17,7 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 export const DEFAULT_MODE: ThemeMode = 'light';
 
 export const ACCENTS = [
+  { value: 'red', label: 'אדום' },
   { value: 'indigo', label: 'אינדיגו' },
   { value: 'violet', label: 'סגול' },
   { value: 'blue', label: 'כחול' },
@@ -28,7 +29,7 @@ export const ACCENTS = [
 
 export type Accent = (typeof ACCENTS)[number]['value'];
 
-export const DEFAULT_ACCENT: Accent = 'indigo';
+export const DEFAULT_ACCENT: Accent = 'red';
 
 export const MODE_STORAGE_KEY = 'seder-theme';
 export const ACCENT_STORAGE_KEY = 'seder-accent';

@@ -92,7 +92,7 @@ export function MenuContent({
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          'z-60 min-w-48 overflow-hidden rounded-lg border border-line bg-surface p-1 shadow-pop',
+          'z-60 min-w-48 max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto rounded-lg border border-line bg-surface p-1 shadow-pop',
           'data-[state=open]:animate-pop-in',
           className,
         )}

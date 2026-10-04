@@ -1,56 +1,81 @@
 ---
 name: "סדר"
-description: "Hebrew task capture, personal planning and shared projects."
+description: "A neutral Hebrew task canvas with controls on demand."
 colors:
-  paper: "light-dark(oklch(97.4% calc(var(--accent-c) * 0.045) var(--accent-h)), oklch(14.5% calc(var(--accent-c-dark) * 0.06) var(--accent-h)))"
-  surface: "light-dark(oklch(100% 0 0), oklch(19.5% 0.009 268))"
-  surface-2: "light-dark(oklch(95.8% 0.005 265), oklch(24% 0.01 268))"
-  surface-sunk: "light-dark(oklch(94.6% 0.006 265), oklch(11.5% 0.007 268))"
-  ink: "light-dark(oklch(17.5% 0.008 270), oklch(93% 0.005 268))"
-  ink-2: "light-dark(oklch(33.5% 0.014 265), oklch(78% 0.011 268))"
-  muted: "light-dark(oklch(47.5% 0.019 265), oklch(63% 0.016 268))"
-  line: "light-dark(oklch(91.5% 0.005 265), oklch(25.5% 0.01 268))"
-  line-strong: "light-dark(oklch(84% 0.011 265), oklch(33% 0.013 268))"
-  rail: "light-dark(oklch(28% calc(var(--accent-c) * 0.32) var(--accent-h)), oklch(11.5% calc(var(--accent-c-dark) * 0.28) var(--accent-h)))"
-  rail-ink: "light-dark(oklch(96% calc(var(--accent-c) * 0.05) var(--accent-h)), oklch(93% calc(var(--accent-c-dark) * 0.04) var(--accent-h)))"
-  rail-muted: "light-dark(oklch(74% calc(var(--accent-c) * 0.14) var(--accent-h)), oklch(66% calc(var(--accent-c-dark) * 0.12) var(--accent-h)))"
-  rail-line: "light-dark(oklch(35% calc(var(--accent-c) * 0.3) var(--accent-h)), oklch(19% calc(var(--accent-c-dark) * 0.25) var(--accent-h)))"
-  rail-hover: "light-dark(oklch(33.5% calc(var(--accent-c) * 0.34) var(--accent-h)), oklch(16.5% calc(var(--accent-c-dark) * 0.3) var(--accent-h)))"
-  rail-active: "light-dark(oklch(39% calc(var(--accent-c) * 0.45) var(--accent-h)), oklch(22% calc(var(--accent-c-dark) * 0.42) var(--accent-h)))"
-  accent: "light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(70% var(--accent-c-dark) var(--accent-h)))"
+  paper: "light-dark(oklch(100% 0 0), oklch(16% 0 0))"
+  surface: "light-dark(oklch(100% 0 0), oklch(20% 0 0))"
+  surface-2: "light-dark(oklch(97% 0 0), oklch(24% 0 0))"
+  surface-sunk: "light-dark(oklch(95% 0 0), oklch(13% 0 0))"
+  ink: "light-dark(oklch(23% 0 0), oklch(93% 0 0))"
+  ink-2: "light-dark(oklch(38% 0 0), oklch(80% 0 0))"
+  muted: "light-dark(oklch(49% 0 0), oklch(68% 0 0))"
+  line: "light-dark(oklch(93% 0 0), oklch(30% 0 0))"
+  line-strong: "light-dark(oklch(76% 0 0), oklch(43% 0 0))"
+  rail: "light-dark(oklch(98% 0 0), oklch(20% 0 0))"
+  rail-ink: "light-dark(oklch(27% 0 0), oklch(93% 0 0))"
+  rail-muted: "light-dark(oklch(48% 0 0), oklch(68% 0 0))"
+  rail-line: "light-dark(oklch(93% 0 0), oklch(30% 0 0))"
+  rail-hover: "light-dark(oklch(95% 0 0), oklch(24% 0 0))"
+  rail-active: "light-dark(oklch(95% calc(var(--accent-c) * 0.12) var(--accent-h)), oklch(25% calc(var(--accent-c-dark) * 0.25) var(--accent-h)))"
+  accent: "light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h)))"
   accent-hover: "light-dark(oklch(44% var(--accent-c) var(--accent-h)), oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h)))"
-  accent-soft: "light-dark(oklch(94.5% calc(var(--accent-c) * 0.14) var(--accent-h)), oklch(24% calc(var(--accent-c-dark) * 0.38) var(--accent-h)))"
-  on-accent: "light-dark(oklch(100% 0 0), oklch(14.5% 0.008 268))"
+  accent-soft: "light-dark(oklch(95% calc(var(--accent-c) * 0.12) var(--accent-h)), oklch(25% calc(var(--accent-c-dark) * 0.25) var(--accent-h)))"
+  on-accent: "light-dark(oklch(100% 0 0), oklch(14% 0 0))"
   flag: "light-dark(oklch(50% 0.128 58), oklch(76% 0.13 70))"
   flag-soft: "light-dark(oklch(96% 0.024 75), oklch(24% 0.035 70))"
   p1: "light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))"
   p2: "light-dark(oklch(50% 0.128 58), oklch(76% 0.13 70))"
   p3: "light-dark(oklch(50% 0.19 268), oklch(70% 0.155 272))"
-  p4: "light-dark(oklch(59.5% 0.015 265), oklch(59% 0.014 268))"
+  p4: "light-dark(oklch(59% 0 0), oklch(65% 0 0))"
   swatch-teal: "light-dark(#0d9488, #2dd4bf)"
   swatch-clay: "light-dark(#ea580c, #fb923c)"
   swatch-plum: "light-dark(#7c3aed, #a78bfa)"
   swatch-moss: "light-dark(#16a34a, #4ade80)"
   swatch-slate: "light-dark(#64748b, #94a3b8)"
   swatch-rose: "light-dark(#e11d48, #fb7185)"
+  scrim: "light-dark(oklch(20% 0.02 268 / 0.45), oklch(8% 0.01 268 / 0.65))"
+  scrim-soft: "light-dark(oklch(20% 0.02 268 / 0.3), oklch(8% 0.01 268 / 0.45))"
 typography:
-  display:
-    fontFamily: "Frank Ruhl Libre, Noto Serif Hebrew, Georgia, serif"
-    fontSize: "3.25rem"
-    fontWeight: 700
-    lineHeight: 1
-    letterSpacing: "normal"
-  title:
-    fontFamily: "Frank Ruhl Libre, Noto Serif Hebrew, Georgia, serif"
-    fontSize: "2.375rem"
+  headline:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "2rem"
     fontWeight: 700
     lineHeight: 1.25
+    letterSpacing: "normal"
+  headline-mobile:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1.75rem"
+    fontWeight: 700
+    lineHeight: 1.25
+    letterSpacing: "normal"
+  display-heading:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "2.375rem"
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: "normal"
+  title:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 700
+    lineHeight: 1.375
     letterSpacing: "normal"
   body:
     fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.7
+    letterSpacing: "normal"
+  task-title:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.375
+    letterSpacing: "normal"
+  control:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 600
     letterSpacing: "normal"
   label:
     fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
@@ -62,6 +87,17 @@ typography:
     fontSize: "0.8125rem"
     fontWeight: 400
     letterSpacing: "normal"
+  app-wordmark:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 600
+    letterSpacing: "normal"
+  editorial-display:
+    fontFamily: "Frank Ruhl Libre, Noto Serif Hebrew, Georgia, serif"
+    fontSize: "3.25rem"
+    fontWeight: 700
+    lineHeight: 1.15
+    letterSpacing: "normal"
   numerals:
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
     fontFeature: "tnum"
@@ -70,15 +106,17 @@ rounded:
   md: "0.375rem"
   lg: "0.625rem"
   xl: "0.875rem"
-  task-surface: "0.75rem"
+  board-card: "0.7rem"
   work-container: "0.9rem"
-  planning-card: "1rem"
+  focus-container: "1rem"
+  detail-dialog: "1rem"
   full: "9999px"
 spacing:
   1: "0.25rem"
   2: "0.5rem"
   3: "0.75rem"
   4: "1rem"
+  5: "1.25rem"
   6: "1.5rem"
   8: "2rem"
   12: "3rem"
@@ -86,6 +124,7 @@ components:
   button-primary:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.on-accent}"
+    typography: "{typography.control}"
     rounded: "{rounded.lg}"
     height: "2.75rem"
     padding: "0 1rem"
@@ -94,35 +133,57 @@ components:
   button-secondary:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
+    typography: "{typography.control}"
     rounded: "{rounded.lg}"
     height: "2.75rem"
     padding: "0 1rem"
   button-ghost:
     textColor: "{colors.ink-2}"
+    typography: "{typography.control}"
     rounded: "{rounded.lg}"
     height: "2.75rem"
     padding: "0 1rem"
   button-danger:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.p1}"
+    typography: "{typography.control}"
     rounded: "{rounded.lg}"
     height: "2.75rem"
     padding: "0 1rem"
   input:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
+    typography: "{typography.body}"
     rounded: "{rounded.lg}"
     padding: "0.625rem 0.75rem"
-  filter-chip:
+  navigation-current:
+    backgroundColor: "{colors.rail-active}"
+    textColor: "{colors.accent}"
+    typography: "{typography.label}"
+    rounded: "{rounded.lg}"
+    padding: "0.5rem 0.75rem"
+  deadline-chip:
+    backgroundColor: "{colors.flag-soft}"
+    textColor: "{colors.flag}"
+    rounded: "{rounded.sm}"
+    padding: "0 0.25rem"
+  board-card:
     backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink-2}"
-    rounded: "0.6rem"
-    height: "2.5rem"
-    padding: "0 1rem"
-  task-surface:
-    backgroundColor: "{colors.surface}"
-    rounded: "{rounded.task-surface}"
-    padding: "0.25rem"
+    rounded: "{rounded.board-card}"
+    padding: "1rem"
+  task-row:
+    textColor: "{colors.ink}"
+    typography: "{typography.task-title}"
+    padding: "0.75rem 0"
+  task-completion:
+    textColor: "{colors.on-accent}"
+    rounded: "{rounded.full}"
+    size: "1.25rem"
+  mobile-add:
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.on-accent}"
+    rounded: "{rounded.full}"
+    size: "3.25rem"
 ---
 
 # Design System: סדר
@@ -131,125 +192,148 @@ components:
 
 **Creative North Star: "A clear place for Hebrew work"**
 
-This records the built, inherited visual world: a dark indigo navigation rail beside cool paper and white task surfaces. It supports Hebrew capture, planning and shared projects with familiar task-manager affordances. Dense working content stays legible; color and display type establish orientation without competing with tasks.
+A clear Hebrew task canvas follows the operating grammar the user pinned from Todoist: white work, pale gray navigation, short sans headings, flat rows and round completion controls. The app is quiet at rest. Tasks carry the reading weight; navigation and attributes explain place and state without becoming the main content.
 
-The interface is Hebrew-first and RTL. Assistant carries everyday controls, Frank Ruhl Libre gives the wordmark and view titles their character, and Inter keeps numbers stable. The default appearance is light; explicit dark and system modes use the same semantic structure. Seven accent choices change the navigation and action family while urgency colors remain fixed.
+This records the implemented replacement of 2026-10-04. The user rejected the lavender ground, dark indigo rail, large serif date, progress rail, crowded permanent filters and supporting cards on Today. The app uses Assistant throughout its working hierarchy, including its current live rail wordmark. Frank Ruhl Libre remains the public editorial face; the existing blue identity image remains an identity asset rather than the action accent.
+
+The authority is the user-pinned, code-led Todoist canon in design/todoist-research.md, not assigned candidate 5. Its recorded seed is 95c8c208, also emitted by src/app/layout.tsx. The signed-out public landing retains its independent editorial composition and is outside this replacement finish review. Shared global tokens apply there, but app composition rules do not turn its headings into the authenticated hierarchy.
 
 **Key Characteristics:**
-- Tasks lead; planning information supports them from a margin or follows them on small screens.
-- Cool tonal surfaces, gentle corners and restrained elevation.
-- Hebrew display titles paired with a practical interface face and isolated numerals.
-- A stable navigation frame, explicit state and visible capture affordances.
+
+- A neutral task canvas, flat rows and brief metadata.
+- Hebrew sans hierarchy, normal letter spacing and isolated tabular numerals.
+- Controls on demand, with active conditions explained in the working view.
+- Four mobile destinations and a separate capture action.
+- Completion is the main feedback moment; reduced motion is immediate.
 
 ## Colors
 
-The frontmatter preserves the canonical CSS color pairs and theme variables from `src/app/globals.css`; fallback hex declarations are compatibility values, not a second palette.
+The frontmatter preserves the exact canonical source declarations from src/app/globals.css. Hex fallbacks exist for older engines; they are compatibility values, not a second palette. Appearance has eight accent choices and three brightness choices. Light and red are the defaults; following the system is explicit.
 
 ### Primary
-- **Action Indigo:** `accent`, `accent-hover`, `accent-soft` and `on-accent` express capture, selected controls, completion and focus. Indigo is the resting accent; violet, blue, teal, green, pink and graphite are supported appearance choices.
-- **Indigo Rail:** the `rail` family is an independent dark surface with its own text, divider, hover and current-page values. Shared controls inside it inherit rail-aware neutral tokens.
+
+- **Action Red:** accent, accent-hover, accent-soft and on-accent carry capture, link text, focus, completion and selected controls. Red, indigo, violet, blue, teal, green, pink and graphite are available. Changing a hue preserves the neutral ground.
+- **Current Destination Wash:** rail-active shares the action wash. The current navigation icon, label and count use the selected accent, while the base rail remains gray.
 
 ### Secondary
-- **Deadline Amber:** `flag` and `flag-soft` identify upcoming deadline pressure. Priority 2 uses the matching fixed amber family through `p2`.
-- **Urgency Red:** `p1` marks priority 1, destructive/error feedback and overdue dates. Completed dates lose overdue emphasis. This is the built behavior, even where older token comments describe amber more broadly.
-- **Fixed Priority Indigo and Gray:** `p3` and `p4` belong to priority state, independent of the selected accent.
-- **Project Swatches:** teal, clay, plum, moss, slate and rose distinguish projects and labels at dot or chip scale; they do not replace the main action family.
+
+- **Deadline Amber:** flag and flag-soft identify deadlines that are not overdue. Priority 2 has its own fixed matching amber token.
+- **Urgency Red:** p1 identifies priority 1, overdue dates and error/destructive feedback. Completed dates lose overdue emphasis. Its semantic role remains separate from the default red action accent.
+- **Priority Indigo / Neutral Ring:** p3 and p4 remain fixed when appearance changes; an unprioritized completion ring still has a visible boundary.
+- **Project Swatches:** teal, clay, plum, moss, slate and rose identify projects and labels at dot or chip scale. Their source pairs are hexadecimal because that is their actual canonical source format.
 
 ### Neutral
-- **Cool Paper:** `paper` is the accent-tinted ground.
-- **White Work Surface:** `surface` contains task groups, cards, inputs and popovers; dark mode steps above its blue-black ground.
-- **Quiet Layers:** `surface-2` and `surface-sunk` distinguish tracks, grouped controls and recessed areas.
-- **Ink / Secondary Ink / Muted:** the three text levels convey hierarchy; `line` and `line-strong` divide content and outline controls.
 
-**The Stable Meaning Rule.** Appearance changes action and navigation color; priority, deadline and project identities remain separately named semantic families.
+- **White Task Canvas:** paper is neutral white in light mode and neutral charcoal in dark mode.
+- **Work Surface / Quiet Gray Layer / Recessed Layer:** surface, surface-2 and surface-sunk provide overlays, hover/group treatments and tracks without inheriting hue.
+- **Ink / Secondary Ink / Supporting Ink:** ink, ink-2 and muted create hierarchy. line and line-strong distinguish hairline separators from control boundaries.
+- **Pale Navigation:** rail and its ink, supporting ink, line and hover tokens supply a neutral navigation family. Shared controls inside it inherit those local semantic roles; portalled overlays use the work-surface family.
+- **Scrims:** scrim and scrim-soft separate modal attention from the working canvas.
+
+**The Neutral Ground Rule.** Accent choice may change actions and selected-state washes; it must not tint the work canvas, base navigation, text ramp or dividers.
+
+**The Stable Meaning Rule.** Keep action, priority, deadline and project tokens separate. Default action red and urgency red coexist; text, icons and accessible labels explain their different meanings.
 
 ## Typography
 
-**Display Font:** Frank Ruhl Libre, with Noto Serif Hebrew and serif fallbacks.
-**Body Font:** Assistant, with Segoe UI, Heebo and sans-serif fallbacks.
+**App Font:** Assistant, with Segoe UI, Heebo, Arial and sans-serif fallbacks.
+**Editorial Font:** Frank Ruhl Libre, with Noto Serif Hebrew, Georgia and serif fallbacks, on the public landing and editorial identity uses.
 **Numeral Font:** Inter, with tabular figures and LTR isolation.
 
-All three are self-hosted variable fonts in `public/fonts`; their licenses ship beside the files. The display face marks places and dates, while task titles stay in the interface face. Hebrew uses normal letter spacing; body word spacing is slightly open (`0.05em`).
+The three variable faces are self-hosted in public/fonts with their licenses. App headings are sans, including dialog display headings and the current rail wordmark. The public landing remains editorial; its display typography is not an app-heading prescription. Hebrew uses normal letter spacing and slightly open body word spacing (0.05em).
 
 ### Hierarchy
-- **Display:** the Today weekday uses the display role on desktop and contracts to `2rem` on mobile.
-- **Title:** ordinary view and project titles use the title role; project titles may use the project's swatch.
-- **Body:** prose starts at the body role. Task titles retain its size with a compact line height (`1.375`).
-- **Label / Metadata:** labels and supporting notes use the smaller interface scale; counts and time strings use the numeral face.
-- **Panel headings:** compact Assistant headings (`1rem`, bold) keep week, deadline and board sections subordinate to the view title.
 
-**The Hebrew Reading Rule.** Preserve RTL reading order, normal Hebrew letter spacing and isolated LTR islands for times, dates, shortcuts and counts. User-entered task and project titles resolve with `dir="auto"`.
+- **Headline:** compact ViewHeader route titles use weight 700, with the frontmatter desktop and mobile roles. Today uses the literal view name; the date is one subordinate dual-calendar line. App display headings, including the settings title, use the effective 600 override rather than their older utility-class weights.
+- **Title:** task-detail titles and compact dialog hierarchy. The detail title is bold; ordinary dialog display headings use Assistant at weight 600.
+- **Body / Task Title:** body prose uses the body role; task rows and calendar entry titles use the task-title role with its tighter line height. Board task titles use the same size at weight 600.
+- **Label / Metadata:** control labels and secondary route/date/task notes use the smaller Assistant scale. A smaller metadata role does not authorize shrinking task titles.
+- **App Wordmark / Editorial Display:** the current rail text follows the app sans override; Frank remains the independent public display role and the existing blue logo image remains unchanged.
+- **Numerals:** times, numeric dates, counts and timer values use Inter; their width and order remain stable inside RTL content.
+
+**The Hebrew Reading Rule.** Use Assistant for app headings and controls, normal Hebrew letter spacing, and isolated LTR islands for times, dates, shortcuts and counts. User-entered free text resolves with dir="auto".
 
 ## Layout
 
-The authenticated shell occupies the viewport. Its content column scrolls independently; the navigation stays anchored. Desktop uses a right rail (`16rem`), collapsible to an icon strip (`4.25rem`), and a white breadcrumb/action bar with a minimum height of `4.25rem`. The main container uses `50rem` for ordinary views and expands to `82rem` for marked wide surfaces, with horizontal padding increasing from `1rem` to `2rem` at the desktop navigation breakpoint (`48rem`).
+The authenticated shell occupies the viewport. Only the main content column scrolls; desktop navigation stays at the Hebrew reading edge, on the right. At the desktop breakpoint (768px), the rail is 16rem wide and can collapse to 4.25rem while its contents retain their original width. The desktop workspace bar is a quiet 3rem contextual row, with breadcrumb, search and shortcut access.
 
-Today keeps the task column first in reading order. From `1280px`, its support margin is `17rem`, separated by a hairline and a `3rem` grid gap; below that width planning sections follow the task list, with two columns where space permits. Below `768px` the layout becomes one column, the desktop breadcrumb bar disappears, and the compact top bar plus fixed bottom navigation take over. Bottom clearance comes from the shared safe-area-aware navigation token.
+Ordinary work uses a centered reading column with a final maximum width of 52rem and desktop inline padding of 2rem. Calendar and board surfaces may opt into the wide container, capped at 82rem. Task groups use open space and hairline rows rather than a rounded group card. Group spacing is 1.5rem; row padding is 0.75rem on desktop and 0.9rem on phones.
 
-Task groups sit on white surfaces with hairline row dividers and a minimum row height of `3.5rem`; richer metadata may increase height. Toolbars wrap their search onto its own mobile row. Project directories use an auto-filling grid with a `17rem` minimum card width. Boards scroll horizontally: columns are `19rem` on desktop and shrink to the viewport minus `3rem` on mobile; the page itself remains contained.
+Below 768px, the content has 1.25rem inline padding. The header places a short Today title and compact Hebrew/Gregorian date over the task collection, with search, actions and Display on the same heading row. Weekly outlook, deadlines and focus live at /app/focus. They do not occupy Today. Display opens only when requested; a compact summary names every active search, priority and sort condition with a reset action.
 
-**The Task First Rule.** Capture and working tasks retain the first useful viewport. Planning panels move after tasks on mobile rather than consuming that viewport.
+The fixed mobile bar has four destinations: Inbox, Today, Upcoming and Browse. It is 3.75rem tall plus the safe-area bottom inset. A separate 52px circular Add action clears that bar by 1rem and sits 1.25rem from the inline end. Browse uses a full-width navigation panel above the persistent bar, with the main canvas inert while open. The floating Add action is hidden during Browse because the panel offers its own labeled Add row.
+
+Phone task detail occupies the screen and scrolls as one view. Its property rows align labels and values in two columns (5.5rem label column, 0.75rem gap), with notes, checklist and comments in reading order. Desktop detail is a centered dialog with a maximum width of 58rem and a 17rem property column. Boards scroll horizontally inside their content area; that deliberate local overflow must not become page overflow.
 
 ## Elevation & Depth
 
-Tonal separation and hairlines do most of the work. Small buttons and draggable cards use a shallow shadow; overlays and lifted objects use the popover shadow. The detail panel uses a directional edge shadow. These geometries stay theme-aware through the shadow tint family and are recorded in `.impeccable/design.json`.
+Tonal layers and hairline separators define the work at rest. Shadows appear on popovers, dialogs, capture surfaces and dragged items. Source shadow tints remain semantic light-dark() pairs; geometry and motion extensions are carried by .impeccable/design.json. The modal scrim protects attention without disguising underlying task state.
 
-Motion makes state comprehensible: short color changes for controls, a spring for the rail's physical width, quiet content transitions, and an RTL completion stroke followed by row collapse. Recognized quick-add words and newly placed rows also receive brief feedback. Reduced-motion settings suppress animation and preserve readable end states.
+### Shadow Vocabulary
 
-**The Grounded Depth Rule.** Keep resting task groups flat; use elevation to distinguish a floating control, a popover or an object being moved.
+- **Row:** 0 1px 2px var(--shadow-tint-1), used by filled buttons and the composer.
+- **Popover:** 0 12px 32px -14px var(--shadow-tint-2), 0 2px 6px -2px var(--shadow-tint-3), used by overlays and dragged rows.
+- **Panel Edge:** -18px 0 40px -28px var(--shadow-tint-4), with the physical sign mirrored for reading direction where used.
+- **Mobile Add:** 0 4px 12px var(--shadow-tint-2), used by the separate capture action.
+- **Board / Segmented Choice:** 0 2px 5px var(--shadow-tint-1), used by board cards and the current view-switch segment.
+
+**The Flat Work Rule.** Task rows stay flat at rest. Elevation identifies an overlay, capture surface or item being dragged; it does not turn the task collection into a deck of cards.
+
+Completion combines a tick, a reading-direction strike (220ms) and row collapse (260ms after a 180ms delay). Quiet color changes use 120ms; the existing rail spring is 420ms. Parser recognition retains its bounded 200ms feedback. These are actual inherited motion behaviors, not obligations to introduce more animation. Reduced motion suppresses animation and transition, exposing the final state immediately.
 
 ## Shapes
 
-The shape vocabulary is gently curved: small metadata chips, compact rounded controls, and larger corners on task groups, board columns and planning cards. Use the frontmatter's named scales; existing local containers retain their observed corners rather than being forced into one radius. Hairlines are light and continuous. Dashed borders identify the board's add-section affordance.
+Small softened corners belong to controls and overlays; task-list rows remain flat. Shared buttons and fields use the lg radius. Menus and popovers use lg/xl roles; desktop detail uses its observed 1rem radius and becomes square-edged full-screen detail on phones. Board cards, board columns and the focus container retain their separate source shapes, documented in the frontmatter.
 
-List completion is a rounded square; bulk selection is a smaller circle. Board completion currently uses a circle. Those controls carry different contextual behavior and must retain explicit labels and checked state.
+Task-list and calendar completion controls are circles (20px, 1.5px stroke) with a 12px tick. List rings communicate priority through fixed p1–p4 values and accessible priority descriptions. The detail completion circle uses a neutral outline; board circles retain their 2px stroke. Batch selection is a smaller square (16px) and subtasks retain their own smaller control. Do not generalize the signature circle to every checkbox role.
 
 ## Components
 
 ### Buttons
 
-Confident but quiet. Primary buttons use the accent and a shallow shadow; secondary buttons use the surface with a stronger hairline; ghost buttons gain a quiet surface on hover; destructive buttons use fixed urgency red. Default controls are `2.75rem` high; compact controls are `2.25rem` and grow on coarse pointers. Disabled controls reduce opacity and stop interaction. Focus uses the common accent outline (`2px`, offset `2px`).
-
-### Inputs / Fields
-
-Surface-backed, gently rounded fields have a stronger neutral outline, accent border on focus and red invalid feedback. They inherit the body text size, use automatic content direction where appropriate, and increase their touch height on coarse pointers. The filter builder groups search and four explicit criteria in one white container, using a two-column mobile field grid and four desktop columns.
+Plain Hebrew actions, clear hierarchy and gentle corners. Primary uses action/foreground tokens; secondary uses a work surface with the strong line; ghost uses secondary ink with a quiet hover surface; danger uses fixed urgency red with its own outline. The normal control is 44px high. Small buttons are 36px on desktop and grow to 44px under a coarse pointer; large buttons are 48px. Color transitions are brief, disabled controls reduce opacity, and focus is a visible 2px accent outline with a 2px offset.
 
 ### Chips
 
-Filter choices are quiet white controls, becoming accent wash with stronger type when selected. Task metadata stays compact: deadline flags use semantic urgency, project chips use a small swatch dot, and labels use a translucent wash of their own color. Default priority 4 has no flag. Meaning is supported by icons, labels and accessible names rather than color alone.
+Brief metadata rather than decorative badges. An upcoming deadline uses the amber wash and a flag; an overdue deadline switches to urgency red and says that its date has passed. Project dots and label chips retain their named color. On Today, the date chip suppresses a repeated Today label and keeps the time when present. A recurrence icon has a readable accessible explanation. Priority 4 has no extra badge.
 
 ### Cards / Containers
 
-Task groups are white, lightly padded surfaces with internal dividers. Board columns use the second surface layer, and their task cards use white with a shallow shadow. A drag target becomes accent-soft; a dragged card gains the popover shadow. Directory cards contain project identity, task totals and a thin completion bar. The focus timer uses the accent wash rather than an elevated dashboard tile.
+Flat lists carry day-to-day work. Board cards use a white/charcoal work surface, a compact low shadow and 1rem padding inside neutral columns. Project directory entries group real projects and progress; the focus container groups a real browser timer. These destination-specific containers do not authorize insight cards on Today. The public landing and WhatsApp demonstration image keep their independently scoped roles.
+
+### Inputs / Fields
+
+Shared fields use the work surface, strong line, normal body size and lg corners. Hover strengthens the boundary; focus uses accent; invalid fields use urgency red and a written error. Free text is direction-aware. Display's search and select fields use their observed 0.4rem corners and 44px minimum height inside a compact popover. Task-detail attributes remain labeled, but their values are visually plain until hovered or focused rather than each becoming a filled button.
 
 ### Navigation
 
-The rail uses inverted text hierarchy and full-row hover/active backgrounds. Capture is a high-contrast, full-width action near its top. Labels fade when it collapses while icons retain stable positions. Mobile uses the existing drawer plus four frequent destinations and a separate capture slot in the bottom bar. Hidden drawers leave the keyboard and accessibility tree; touch menus remain reachable without hover.
+Pale neutral desktop rail, concise labels, small SVG icons and current-row wash. Selected text, icon and count all follow the accent. Mobile Inbox / Today / Upcoming / Browse uses quiet icons and labels with no overlaid task badges. Browse exposes the rest of the navigation, projects, labels and account actions, maintains the tab bar, traps its working focus and provides a close path. Settings has six sections in a desktop column and a scrolling phone tab strip, with the persistent mobile shell.
 
-### Hebrew Composer and Date Lockup
+### Task Rows and Detail
 
-Quick-add recognizes parts of a Hebrew sentence in place, showing semantic highlights before saving; an accessible live description conveys the parse. The Today header combines a large weekday, Hebrew date and isolated Gregorian date above an RTL progress hairline. The count reflects completed tasks, and appears only when a nonzero total exists.
+The title is the main click target. Hover/focus adds a quiet neutral layer; completion remains a distinct circular action. A thin separator starts after the completion control. Supporting notes, project, time and recurrence remain subordinate; an empty metadata line disappears. Desktop row actions appear on hover/focus, while phone actions are reached through task detail instead of repeating an ellipsis on every row. Detail has its own visible action menu and written property labels. Calendar scheduled rows share the title and circular completion grammar; deadline entries retain their separate, non-completing meaning.
 
-### Project Workspace
+### Hebrew Capture
 
-The list/board switch is a recessed segmented control with a white selected segment, pressed state and a small shadow. Share is an explicit adjacent action; assignment and comments belong with tasks. Board moves support a labeled select menu in addition to pointer dragging. On phones the board initially positions the first populated column in view while retaining empty drop targets.
-
-### Messaging Previews and Service Notices
-
-Reminder introductions inherit the shared dialog, display heading and control language. A bordered, gently rounded message illustration supplies the demonstration, with useful alternative text and a visible synthetic-example caption; reuse the same illustration in its settings surface. A disconnected-service explanation uses secondary ink on the quiet second surface layer with a neutral hairline. It does not borrow deadline amber. Primary settings actions retain the shared touch height, while dismissal remains easy to reach.
+The composer recognizes Hebrew sentence tokens in place before saving, with date/time/project/priority meanings visible. Desktop capture is inline; phone capture is a bottom sheet above the keyboard. A route without a task list routes Add to Today and opens the sheet there. This is a product mechanism and a feedback moment, not an ornamental illustration.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** inherit the semantic color tokens in both themes and retain the rail's local neutral remapping.
-- **Do** keep Hebrew task titles readable, metadata subordinate and task controls explicitly labeled.
-- **Do** preserve separate visual meanings for schedule, deadline, priority, project and completion.
-- **Do** keep mobile capture reachable and clear fixed navigation with the shared safe-area spacing.
-- **Do** use quiet surface layering before adding shadows, and honor reduced motion.
+
+- **Do** use semantic CSS tokens and preserve their canonical light-dark() / OKLCH values.
+- **Do** keep task titles readable at 16px and keep supporting metadata subordinate.
+- **Do** make every active search, priority and sort condition visible after Display closes, with a reset action.
+- **Do** preserve separate schedule and deadline semantics in every view.
+- **Do** keep touch targets generous without enlarging the task glyphs or creating horizontal page overflow.
+- **Do** retain keyboard access, accessible control names and immediate reduced-motion end states.
+- **Do** preserve the public landing editorial role and image provenance when touching shared styles.
 
 ### Don't:
-- **Don't** introduce raw component colors that bypass appearance and semantic state tokens.
-- **Don't** letter-space Hebrew or allow mixed dates, times and shortcuts to reorder punctuation.
-- **Don't** turn Today planning data into a productivity score or place it ahead of mobile tasks.
-- **Don't** reuse urgency styling as a decorative accent or infer project identity from the action hue.
-- **Don't** make hovering or dragging the only way to reach a task action.
+
+- **Don't** restore the rejected lavender ground, dark accent rail, serif Today date, progress rail, permanent Today filter form or Today insight cards.
+- **Don't** make Add a fifth mobile destination or duplicate the mobile navigation toolbar.
+- **Don't** repeat Today as metadata on every Today task; show its scheduled time when present.
+- **Don't** use a swatch or red alone to communicate priority, lateness, an error or destructive intent.
+- **Don't** replace real task, collaboration or service state with fabricated customer content or delivery proof.
+- **Don't** treat the scoped fix verdict, local captures or documentation as proof of production deployment or the unreviewed landing.

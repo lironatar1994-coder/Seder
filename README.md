@@ -20,8 +20,9 @@ Requires Node.js 22.12 or newer.
 
 ## Workspace and collaboration
 
-Today combines tasks, a seven-day outlook, upcoming deadlines and a resumable 25-minute focus
-timer. Lists can be searched, filtered by priority and sorted. `/app/filters` combines search,
+Today presents tasks in a flat list with a compact date heading. Search, priority filtering and
+sorting live in the header's Display popover. `/app/focus` contains the seven-day outlook,
+upcoming deadlines and resumable 25-minute focus timer. `/app/filters` combines search,
 priority, date, project and assignee; named saved filters appear in the sidebar and remain private
 to their account. `/app/projects` shows personal and shared projects with task progress.
 
@@ -282,9 +283,9 @@ February rather than skipping into March.
 
 ## Settings
 
-`/app/settings`, reachable from the user menu at the foot of the sidebar. Four tabs rather than a
-second sidebar — the app already has one on that edge, and nesting another would push the content
-off-centre.
+`/app/settings`, reachable from the sidebar, mobile Browse and the user menu. Six sections form
+a desktop navigation column and a scrolling phone tab strip; the mobile app's four-destination
+bar and separate Add action remain available.
 
 Each tab is a column of rows: label and description on the reading edge, control on the far side,
 separated by hairlines. Not a stack of cards — a card per setting makes every option look like a
@@ -295,17 +296,19 @@ separate destination when what the eye wants is one scannable column.
 | פרופיל | Display name. Email is shown read-only — changing it needs a verification flow that does not exist yet, and a disabled input would imply it is merely unavailable |
 | סיסמה | Current + new + confirm. Requires the current password, and drops every **other** session |
 | מראה | Brightness (system / light / dark), accent theme, and the view the app opens on |
+| יומנים | Google connection and selected calendars when configured, plus the private read-only calendar subscription link |
+| וואטסאפ | Phone, separate reminder/capture preferences and personal logs; administrator pairing and service controls are role-gated |
 | חשבון | Connected devices, sign out everywhere else, and account deletion |
 
 **Appearance is two independent axes**, and they compose: *brightness* (system / light / dark) and
-*accent* (seven themes). Any accent works in either brightness, because the accent tokens are
+*accent* (eight themes). Any accent works in either brightness, because the accent tokens are
 derived from a hue variable while lightness and chroma come from the brightness in force.
 
-Both are absent-means-default. "מערכת" and the default indigo accent write nothing and carry no
-attribute, which is exactly what the inline bootstrap script already assumed — it only stamps
-`data-theme` / `data-accent` when a choice was made. Picking the default removes the stored value
-rather than writing a third one. Both are device-local, like the theme in most apps; the default
-view is per-account because it is about the work, not the screen.
+Both are absent-means-default: **light** brightness and the **red** accent write nothing and
+carry no attribute. System brightness is an explicit stored choice and applies
+`data-theme="system"`; dark applies `data-theme="dark"`. A non-default accent applies its own
+`data-accent`. Picking a default removes its stored value. Both choices are device-local; the
+default view is per-account because it describes the work rather than the screen.
 
 **Default view** drives `/app`, which is where sign-in, sign-up and the wordmark all point. A
 stored value that no longer matches a view falls back to Today rather than 404ing on the first
@@ -438,32 +441,31 @@ The phone is not the desk with less room. It is for capture, a glance at what
 is due, and ticking things off; planning happens sitting down. The layout says
 so:
 
-**A tab bar, not a hamburger.** Four destinations — היום, בקרוב, תיבה נכנסת,
-לוח שנה — sit permanently in the thumb arc with their counts. The drawer keeps
-what a phone reaches for rarely: projects, labels, settings, sign-out.
+**Four navigation destinations.** Inbox, Today, Upcoming and Browse follow the familiar
+Todoist mobile structure. Browse opens projects, labels, calendar, focus, settings and sign-out.
+Counts remain in Browse rather than overlapping the bottom navigation icons.
 
-**Capture is a slot of its own**, because it is the one thing a phone does
+**Capture is a floating button**, because it is the one thing a phone does
 better than a desk — the task occurs to you while you are standing somewhere.
 It opens the composer as a sheet on the bottom edge, next to the thumb that
 asked for it and above the keyboard about to appear. On a route with no list to
 open — the calendar, settings — it navigates to Today and opens there rather
 than dropping the tap. The desktop's inline "משימה חדשה" button, and its `N`
-badge, are hidden: the tab bar owns capture, and a second one would spend the
+badge, are hidden: the floating button owns capture, and a second one would spend the
 fold repeating it.
 
-**The lockup shrinks.** At 1280px the dual-calendar header costs a corner; at
-390px it was costing five of the seven rows on screen. It stays the largest
-thing on the phone, just not by the same absolute measure, and the sticky top
-bar carries the current view so context survives scrolling.
+**Tasks lead the viewport.** A short sans-serif heading and one Hebrew/Gregorian date line
+replace the large serif weekday, progress rail and duplicate mobile toolbar. Display settings
+open on demand. Weekly planning and the focus timer have their own screen. The light canvas
+is white, navigation is neutral gray, and red is the default action accent.
 
 **Touch targets grow, glyphs do not.** Controls keep their density under a
 pointer and extend their hit area past their box under a thumb, via a
 `::before` under `@media (pointer: coarse)`. Layout is unchanged either way.
 
-**The row menu is visible on touch.** It was `opacity-0 group-hover:opacity-100`,
-and a touch screen has no hover — so schedule, move, prioritise and delete were
-invisible on every phone since the row was written. The reveal is now gated on
-`@media (hover: hover)`.
+**Task actions stay discoverable.** The phone opens labeled task detail with its own action
+menu. It does not repeat an ellipsis on every list row. Desktop row menus appear on hover,
+keyboard focus or while open; their opacity reveal is gated on `@media (hover: hover)`.
 
 ### Verifying it
 
@@ -519,36 +521,43 @@ both engines; the allowed values live in `src/lib/constants.ts` and are enforced
 
 ## Design
 
-The familiar productivity palette, executed carefully rather than avoided: cool near-white
-surfaces, a saturated indigo accent, and amber reserved exclusively for time pressure — deadlines
-and overdue — so that colour always means one thing.
+The authenticated interface follows the Todoist operating grammar researched in
+`design/todoist-research.md`: a white task canvas, pale neutral navigation, compact Assistant
+headings, flat rows and round completion controls. Search, priority and sorting open in Display;
+a compact summary names every active condition with reset. Weekly planning and focus have their
+own destination. This replaces the user's rejected lavender ground, dark indigo rail, serif date,
+progress rail and crowded Today controls.
 
-The neutrals carry a slight blue cast rather than being warm greys; that is what makes an indigo
-accent read as deliberate instead of as a stray colour. One accent token covers link text, focus
-ring and filled checkbox, because it clears 4.5:1 both as text and as a fill behind its
-`--on-accent` glyph.
+Light and red are the defaults. Eight action accents are available, but the canvas, base rail,
+text and dividers remain neutral. The action token covers link text, focus and completed controls;
+priority, deadline and project families retain their own semantic tokens. Red action and red
+urgency coexist, with written labels, icons and accessible descriptions distinguishing meanings.
+Upcoming deadlines use amber; overdue dates use urgency red.
 
-Dark mode is not the light theme inverted. The ground is a deep blue-black, surfaces step up in
-small increments, and the accent moves the *other* way — light enough to read as text on that
-ground, which means filled elements take dark glyphs rather than white ones.
+Dark mode uses neutral charcoal with surfaces stepping up in lightness. Its action accent becomes
+lighter, and filled controls use the dark `--on-accent` foreground. The existing blue logo image
+is an identity asset, independent of the selected action color. The signed-out landing keeps its
+Frank Ruhl Libre editorial display and independent composition; it is outside this authenticated
+replacement finish review. `DESIGN.md` and `.impeccable/design.json` record actual tokens and
+primitives rather than the earlier visual direction.
 
 ### One declaration per token
 
-Tokens live in `src/app/globals.css`, and each is declared **once**, with both themes inside it:
+Tokens live in `src/app/globals.css`, with one canonical light/dark pair plus a light fallback:
 
 ```css
---paper: #f7f8fa;                                                  /* engines without light-dark() */
---paper: light-dark(oklch(97.6% 0.003 265), oklch(14.5% 0.008 268));
+--paper: #ffffff;                                      /* engines without light-dark() */
+--paper: light-dark(oklch(100% 0 0), oklch(16% 0 0));
 ```
 
-`light-dark()` picks its side from the element's `color-scheme`, so the three tiers this used to
-need — light, dark-by-media-query, dark-by-attribute — collapse to two selectors that set nothing
-but `color-scheme`:
+`light-dark()` picks its side from the element's `color-scheme`. Only brightness selectors choose
+the scheme; component colors retain their single paired declaration:
 
 ```css
-:root                     { color-scheme: light dark; }  /* no choice → the OS decides */
+:root                     { color-scheme: light; }       /* no choice → light */
 :root[data-theme='light'] { color-scheme: light; }
 :root[data-theme='dark']  { color-scheme: dark; }
+:root[data-theme='system'] { color-scheme: light dark; }   /* following the OS is opt-in */
 ```
 
 Adding a token is one line, changing a colour is one edit, and a token can no longer be updated in
@@ -559,31 +568,17 @@ the light theme, which is the safe degradation.
 `light-dark()` resolves a `<color>`, not an arbitrary value, so shadows keep their tint in a token
 (`--shadow-tint-1`) and write the geometry around it once. No component branches on theme.
 
-### The rail, and why the ground is not white
+### Neutral navigation and task canvas
 
-The sidebar is a dark, low-chroma slab of the accent hue against a light content
-area. It is not decoration: a screen that is one flat light field gives the eye
-nothing to orient by, so the navigation and the work read as the same material.
-A dark rail makes the content the lit surface. Slack, Superhuman and Todoist's
-own coloured themes all do a version of this.
+The rail is pale gray beside the white light-mode canvas; in dark mode both remain neutral.
+Changing an accent changes actions and current-state washes, while the work canvas and base
+navigation keep their own gray values. The current destination highlights its label, icon and
+count together. Hairlines and open spacing supply hierarchy without a dark navigation slab.
 
-The content ground carries the accent hue too — under 1% chroma, a whisper — so
-choosing *green* changes the mood of the whole app instead of recolouring six
-buttons. Every near-white app shares the same `#f8f9fa`; this one's ground
-belongs to whoever is using it. Pure white is also the wrong answer for a tool
-someone sits in all day, and a tinted ground makes contrast easier to pass, not
-harder.
-
-The rail has its own token family, because these invert: on a dark slab "muted"
-is a *lighter* grey, and `--accent-soft` — a pale wash meant for white — is a
-hole in it. Inside `.rail`, the neutral ramp is re-pointed at that family, so
-the shared icon button, menu trigger and section heading work on the dark ground
-with no call-site changes. Portalled menus escape the subtree, which is correct:
-a popover is a light surface wherever it was opened from.
-
-The contrast audit checks the rail pairs per accent, the same way it checks the
-light ones — a dark slab is the easiest place for secondary text to drift into
-decorative grey.
+The rail retains its own semantic family for text, separators, hover and selected state. Inside
+`.rail`, shared controls inherit those roles. Portalled menus escape that subtree and use the
+work-surface family. Contrast is checked in both brightness modes, including every accent on its
+selected navigation wash.
 
 ### Motion with mass
 
@@ -606,8 +601,9 @@ A centred modal split the way Todoist splits its task view: the main column
 holds what the task *is* — checkbox and title, description, checklist — and a
 17rem rail holds what it is *tagged with*. Todoist's own note on their redesign
 is that attributes are written out rather than reduced to icons, and this
-follows that: every rail row is a spelled-out label over exactly one control,
-so the rail scans as a list rather than a puzzle.
+follows that: every property has a spelled-out label and one plain value control.
+On a phone, detail fills the screen and property labels align beside their values;
+on desktop, the label sits above its value in the property column.
 
 Priority and labels are pickers rather than a grid of chips and a wall of
 toggles. Not only for tidiness — seven fields set the height of the whole
@@ -700,8 +696,8 @@ run a light-grey system bar down the edge of the dark theme.
 
 ### Accent themes
 
-Seven of them — indigo, violet, blue, teal, green, pink, graphite — and each is **one hue number**,
-not a hand-picked palette:
+Eight of them — red, indigo, violet, blue, teal, green, pink, graphite. Red is the default.
+Each is a hue plus light/dark chroma values rather than a separately maintained palette:
 
 ```css
 [data-accent='green'] { --accent-h: 150; --accent-c: 0.13; --accent-c-dark: 0.13; }
@@ -711,10 +707,11 @@ Lightness comes from whichever side of the `light-dark()` pair applies, so every
 contrast behaviour that was tuned once. Adding a theme is three numbers. Chroma drops on the hues where sRGB cannot hold 0.19
 without clipping, since clipping quietly shifts lightness and with it the contrast.
 
-**Amber and red are deliberately absent.** Amber means "time pressure" and red means "highest
-priority" everywhere in this app; an accent wearing either would break a meaning the rest of the
-interface depends on. For the same reason the priority ramp no longer mirrors the accent — `p3` is
-a fixed blue, so switching to the pink theme changes the accent and leaves every flag alone.
+Amber remains a fixed deadline/priority semantic family rather than an appearance choice.
+Red is available and is the default action accent, while `p1` independently carries urgent,
+overdue and destructive states. These meanings use labels and icons as well as color. The
+priority ramp does not mirror the accent: `p3` is fixed indigo, so switching to pink leaves
+every priority flag and completion-ring meaning intact. Neutral surfaces do not inherit hue.
 
 ### Verifying it
 
@@ -722,15 +719,15 @@ a fixed blue, so switching to the pink theme changes the accent and leaves every
 node scripts/contrast-check.mjs
 ```
 
-Audits every text-on-surface pair against 4.5:1 and every UI boundary against 3:1 — **7 accents ×
-2 modes, 108 pairs** — and exits non-zero on a failure.
+Audits the declared text-on-surface pairs against 4.5:1 and the unprioritized completion
+boundary against 3:1 across **8 accents × 2 brightness modes**, and exits non-zero on failure.
 
 It reads `globals.css`, splits each `light-dark()` pair into its two sides, and evaluates the
 `oklch()` values the browser actually uses, converting oklch → oklab → linear sRGB → sRGB and
 clamping out-of-gamut colours exactly as a browser clamps them. Checking the hex fallbacks would
 not do: they exist only for engines without oklch, and the accent themes have none at all.
 Parameterising colour by hue is only safe if something proves the whole matrix, so this is what
-makes the one-number-per-theme trick honest.
+makes the shared hue/chroma theme system verifiable.
 
 ```bash
 node scripts/theme-matrix.mjs
@@ -746,15 +743,17 @@ hands back the literal `light-dark(a, b)` text. Custom properties are substitute
 the function is only evaluated where something consumes the token — reading a *used* property like
 `background-color` is what shows which side won.
 
-Three type roles: **Frank Ruhl Libre** (the 1908 Hebrew book face) for the date lockup and view
-titles only, **Assistant** for the interface, and **Inter** with tabular figures for numerals.
-16px body floor, 1.7 line-height, word-spacing instead of letter-spacing — Hebrew must never be
-letter-spaced.
+Three type roles: **Assistant** for app headings, the current app wordmark and controls;
+**Frank Ruhl Libre** for public editorial display and its live-text wordmark; **Inter** with
+tabular figures for numerals. Body prose starts at 16px with a 1.7 line height. Task and calendar
+entry titles remain 16px with a tighter line height; smaller metadata stays subordinate.
+Hebrew uses word spacing rather than letter spacing.
 
-The signature is the Today header: the weekday and the dual-calendar date — `יום רביעי · כ״ט באב ·
-12.08` — sitting on a rail that fills right-to-left as the day closes. ICU converts the calendar
-but refuses to render Hebrew numerals (`nu-hebr` silently falls back to Latin digits), so the
-gematria in `src/lib/gematria.ts` is hand-built, including the ט״ו/ט״ז rule.
+Today uses a short title and one subordinate Gregorian/Hebrew date line. It has no progress rail.
+Completion supplies the signature feedback: a round tick, reading-direction title strike and row
+collapse, with immediate reduced-motion end states. ICU converts the calendar but does not render
+Hebrew numerals (`nu-hebr` falls back to Latin digits), so `src/lib/gematria.ts` supplies them,
+including the ט״ו/ט״ז rule.
 
 ## RTL notes
 

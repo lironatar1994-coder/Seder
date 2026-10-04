@@ -9,15 +9,18 @@ export function WhenChip({
   date,
   time,
   muted,
+  compact = false,
 }: {
   date: Date;
   time?: string | null;
   /** The task is finished. Also suppresses the overdue treatment. */
   muted?: boolean;
+  compact?: boolean;
 }) {
   // A completed task cannot be late. Leaving it red says the opposite of what
   // the tick next to it says.
   const overdue = !muted && isOverdue(date);
+  if (compact && !time && relativeDayLabel(date, today()) === 'היום') return null;
   return (
     <span
       className={cn(
@@ -25,11 +28,11 @@ export function WhenChip({
         overdue ? 'font-semibold text-p1' : muted ? 'text-muted' : 'text-ink-2',
       )}
     >
-      <CalendarDays className="size-3.5 shrink-0" aria-hidden />
-      {relativeDayLabel(date, today())}
+      {!compact && <CalendarDays className="size-3.5 shrink-0" aria-hidden />}
+      {(!compact || relativeDayLabel(date, today()) !== 'היום') && relativeDayLabel(date, today())}
       {time && (
         <>
-          <Clock className="ms-0.5 size-3 shrink-0" aria-hidden />
+          {!compact && <Clock className="ms-0.5 size-3 shrink-0" aria-hidden />}
           {/* A time is an LTR island — without isolation the colon can jump. */}
           <span className="num">{time}</span>
         </>
@@ -87,13 +90,13 @@ export function LabelChip({ name, color }: { name: string; color: string }) {
 
 /** "כל יום שני" — shown whenever a task repeats, so a row that keeps coming
  *  back explains itself instead of looking like it was never finished. */
-export function RepeatChip({ rule }: { rule: string }) {
+export function RepeatChip({ rule, compact = false }: { rule: string; compact?: boolean }) {
   const label = describeStored(rule);
   if (!label) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-muted" title={label}>
+    <span className="inline-flex items-center gap-1 text-xs text-muted" title={label} aria-label={label}>
       <Repeat className="size-3.5 shrink-0" aria-hidden />
-      {label}
+      {compact ? <span className="sr-only">{label}</span> : label}
     </span>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -24,6 +24,7 @@ import {
   SlidersHorizontal,
   FolderKanban,
   Bookmark,
+  Timer,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { VIEWS, swatchVar, type ViewSlug } from '@/lib/constants';
@@ -66,6 +67,32 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { collapsed, toggle } = useRail();
+  const drawerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const browse = () => setOpen((value) => !value);
+    const close = () => setOpen(false);
+    window.addEventListener('seder:browse', browse);
+    window.addEventListener('seder:browse-close', close);
+    return () => { window.removeEventListener('seder:browse', browse); window.removeEventListener('seder:browse-close', close); };
+  }, []);
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('seder:browse-state', { detail: open }));
+    if (!open) return;
+    const drawer = drawerRef.current;
+    const main = document.querySelector<HTMLElement>('main');
+    if (main) main.inert = true;
+    drawer?.querySelector<HTMLButtonElement>('[aria-label="סגירה"]')?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('[data-browse-trigger]')?.focus(); }
+      if (event.key !== 'Tab' || !drawer) return;
+      const elements = [...Array.from(drawer.querySelectorAll<HTMLElement>('a[href],button:not([disabled])')), ...Array.from(document.querySelectorAll<HTMLElement>('.tab-bar a,.tab-bar button'))].filter((item) => item.getClientRects().length > 0);
+      const first = elements[0], last = elements.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', keydown);
+    return () => { document.removeEventListener('keydown', keydown); if (main) main.inert = false; };
+  }, [open]);
 
   return (
     <>
@@ -76,15 +103,6 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
           already on the drawer it opens, and a phone screen is too short to
           spend a line telling you which app you are in; where you are inside it
           is the thing that stops being obvious once the header scrolls away. */}
-      <div className="sticky inset-bs-0 z-30 flex items-center gap-1 border-be border-line bg-paper/90 px-2 py-1.5 backdrop-blur md:hidden">
-        <IconButton label="תפריט" onClick={() => setOpen(true)}>
-          <MenuIcon className="size-5" aria-hidden />
-        </IconButton>
-        <span className="min-w-0 flex-1 truncate px-1 text-sm font-semibold text-ink-2">
-          {currentPlace(pathname, data)}
-        </span>
-        <ThemeToggle />
-      </div>
 
       {open && (
         <button
@@ -96,6 +114,7 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
       )}
 
       <aside
+        ref={drawerRef}
         data-open={open}
         // Closed, this is hidden from the tab order and the accessibility tree
         // by `.drawer[data-open='false']` in globals.css — in CSS rather than
@@ -183,8 +202,10 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
           </ul>
 
           <div className="mt-3 border-bs border-[var(--rail-line)] pt-3">
+            <NavLink href="/app/focus" active={pathname === '/app/focus'}><Timer className="size-4 shrink-0" aria-hidden /><span className="rail-label">מיקוד ותכנון</span></NavLink>
             <NavLink href="/app/filters" active={pathname === '/app/filters' && !searchParams.get('id')}><SlidersHorizontal className="size-4 shrink-0" aria-hidden /><span className="rail-label">מסננים</span></NavLink>
             <NavLink href="/app/projects" active={pathname === '/app/projects'}><FolderKanban className="size-4 shrink-0" aria-hidden /><span className="rail-label">כל הפרויקטים</span></NavLink>
+            <NavLink href="/app/settings" active={pathname.startsWith('/app/settings')}><Settings className="size-4 shrink-0" aria-hidden /><span className="rail-label">הגדרות</span></NavLink>
           </div>
           {data.savedFilters.length > 0 && <><Section title="מסננים שמורים" /><ul className="space-y-0.5">{data.savedFilters.map((filter) => <li key={filter.id}><NavLink href={`/app/filters?id=${filter.id}`} active={pathname === '/app/filters' && searchParams.get('id') === filter.id}><Bookmark className="size-3.5 shrink-0" aria-hidden /><span className="rail-label truncate">{filter.name}</span></NavLink></li>)}</ul></>}
 
@@ -355,7 +376,7 @@ function NavLink({
         // word rather than a row that was current. The descendant selectors
         // outrank the muted colour the icons set for themselves.
         active
-          ? 'bg-[var(--rail-active)] font-semibold text-[var(--rail-ink)] [&_[data-count]]:text-[var(--rail-ink)] [&_svg]:text-[var(--rail-ink)]'
+          ? 'bg-[var(--rail-active)] font-semibold text-accent [&_[data-count]]:text-accent [&_svg]:text-accent'
           : 'text-[var(--rail-muted)] hover:bg-[var(--rail-hover)] hover:text-[var(--rail-ink)]',
       )}
     >

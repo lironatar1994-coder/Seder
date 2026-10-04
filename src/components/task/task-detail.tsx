@@ -646,7 +646,7 @@ export function TaskDetail({
                   aria-checked={task.status !== 'TODO'}
                   onClick={() => run(() => toggleTaskAction(task.id, task.status === 'TODO'))}
                   className={cn(
-                    'mt-1.5 grid size-5 shrink-0 place-items-center rounded-md border-2 transition-colors',
+                    'mt-1.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px] transition-colors',
                     task.status !== 'TODO'
                       ? 'border-accent bg-accent'
                       : 'border-line-strong hover:border-accent',
@@ -693,9 +693,9 @@ export function TaskDetail({
               />
             </div>
 
-            <aside
+            <aside data-task-properties
               className={cn(
-                'order-2 shrink-0 space-y-4 border-line bg-surface-2/50 p-5',
+                'order-2 shrink-0 border-line bg-surface-2/50 p-5',
                 'border-bs md:order-none md:col-start-2 md:row-span-2 md:row-start-1',
                 'md:border-bs-0 md:border-s',
               )}
@@ -809,11 +809,11 @@ function MetaRow({
      them stacked set the height of the whole dialog, and every 4px here is
      28px of emptiness at the bottom of the column beside it. */
   return (
-    <div className="space-y-1">
+    <div className="task-property" role="group" aria-label={label}>
       <Label htmlFor={htmlFor} className="text-xs">
         {label}
       </Label>
-      {children}
+      <div className="task-property-value">{children}</div>
     </div>
   );
 }

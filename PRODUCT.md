@@ -48,33 +48,39 @@ Views: תיבה נכנסת, היום, בקרוב, בכל עת, מתישהו, י�
 
 Repeating tasks complete per-occurrence: the done copy lands in the Logbook and the live task
 rolls to its next date, deadline offset preserved. `Ctrl/⌘ K` is search plus jump-to-anything.
-Appearance is two independent axes: brightness (system/light/dark) and one of seven accent
+Appearance is two independent axes: brightness (system/light/dark) and one of eight accent
 hues.
 
 ## Capabilities and Constraints
 
 - Next.js 15 App Router, React 19, Tailwind v4, Prisma + SQLite, argon2 sessions.
 - `<html lang="he" dir="rtl">` at the root; RTL is the only direction the product ships.
-- Three type roles already fixed: Frank Ruhl Libre (display / date lockup / view titles),
-  Assistant (interface), Inter (numerals only, tabular, LTR islands).
+- Assistant carries app headings, the current app rail wordmark and the interface; Inter
+  carries tabular numerals in LTR islands. Frank Ruhl Libre carries public editorial display
+  and the public live-text wordmark; the existing blue logo image remains an identity asset.
 - Colour is a token system in `src/app/globals.css` using `light-dark()`; components never
-  reference a raw colour. Amber means time pressure and red means priority 1 — neither may be
-  reused for anything else.
+  reference a raw colour. White and neutral gray surfaces remain independent of accent hue.
+  Red is the default action accent and also denotes overdue dates / priority 1; labels and
+  checkbox outlines, never color alone, distinguish those meanings. Amber denotes deadlines.
 - Free account, email + password, with password reset through Resend or SMTP.
 - Shared projects have invitation links, email-bound invitations, assignment and comments.
   Owners can revoke invitations and remove members. Personal tasks stay private.
 - Project boards support sections, dragging and an accessible move menu, plus starting templates.
-- Saved filters combine title/notes, priority, date, project and responsibility. Today includes
-  a seven-day outlook and a 25-minute focus timer. This is planning data, not a productivity score.
+- Saved filters combine title/notes, priority, date, project and responsibility. The separate
+  focus and planning screen includes a seven-day outlook and a 25-minute timer.
 - Production: lawebs.co.il/seder.
 
 ## Brand Commitments
 
-- Name: **סדר**. Wordmark is the word itself, set in Frank Ruhl Libre.
+- Name: **סדר**. The live-text wordmark uses Assistant in the authenticated rail and Frank
+  Ruhl Libre on the public editorial landing. Preserve the existing blue logo image.
 - Voice: plain modern Hebrew, dugri, no marketing padding, no hype adjectives, no exclamation
   marks. The product's own words are the interface's words (היום, בקרוב, מתישהו, תיבה נכנסת).
 - Gender-neutral phrasing by rewording (`אפשר`, `יש ל…`), not slash notation.
-- The existing design system is inherited, not replaced.
+- The user rejected the lavender ground, large serif dates, dark sidebar and crowded Today
+  controls on 2026-10-04. The replacement follows Todoist's familiar task-first interface:
+  neutral surfaces, sans headings, flat rows, round completion controls, on-demand display
+  settings, and mobile Inbox / Today / Upcoming / Browse with a separate Add button.
 
 ## Evidence on Hand
 

@@ -6,7 +6,7 @@ import { LogbookView } from '@/components/task/logbook-view';
 import { VIEWS, isViewSlug, type ViewSlug } from '@/lib/constants';
 import { ViewHeader } from '@/components/nav/view-header';
 import { TaskList } from '@/components/task/task-list';
-import { TodayInsights } from '@/components/task/today-insights';
+import { ViewActions } from '@/components/nav/view-actions';
 import { getGoogleEvents } from '@/server/google/queries';
 import { GoogleEventList, GoogleSyncBar } from '@/components/calendar/google-events';
 import { db } from '@/server/db';
@@ -86,12 +86,13 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
   ]);
 
   return (
-    <div data-wide={view === 'today' ? true : undefined}>
+    <div>
       <ViewHeader
         title={meta.label}
         subtitle={view === 'today' ? null : meta.hint}
         showDate={view === 'today'}
         progress={data.progress}
+        action={<ViewActions planning={view === 'today'} />}
       />
       <div className={view === 'today' ? 'today-workspace' : undefined}>
       <div className="min-w-0">
@@ -109,7 +110,6 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
         empty={EMPTY[view]}
       />
       </div>
-      {view === 'today' && <TodayInsights userId={user.id} projects={sidebar.projects} />}
       </div>
     </div>
   );

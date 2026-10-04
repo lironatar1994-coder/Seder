@@ -5,11 +5,9 @@ import { VisitorSignal } from '@/components/analytics/visitor-signal';
 import './fonts.css';
 import './globals.css';
 
-/* Three roles, three faces.
-   Frank Ruhl Libre is the 1908 Hebrew book face — used only for the date
-   lockup and view titles, never for UI chrome.
-   Assistant carries the interface: Hebrew-first, clean at 14–16px.
-   Inter is a numerals-only utility face, tabular, for dates, times and counts. */
+/* Assistant carries the authenticated workspace, including its headings.
+   Frank Ruhl Libre retains the public/editorial display role.
+   Inter provides tabular numerals for dates, times and counts. */
 
 export const metadata: Metadata = {
   title: 'סדר — ניהול משימות',
@@ -23,7 +21,7 @@ export const metadata: Metadata = {
    light bar, which is the smaller wrong of the two and the only one a static
    meta tag can avoid. */
 export const viewport: Viewport = {
-  themeColor: '#f7f8fa',
+  themeColor: '#ffffff',
   /* Lets the page use the full screen behind the notch and the home indicator,
      and — the reason it is here — makes `env(safe-area-inset-*)` report real
      numbers. Without it those insets are zero everywhere, so the tab bar would
@@ -61,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body>
+        <div hidden data-design-contract dangerouslySetInnerHTML={{ __html: '<!-- THESIS: Hebrew tasks first, controls on demand. OWN-WORLD: user-pinned Todoist canon, white and gray, sans headings, flat rows, round checkboxes, restrained red. STORY: capture, plan, finish; Browse reveals projects and settings. FIRST VIEWPORT: compact Today/date, actual task rows, four mobile destinations and separate Add; no permanent filters or insight cards. FORM: code-led Todoist canon overrides candidate 5, seed 95c8c208. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->' }} />
         <VisitorSignal />
         {/* Radix portals mount at document.body and would otherwise assume LTR,
             opening every menu and popover on the wrong side. */}

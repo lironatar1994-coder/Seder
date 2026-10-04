@@ -3,7 +3,7 @@
 import { useTransition } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { swatchVar } from '@/lib/constants';
+import { PRIORITY_LABELS, swatchVar } from '@/lib/constants';
 import { relativeDayLabel, today } from '@/lib/dates';
 import type { CalendarEntry } from '@/server/tasks/queries';
 import { toggleTaskAction } from '@/server/tasks/actions';
@@ -31,6 +31,7 @@ export function EntryRow({
   const [, startTransition] = useTransition();
   const { toast } = useToast();
   const done = entry.task.status !== 'TODO';
+  const ring = entry.task.priority === 1 ? 'border-p1' : entry.task.priority === 2 ? 'border-p2' : entry.task.priority === 3 ? 'border-p3' : 'border-p4';
 
   const toggle = () =>
     startTransition(async () => {
@@ -44,7 +45,7 @@ export function EntryRow({
         type="button"
         onClick={() => onOpen(entry.taskId)}
         className={cn(
-          'flex w-full flex-col justify-center rounded-lg px-1 py-2 text-start text-sm text-ink',
+          'flex w-full flex-col justify-center rounded-lg px-1 py-2 text-start text-base text-ink',
           'hover:bg-surface-2 [@media(pointer:coarse)]:min-h-11',
         )}
       >
@@ -65,19 +66,20 @@ export function EntryRow({
         role="checkbox"
         aria-checked={done}
         aria-label={done ? `ביטול השלמה: ${entry.task.title}` : `סימון כהושלם: ${entry.task.title}`}
+        aria-description={`עדיפות: ${PRIORITY_LABELS[entry.task.priority]}`}
+        title={PRIORITY_LABELS[entry.task.priority]}
         onClick={toggle}
         className={cn(
-          'relative mt-0.5 grid size-4.5 shrink-0 place-items-center rounded-md border-2 transition-colors',
-          done ? 'border-accent bg-accent' : 'border-line-strong hover:border-accent',
-          // The visual box stays 18px; the target grows past it under a thumb,
-          // the same way the task row's checkbox does.
+          'relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px] transition-colors',
+          done ? 'border-accent bg-accent' : `${ring} hover:border-accent`,
+          // Same 20px control and 44px touch target as the task list.
           "before:absolute before:content-['']",
-          '[@media(pointer:coarse)]:before:-inset-3.5',
+          '[@media(pointer:coarse)]:before:-inset-3',
         )}
       >
         <Check
-          className={cn('size-2.5 text-[var(--on-accent)]', done ? 'opacity-100' : 'opacity-0')}
-          strokeWidth={4}
+          className={cn('size-3 text-[var(--on-accent)]', done ? 'opacity-100' : 'opacity-0')}
+          strokeWidth={3.5}
           aria-hidden
         />
       </button>
@@ -93,7 +95,7 @@ export function EntryRow({
         <span
           dir="auto"
           className={cn(
-            'block text-sm leading-snug',
+            'block text-base leading-snug',
             done ? 'text-muted line-through' : 'text-ink',
           )}
         >

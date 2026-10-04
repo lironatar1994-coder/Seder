@@ -194,7 +194,7 @@ function resolve(value, vars) {
 
 /* -------------------------------------------------------------------- audit */
 
-const SURFACES = ['paper', 'surface', 'surface-sunk'];
+const SURFACES = ['paper', 'surface', 'surface-2', 'surface-sunk'];
 const TEXT_ON_SURFACE = ['ink', 'ink-2', 'muted', 'flag', 'p1', 'p3'];
 
 let failures = 0;
@@ -213,7 +213,7 @@ for (const [modeName, tokens] of [
   ['dark', darkTokens],
 ]) {
   console.log(`\n=== ${modeName} — neutrals and semantics ===`);
-  const vars = { ...accents.indigo, ...tokens };
+  const vars = { ...accents.red, ...tokens };
 
   for (const surface of SURFACES) {
     const bg = resolve(tokens[surface], vars);
@@ -248,6 +248,7 @@ for (const [modeName, tokens] of [
       resolve(tokens['rail-active'], v),
       4.5,
     );
+    check(`${accentName}: active accent on rail-active`, accent, resolve(tokens['rail-active'], v), 4.5);
     check(
       `${accentName}: rail-muted on rail-hover`,
       resolve(tokens['rail-muted'], v),

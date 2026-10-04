@@ -159,8 +159,7 @@ export async function getViewTasks(userId: string, view: ViewSlug): Promise<View
       if (overdue.length) {
         groups.push({
           key: 'overdue',
-          title: 'נגרר מקודם',
-          subtitle: 'להזיז להיום או לדחות',
+          title: 'באיחור',
           tasks: overdue,
         });
       }

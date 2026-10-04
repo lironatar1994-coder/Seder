@@ -22,7 +22,7 @@ import { cn } from '@/lib/cn';
 import type { TaskDTO, TaskGroup } from '@/server/tasks/queries';
 import type { Priority } from '@/lib/constants';
 import { addDays, relativeDayLabel, today, weekdayName, formatShortDate } from '@/lib/dates';
-import { Button } from '@/components/ui/button';
+import { Button, IconButton } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { TaskRow } from './task-row';
 import { TaskDetail } from './task-detail';
@@ -45,7 +45,7 @@ import {
   updateTaskAction,
   type QuickAddContext,
 } from '@/server/tasks/actions';
-import { Dialog, DialogContent, DialogFooter } from '@/components/ui/overlays';
+import { Dialog, DialogContent, DialogFooter, Popover, PopoverTrigger, PopoverContent, PopoverClose } from '@/components/ui/overlays';
 import { BulkBar, bulkDeleteCopy } from './bulk-bar';
 import { useIsPhone } from '@/components/ui/use-is-phone';
 import { registerComposer } from './compose-bus';
@@ -106,6 +106,13 @@ export function TaskList({
   const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [sort, setSort] = useState('manual');
+  const [controlsHost, setControlsHost] = useState<Element | null>(null);
+  const [displayOpen, setDisplayOpen] = useState(false);
+  const displaySummary = [
+    search && `חיפוש: ${search}`,
+    priorityFilter !== 'all' && `עדיפות: ${{ '1': 'דחוף', '2': 'חשוב', '3': 'רגיל', '4': 'ללא עדיפות' }[priorityFilter]}`,
+    sort !== 'manual' && `מיון: ${{ priority: 'עדיפות', date: 'תאריך', title: 'שם' }[sort]}`,
+  ].filter(Boolean).join(' · ');
   /** The row just added, while it is still tinted. */
   const [landedId, setLandedId] = useState<string | null>(null);
   /** A task saved but not yet returned by the server. */
@@ -114,6 +121,12 @@ export function TaskList({
   const isPhone = useIsPhone();
   const { toast } = useToast();
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+
+  // One task list owns the view header's display control. Keep its state beside
+  // the list, while placing the control in the same row as the page title.
+  useEffect(() => {
+    if (showTools && showComposer) setControlsHost(document.querySelector('[data-list-controls-host]'));
+  }, [showTools, showComposer]);
 
   useEffect(() => {
     const set = timers.current;
@@ -647,7 +660,17 @@ export function TaskList({
 
   return (
     <div className="pb-24" data-testid="task-list">
-      {showTools && showComposer && groups.some((group) => group.tasks.length > 0) && <div className="task-toolbar"><label className="task-search"><Search className="size-4 shrink-0" aria-hidden /><input dir="auto" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="חיפוש ברשימה" placeholder="חיפוש ברשימה" />{search && <button type="button" aria-label="ניקוי חיפוש" onClick={() => setSearch('')}><X className="size-3.5" aria-hidden /></button>}</label><label className="sr-only" htmlFor="task-priority-filter">סינון לפי עדיפות</label><select id="task-priority-filter" value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}><option value="all">כל העדיפויות</option><option value="1">דחוף</option><option value="2">חשוב</option><option value="3">רגיל</option><option value="4">ללא עדיפות</option></select><label className="sr-only" htmlFor="task-sort">מיון משימות</label><select id="task-sort" value={sort} onChange={(event) => setSort(event.target.value)}><option value="manual">סדר ידני</option><option value="priority">לפי עדיפות</option><option value="date">לפי תאריך</option><option value="title">לפי שם</option></select></div>}
+      {controlsHost && createPortal(<Popover open={displayOpen} onOpenChange={setDisplayOpen}>
+        <PopoverTrigger asChild><IconButton label="תצוגת הרשימה" className={priorityFilter !== 'all' || search || sort !== 'manual' ? 'text-accent' : undefined}><SlidersHorizontal className="size-[1.125rem]" aria-hidden /></IconButton></PopoverTrigger>
+        <PopoverContent align="end" className="list-display-panel w-[min(20rem,calc(100vw-2rem))]">
+          <div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">תצוגת הרשימה</h2><PopoverClose asChild><IconButton label="סגירת אפשרויות התצוגה"><X className="size-4" aria-hidden /></IconButton></PopoverClose></div>
+          <label className="task-search"><Search className="size-4 shrink-0" aria-hidden /><input dir="auto" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="חיפוש ברשימה" placeholder="חיפוש ברשימה" />{search && <IconButton label="ניקוי חיפוש" onClick={() => setSearch('')}><X className="size-3.5" aria-hidden /></IconButton>}</label>
+          <label className="list-display-field">סינון לפי עדיפות<select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}><option value="all">כל העדיפויות</option><option value="1">דחוף</option><option value="2">חשוב</option><option value="3">רגיל</option><option value="4">ללא עדיפות</option></select></label>
+          <label className="list-display-field">מיון משימות<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="manual">סדר ידני</option><option value="priority">לפי עדיפות</option><option value="date">לפי תאריך</option><option value="title">לפי שם</option></select></label>
+          <PopoverClose asChild><Button size="sm" className="mt-4 w-full">הצגת המשימות</Button></PopoverClose>
+        </PopoverContent>
+      </Popover>, controlsHost)}
+      {displaySummary && <div className="mb-3 flex items-start justify-between gap-2 text-sm text-muted"><button type="button" className="min-w-0 flex-1 break-words py-2 text-start" onClick={() => setDisplayOpen(true)}>{displaySummary}</button><Button variant="ghost" size="sm" className="shrink-0" onClick={() => { setSearch(''); setPriorityFilter('all'); setSort('manual'); }}>איפוס תצוגה</Button></div>}
       {showComposer &&
         (composerOpen ? (
           <ComposerSlot phone={isPhone} onClose={() => setComposerOpen(false)}>
@@ -670,7 +693,7 @@ export function TaskList({
             //
             // Hidden on the phone: the tab bar owns capture there, and a second
             // add button would spend the fold repeating it.
-            className="mb-2 hidden items-center gap-2.5 rounded-lg px-2 py-2.5 text-start text-muted transition-colors hover:bg-surface hover:text-ink md:inline-flex"
+            className="mb-3 hidden items-center gap-2 rounded-md px-0 py-2 text-start text-muted transition-colors hover:text-accent md:inline-flex"
           >
             <Plus className="size-5 shrink-0" aria-hidden />
             <span className="text-base">משימה חדשה</span>
@@ -712,7 +735,7 @@ export function TaskList({
                   {group.tasks.length === 0 ? (
                     <p className="px-2 py-3 text-sm text-muted">אין כאן משימות.</p>
                   ) : (
-                    <ul className="space-y-0.5">
+                    <ul>
                       {group.tasks.map((task) => (
                         <TaskRow
                           key={task.id}
@@ -870,7 +893,7 @@ function GroupHeading({
 
   return (
     <div className="mb-1 flex items-baseline gap-2.5 border-be border-line px-2 pb-1.5">
-      <h2 className="display text-base font-bold text-ink">{primary}</h2>
+      <h2 className="text-base font-semibold text-ink">{primary}</h2>
       {secondary && <span className="num text-xs text-muted">{secondary}</span>}
       <span className="num ms-auto text-xs text-muted">{count}</span>
     </div>
