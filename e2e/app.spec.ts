@@ -608,6 +608,33 @@ test.describe('tasks', () => {
     await expect(detail.getByRole('group', { name: 'מועד הגשה', exact: true }).getByRole('button', { name: 'מחר', exact: true })).toBeVisible();
   });
 
+  for (const width of [1440, 390]) test(`time editing saves explicitly and preserves dates at ${width}px`, async ({ page }) => {
+    await register(page);
+    await addTask(page, 'בדיקת שעה היום בשעה 09:15 עד מחר');
+    await page.setViewportSize({ width, height: 900 });
+    await page.getByRole('button', { name: 'פתיחת בדיקת שעה', exact: true }).click();
+    const editTime = page.getByRole('button', { name: 'עריכת שעה', exact: true });
+    await expect(editTime).toHaveText('09:15');
+    await editTime.click();
+    await page.getByLabel('שעה', { exact: true }).fill('15:45');
+    // Intermediate edits must not close the picker or save part of the time.
+    await expect(page.getByLabel('שעה', { exact: true })).toHaveValue('15:45');
+    await page.evaluate(() => document.fonts.ready);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: `.local-artifacts/time-picker-${width}.png`, fullPage: true });
+    await page.getByRole('button', { name: 'שמור', exact: true }).click();
+    await expect(editTime).toHaveText('15:45');
+    await page.getByRole('button', { name: 'סגירה', exact: true }).click();
+    await page.reload();
+    await page.getByRole('button', { name: 'פתיחת בדיקת שעה', exact: true }).click();
+    await expect(editTime).toHaveText('15:45');
+    await expect(page.getByRole('group', { name: 'מועד הגשה', exact: true })).toContainText('מחר');
+    await editTime.click();
+    await page.getByRole('button', { name: 'ללא שעה', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'הוספת שעה', exact: true })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'מתוזמן ל', exact: true })).toContainText('היום');
+  });
+
   test('the detail panel edits notes and adds a checklist item', async ({ page }) => {
     await register(page);
     await addTask(page, 'לארגן פגישה היום');

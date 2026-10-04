@@ -311,7 +311,7 @@ Pale neutral desktop rail, concise labels, small SVG icons and current-row wash.
 
 ### Task Rows and Detail
 
-The title is the main click target. Hover/focus adds a quiet neutral layer; completion remains a distinct circular action. A thin separator starts after the completion control. Supporting notes, project, time and recurrence remain subordinate; an empty metadata line disappears. Desktop row actions appear on hover/focus, while phone actions are reached through task detail instead of repeating an ellipsis on every row. Detail has its own visible action menu and written property labels. Calendar scheduled rows share the title and circular completion grammar; deadline entries retain their separate, non-completing meaning.
+The title is the main click target. Hover/focus adds a quiet neutral layer; completion remains a distinct circular action. A thin separator starts after the completion control. Supporting notes, project, time and recurrence remain subordinate; an empty metadata line disappears. Desktop row actions appear on hover/focus, while phone actions are reached through task detail instead of repeating an ellipsis on every row. Detail has its own visible action menu and written property labels. Its schedule row exposes the time directly beside the date. A small time editor keeps edits local until Save and offers removal without clearing the date. The date picker exposes time on demand, rather than a permanently visible input. Reminder and recurrence state is conveyed by the selected value without explanatory paragraphs. Calendar scheduled rows share the title and circular completion grammar; deadline entries retain their separate, non-completing meaning.
 
 ### Hebrew Capture
 

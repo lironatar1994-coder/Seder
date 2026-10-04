@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Bell, Check, ChevronDown, ChevronUp, Flag, Plus, Repeat, Trash2, X } from 'lucide-react';
+import { Bell, Check, ChevronDown, ChevronUp, Clock, Flag, Plus, Repeat, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { TaskDTO } from '@/server/tasks/queries';
 import { PRIORITIES, PRIORITY_LABELS, swatchVar, type Priority } from '@/lib/constants';
@@ -21,8 +21,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/overlays';
 import { DatePickerPanel } from '@/components/calendar/date-picker';
+import { TimePickerPanel } from '@/components/calendar/time-picker';
 import {
-  hourLabel,
   isReminderOff,
   reminderLabel,
   reminderOptionsFor,
@@ -90,6 +90,7 @@ export function TaskDetail({
      and in the rail that is the very next field. Picking a date is a complete
      act; there is nothing further to do in the panel. */
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [timeOpen, setTimeOpen] = useState(false);
   const [deadlineOpen, setDeadlineOpen] = useState(false);
   /**
    * A local copy of the task, patched the instant the user changes something.
@@ -152,6 +153,9 @@ export function TaskDetail({
     setTitle(task?.title ?? '');
     setNotes(task?.notes ?? '');
     setNewSubtask('');
+    setScheduleOpen(false);
+    setTimeOpen(false);
+    setDeadlineOpen(false);
     // Reset the editable fields when the panel switches to a different task,
     // not on every refresh of the same one.
   }, [task?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -212,9 +216,10 @@ export function TaskDetail({
   const meta = (
     <>
       <MetaRow label="מתוזמן ל">
+        <div className="flex items-center gap-1">
         <Popover open={scheduleOpen} onOpenChange={setScheduleOpen}>
           <PopoverTrigger asChild>
-            <Button variant="secondary" size="sm" className="w-full justify-between">
+            <Button variant="secondary" size="sm" className="flex-1 justify-between">
               {task.scheduledFor
                 ? relativeDayLabel(task.scheduledFor, today())
                 : task.whenBucket === 'ANYTIME'
@@ -253,6 +258,24 @@ export function TaskDetail({
             />
           </PopoverContent>
         </Popover>
+        {task.scheduledFor && <Popover open={timeOpen} onOpenChange={setTimeOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="secondary" size="sm" aria-label={task.scheduledTime ? 'עריכת שעה' : 'הוספת שעה'} className="shrink-0 gap-1.5">
+              <Clock className="size-3.5" aria-hidden />
+              {task.scheduledTime ? <span className="num" dir="ltr">{task.scheduledTime}</span> : 'שעה'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64">
+            <TimePickerPanel time={task.scheduledTime} onSave={time => {
+              setTimeOpen(false); patch({ scheduledTime: time });
+              run(() => scheduleTaskAction(task.id, { bucket: 'SCHEDULED', date: isoDay(task.scheduledFor!), time }));
+            }} onRemove={() => {
+              setTimeOpen(false); patch({ scheduledTime: null });
+              run(() => scheduleTaskAction(task.id, { bucket: 'SCHEDULED', date: isoDay(task.scheduledFor!), time: null }));
+            }} />
+          </PopoverContent>
+        </Popover>}
+        </div>
       </MetaRow>
 
       {task.scheduledTime && <MetaRow label="משך המשימה">
@@ -353,12 +376,6 @@ export function TaskDetail({
             ))}
           </MenuContent>
         </Menu>
-        {task.scheduledFor && !task.scheduledTime && !isReminderOff(task.reminder) && (
-          <p className="text-xs leading-relaxed text-muted">
-            תגיע בוואטסאפ ב־{hourLabel(reminderDefaults.hour)}, יחד עם שאר המשימות של אותו יום.
-            השעה נקבעת בהגדרות.
-          </p>
-        )}
       </MetaRow>
 
       {shared && (
@@ -480,11 +497,6 @@ export function TaskDetail({
             ))}
           </MenuContent>
         </Menu>
-        {task.recurrence && (
-          <p className="text-xs leading-relaxed text-muted">
-            בסימון כהושלמה, המשימה תיפתח מחדש בתאריך הבא ותירשם ביומן.
-          </p>
-        )}
       </MetaRow>
 
       <MetaRow label="פרויקט" htmlFor="detail-project">

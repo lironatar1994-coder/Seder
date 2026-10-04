@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { CalendarX2, ChevronLeft, ChevronRight, Layers, Moon, Sun, CalendarDays } from 'lucide-react';
+import { CalendarX2, ChevronLeft, ChevronRight, Clock, Layers, Moon, Sun, CalendarDays } from 'lucide-react';
+import { TimePickerPanel } from './time-picker';
 import { cn } from '@/lib/cn';
 import { buildMonthGrid, WEEKDAY_HEADERS, parseISODay } from '@/lib/calendar';
 import { addDays, today, weekdayName, formatShortDate } from '@/lib/dates';
@@ -42,6 +43,7 @@ export function DatePickerPanel({
 }) {
   const base = today();
   const [anchor, setAnchor] = useState<Date>(value ? parseISODay(value) : base);
+  const [timeOpen, setTimeOpen] = useState(false);
   const grid = buildMonthGrid(anchor, base);
 
   const tomorrow = addDays(base, 1);
@@ -64,6 +66,17 @@ export function DatePickerPanel({
         { key: 'tomorrow', icon: CalendarDays, label: 'מחר', hint: weekdayName(tomorrow), value: { bucket: 'SCHEDULED' as const, date: iso(tomorrow) } },
         { key: 'next', icon: CalendarDays, label: 'שבוע הבא', hint: formatShortDate(nextWeek), value: { bucket: 'SCHEDULED' as const, date: iso(nextWeek) } },
       ];
+
+  if (isSchedule && timeOpen && selected) return (
+    <div className="w-72" data-testid="date-picker" data-variant={variant}>
+      <button type="button" onClick={() => setTimeOpen(false)} className="mb-3 flex h-11 items-center gap-2 text-sm text-ink-2">
+        <ChevronRight className="size-4" aria-hidden />תאריך
+      </button>
+      <TimePickerPanel time={time}
+        onSave={nextTime => onPick({ bucket: 'SCHEDULED', date: selected, time: nextTime })}
+        onRemove={() => onPick({ bucket: 'SCHEDULED', date: selected, time: null })} />
+    </div>
+  );
 
   return (
     <div className="w-72" data-testid="date-picker" data-variant={variant}>
@@ -115,7 +128,7 @@ export function DatePickerPanel({
           <div
             key={label}
             className={cn(
-              'pb-1 text-center text-[0.7rem] font-semibold',
+              'pb-1 text-center text-xs font-semibold',
               index >= 5 ? 'text-line-strong' : 'text-muted',
             )}
           >
@@ -150,22 +163,11 @@ export function DatePickerPanel({
       </div>
 
       {isSchedule && (
-        <div className="mt-2 flex items-center gap-2 border-bs border-line pt-2">
-          <label htmlFor="picker-time" className="text-sm text-muted">
-            שעה
-          </label>
-          <input
-            id="picker-time"
-            type="time"
-            dir="ltr"
-            value={time ?? ''}
-            disabled={!selected}
-            onChange={(event) =>
-              onPick({ bucket: 'SCHEDULED', date: selected, time: event.target.value || null })
-            }
-            className="num h-8 flex-1 rounded-md border border-line-strong bg-surface px-2 text-sm text-ink disabled:opacity-50"
-          />
-        </div>
+        <button type="button" disabled={!selected} onClick={() => setTimeOpen(true)}
+          className="mt-2 flex min-h-11 w-full items-center gap-2 border-bs border-line px-2 text-sm text-ink-2 transition-colors hover:bg-surface-2 disabled:opacity-50">
+          <Clock className="size-4" aria-hidden />
+          {time ? <span dir="ltr" className="num">{time}</span> : 'הוספת שעה'}
+        </button>
       )}
 
       {/* The Hebrew reading of whatever is selected — the same dual-calendar
