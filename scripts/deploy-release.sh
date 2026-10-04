@@ -15,6 +15,30 @@ nginx='/etc/nginx/sites-available/lawebs.co.il.conf'
 install -d -m 700 /root/deployment-backups/seder /root/Seder.releases
 exec 9>/var/lock/seder-deploy.lock
 flock -n 9 || { echo '[ERROR] Another Seder release is running.' >&2; exit 1; }
+
+# Keep two ready-to-run rollbacks. Older releases retain their source, lockfile
+# and configuration; only npm dependencies and Next's rebuildable output go.
+prune_previous_builds() {
+  local name dir target leaf kept=0
+  while IFS= read -r name; do
+    [[ "$name" =~ ^Seder.previous-[0-9]{8}-[0-9]{6}-[a-f0-9]{8}$ ]] || continue
+    dir="/root/$name"
+    [[ ! -L "$dir" && "$(readlink -f "$dir")" = "$dir" && -f "$dir/RELEASE.json" && -f "$dir/package-lock.json" ]] || continue
+    kept=$((kept + 1))
+    [[ "$kept" -gt 2 ]] || continue
+    for leaf in node_modules .next; do
+      target="$dir/$leaf"
+      if [[ -d "$target" && ! -L "$target" && "$(readlink -f "$target")" = "$dir/$leaf" ]]; then
+        rm -rf -- "$target"
+        echo "[INFO] Removed rebuildable $leaf from older rollback $name; source and configuration retained."
+      fi
+    done
+  done < <(find /root -mindepth 1 -maxdepth 1 -type d -name 'Seder.previous-*' -printf '%f\n' | LC_ALL=C sort -r)
+}
+
+prune_previous_builds
+available_kb=$(df -Pk /root | awk 'NR == 2 { print $4 }')
+[[ "$available_kb" -ge 2097152 ]] || { echo '[ERROR] At least 2 GiB of free disk space is required before building a release. Production was not changed.' >&2; exit 1; }
 [[ ! -e "$release" && ! -e "$previous" ]] || exit 2
 install -d -m 700 "$backup"
 install -d -m 755 "$release"
@@ -75,4 +99,5 @@ done
 curl -fsS 'https://lawebs.co.il/seder/api/health' | grep -q "$commit"
 trap - ERR
 rm -f -- "$archive"
+prune_previous_builds
 echo "[SUCCESS] Production is serving Git commit $commit. Previous release: $previous. Backup: $backup"
