@@ -14,6 +14,12 @@ import { ComposerProperties } from './composer-properties';
 
 export interface ComposerProject { id: string; name: string; color: string }
 
+/** Picker keys belong to the picker, not the task list/calendar behind it.
+ * Escape must be stopped during Radix's capture callback, before dismissal
+ * unmounts the portal and its ordinary bubbling handler. */
+function stopPickerKey(event: { stopPropagation: () => void }) {
+  event.stopPropagation();
+}
 
 /**
  * A resolved token is coloured like the thing it will produce. `!1` is a red
@@ -326,7 +332,7 @@ export function Composer({
               {schedule.time && <span dir="ltr" className="num shrink-0 text-xs">{schedule.time}</span>}
             </button>
           </PopoverTrigger>
-          <PopoverContent aria-label="תאריך המשימה" onCloseAutoFocus={restoreInput} side={sheet ? 'top' : 'bottom'}>
+          <PopoverContent aria-label="תאריך המשימה" onCloseAutoFocus={restoreInput} side={sheet ? 'top' : 'bottom'} onEscapeKeyDown={stopPickerKey} onKeyDown={stopPickerKey}>
             <DatePickerPanel value={schedule.date} bucket={schedule.bucket} time={schedule.time} onPick={chooseSchedule}
               onClear={() => chooseSchedule({ bucket: 'ANYTIME', date: null, time: null })} />
           </PopoverContent>
@@ -338,7 +344,7 @@ export function Composer({
               <span dir="auto" className="truncate">{projectName ?? 'תיבה נכנסת'}</span>
             </button>
           </PopoverTrigger>
-          <PopoverContent aria-label="פרויקט המשימה" className="w-72" side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput}>
+          <PopoverContent aria-label="פרויקט המשימה" className="w-72" side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput} onEscapeKeyDown={stopPickerKey} onKeyDown={stopPickerKey}>
             <input dir="auto" aria-label="חיפוש פרויקטים" placeholder="חיפוש פרויקט" value={projectSearch} onChange={event => setProjectSearch(event.target.value)} className="mb-2 h-11 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink" />
             <div className="max-h-64 overflow-y-auto" role="group" aria-label="פרויקטים">
               <button type="button" aria-pressed={!projectName} onClick={() => { choose(['project'], { projectId: null }); setProjectOpen(false); }} className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-start text-sm text-ink hover:bg-surface-2"><Inbox className="size-4 text-muted" aria-hidden /><span className="flex-1">תיבה נכנסת</span>{!projectName && <Check className="size-4 text-accent" aria-hidden />}</button>
@@ -354,7 +360,7 @@ export function Composer({
               {extraCount > 0 && <span className="num text-xs text-accent">{extraCount}</span>}
             </button>
           </PopoverTrigger>
-          <PopoverContent aria-label="פרטים נוספים למשימה" side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput}>
+          <PopoverContent aria-label="פרטים נוספים למשימה" side={sheet ? 'top' : 'bottom'} onCloseAutoFocus={restoreInput} onEscapeKeyDown={stopPickerKey} onKeyDown={stopPickerKey}>
             <ComposerProperties deadline={deadline ?? null} priority={priority} labels={labelNames} knownLabels={vocabulary?.labels ?? []} recurrence={recurrence} date={schedule.date}
               onDeadline={value => choose(['deadline'], { deadline: value })}
               onPriority={value => choose(['priority'], { priority: value })}

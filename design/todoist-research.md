@@ -63,3 +63,5 @@ Explicit clearing survives route defaults. Picking an attribute removes its comp
 tokens while preserving the title and other attributes. Server validation and project
 membership remain mandatory. Saving an hour inside the portalled editor must never submit
 the task. Focused browser checks cover these interactions, saved attributes and 320px.
+
+Post-release keyboard check: isolate picker keyboard events from the underlying list and calendar. Escape dismisses only the active picker and preserves the composer draft, including on the phone sheet. Native capture-phase dismissal requires its own propagation guard. Scoped regressions cover date/project Escape, phone More Escape, time editing and surrounding list/board/mobile workflows.

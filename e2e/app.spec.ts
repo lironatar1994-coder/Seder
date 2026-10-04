@@ -512,6 +512,9 @@ test.describe('composer pickers', () => {
     await input.fill('לתכנן מסלול');
     await expect(composer.getByTestId('composer-controls').getByRole('button')).toHaveCount(4);
     await composer.getByRole('button', { name: /^בחירת תאריך/ }).click();
+    await page.keyboard.press('Escape');
+    await expect(input).toHaveValue('לתכנן מסלול');
+    await composer.getByRole('button', { name: /^בחירת תאריך/ }).click();
     await page.getByTestId('date-picker').getByRole('button', { name: /^מחר/ }).click();
     await composer.getByRole('button', { name: /^בחירת תאריך/ }).click();
     await page.getByTestId('date-picker').getByRole('button', { name: 'הוספת שעה', exact: true }).click();
@@ -519,6 +522,9 @@ test.describe('composer pickers', () => {
     await page.getByRole('button', { name: 'שמור', exact: true }).click();
     await expect(input).toHaveValue('לתכנן מסלול'); // Saving an hour must not submit the task.
     await expect(composer.getByRole('button', { name: /^בחירת תאריך/ })).toContainText('16:30');
+    await composer.getByRole('button', { name: /^בחירת פרויקט/ }).click();
+    await page.keyboard.press('Escape');
+    await expect(input).toHaveValue('לתכנן מסלול');
     await composer.getByRole('button', { name: /^בחירת פרויקט/ }).click();
     await page.getByLabel('חיפוש פרויקטים', { exact: true }).fill('משפחתי');
     await page.getByRole('group', { name: 'פרויקטים', exact: true }).getByRole('button', { name: 'טיול משפחתי', exact: true }).click();
@@ -580,6 +586,10 @@ test.describe('composer pickers', () => {
     await composer.getByLabel('משימה חדשה', { exact: true }).fill('לסיים מצגת מחר בשעה 14:30 #עבודה !1');
     await expect(composer.getByRole('button', { name: /^בחירת תאריך/ })).toContainText('מחר');
     await expect(composer.getByRole('button', { name: /^בחירת פרויקט/ })).toContainText('עבודה');
+    await composer.getByRole('button', { name: /^פרטים נוספים/ }).click();
+    await page.keyboard.press('Escape');
+    await expect(composer).toBeVisible();
+    await expect(composer.getByLabel('משימה חדשה', { exact: true })).toHaveValue('לסיים מצגת מחר בשעה 14:30 #עבודה !1');
     await composer.getByRole('button', { name: /^בחירת תאריך/ }).click();
     const picker = page.getByTestId('date-picker');
     const box = (await picker.boundingBox())!;
