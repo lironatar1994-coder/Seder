@@ -196,7 +196,7 @@ A clear Hebrew task canvas follows the operating grammar the user pinned from To
 
 This records the implemented replacement of 2026-10-04. The user rejected the lavender ground, dark indigo rail, large serif date, progress rail, crowded permanent filters and supporting cards on Today. The app uses Assistant throughout its working hierarchy, including its current live rail wordmark. Frank Ruhl Libre remains the public editorial face; the existing blue identity image remains an identity asset rather than the action accent.
 
-The authority is the user-pinned, code-led Todoist canon in design/todoist-research.md, not assigned candidate 5. Its recorded seed is 95c8c208, also emitted by src/app/layout.tsx. The signed-out public landing retains its independent editorial composition and is outside this replacement finish review. Shared global tokens apply there, but app composition rules do not turn its headings into the authenticated hierarchy.
+The authority is the user-pinned, code-led Todoist canon in design/todoist-research.md, not assigned candidate 5. Its recorded seed is 95c8c208, also emitted by src/app/layout.tsx. The signed-out public landing retains its independent editorial composition and is outside this replacement finish review. Shared global tokens apply there, but app composition rules do not turn its headings into the authenticated hierarchy. Its product screenshots were refreshed on 2026-10-04 from the current interface with synthetic tasks; capture provenance is in src/components/landing/shots/provenance.json. The SEO pass checks its public metadata and desktop/mobile overflow separately.
 
 **Key Characteristics:**
 

@@ -63,6 +63,7 @@ test.describe('auth', () => {
   test('registers, lands on today, and stays signed in', async ({ page }) => {
     await register(page);
     await expect(page.getByRole('heading', { level: 1 })).toContainText('יום');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
 
     // The session cookie must not be readable from JavaScript.
     const cookies = await page.context().cookies();

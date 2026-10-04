@@ -243,4 +243,5 @@ if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
   systemctl reload nginx
 fi
 
+bash ./scripts/publish-seo-discovery.sh
 echo "[SUCCESS] Seder deployed at https://$DOMAIN$BASE_PATH"

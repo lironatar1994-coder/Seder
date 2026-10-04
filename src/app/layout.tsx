@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { DirectionProvider } from '@radix-ui/react-direction';
 import { ToastProvider } from '@/components/ui/toast';
 import { VisitorSignal } from '@/components/analytics/visitor-signal';
+import { SITE_DESCRIPTION } from '@/lib/seo';
 import './fonts.css';
 import './globals.css';
 
@@ -10,8 +11,9 @@ import './globals.css';
    Inter provides tabular numerals for dates, times and counts. */
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://lawebs.co.il'),
   title: 'סדר — ניהול משימות',
-  description: 'מנהל משימות בעברית. היום, בקרוב, מתישהו — הכול במקום אחד.',
+  description: SITE_DESCRIPTION,
 };
 
 /* One colour, not a media-query pair: the page no longer resolves against the

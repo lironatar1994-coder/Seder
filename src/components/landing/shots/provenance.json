@@ -1,0 +1,14 @@
+{
+  "sourceType": "browser-screenshot",
+  "capturedAt": "2026-10-04",
+  "route": "/seder/app/today",
+  "syntheticData": true,
+  "generatedByAI": false,
+  "captureInstructions": "Run Seder locally with a disposable test account, seed seven Today/overdue tasks and two future tasks, open Today, wait for fonts, select the light or dark theme, then capture the viewport. Remove the disposable account afterwards. The SEO capture run used .local-artifacts/todoist-visual-check.mjs with CAPTURE_ONLY=product; the general screenshot harness is scripts/shots.mjs.",
+  "images": [
+    { "file": "today-light.png", "width": 1440, "height": 1000, "theme": "light" },
+    { "file": "today-dark.png", "width": 1440, "height": 1000, "theme": "dark" },
+    { "file": "today-mobile-light.png", "width": 390, "height": 844, "theme": "light" },
+    { "file": "today-mobile-dark.png", "width": 390, "height": 844, "theme": "dark" }
+  ]
+}

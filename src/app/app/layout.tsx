@@ -13,6 +13,9 @@ import { WhatsappIntroduction } from '@/components/nav/whatsapp-introduction';
 import { shouldIntroduceWhatsapp } from '@/lib/whatsapp-onboarding';
 import { readWhatsappState } from '@/server/whatsapp/status';
 import { db } from '@/server/db';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // The middleware only checked that a cookie exists. This is where the session

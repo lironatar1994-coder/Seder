@@ -22,6 +22,13 @@ tar -xzf "$archive" -C "$release"
 printf '{"commit":"%s","release":"%s"}\n' "$commit" "$release_id" > "$release/RELEASE.json"
 [[ ! -f "$nginx" ]] || cp -p "$nginx" "$backup/nginx.conf"
 [[ ! -f "$current/.env.production" ]] || cp -p "$current/.env.production" "$backup/environment.env"
+robots_target=''
+if [ -d /opt/lawebs-portfolio/www/current ]; then
+  portfolio_root=$(readlink -f /opt/lawebs-portfolio/www/current)
+  [[ "$portfolio_root" == /opt/lawebs-portfolio/* ]] || exit 2
+  robots_target="$portfolio_root/robots.txt"
+  [[ ! -f "$robots_target" ]] || cp -p "$robots_target" "$backup/portfolio-robots.txt"
+fi
 paused=0
 switched=0
 rollback() {
@@ -41,6 +48,7 @@ rollback() {
       install -m 600 "$backup/database.db" "$database"
     fi
     if [ -f "$backup/nginx.conf" ]; then cp -p "$backup/nginx.conf" "$nginx"; nginx -t && systemctl reload nginx; fi
+    if [ -n "$robots_target" ] && [ -f "$backup/portfolio-robots.txt" ]; then cp -p "$backup/portfolio-robots.txt" "$robots_target"; fi
     (cd "$current" && pm2 startOrReload ecosystem.config.cjs --update-env) || true
     pm2 save --force >/dev/null 2>&1
   fi

@@ -6,7 +6,7 @@
  *   three-up grid of icon-heading-text feature cards.
  * OWN-WORLD: The app's own system, inherited whole — paper/surface tokens,
  *   Frank Ruhl Libre for display, Assistant for interface, Inter for numerals
- *   only; indigo accent, amber strictly for time pressure, hairlines instead of
+ *   only; neutral grounds and red action accent, hairlines instead of
  *   cards, one shadow tier. Grounds alternate paper / sunk to pace the scroll.
  * STORY: An Israeli sees Hebrew read correctly, sees the interface it produces,
  *   understands this was written in Hebrew rather than translated into it, and
@@ -31,11 +31,16 @@ import { ParseDemo } from '@/components/landing/parse-demo';
 import { MonthPreview } from '@/components/landing/month-preview';
 import { ProductShot } from '@/components/landing/product-shot';
 import { BrandMark } from '@/components/brand/brand-mark';
+import { PUBLIC_SITE_URL, SITE_TITLE, SITE_DESCRIPTION, SITE_IMAGE, SITE_STRUCTURED_DATA } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'סדר — מנהל משימות בעברית',
-  description:
-    'מנהל משימות שנכתב בעברית מההתחלה. כותבים משפט רגיל והוא נשמר כמשימה מתוזמנת, עם לוח שנה עברי ולועזי ותאריך הגשה בנפרד מהתזמון.',
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: PUBLIC_SITE_URL },
+  robots: { index: true, follow: true },
+  verification: { google: 'SOnMsCKErKrO0Aghp9B9YI_j7h5hhLsX6_4m4l_MtTY' },
+  openGraph: { type: 'website', locale: 'he_IL', siteName: 'סדר — Seder', title: SITE_TITLE, description: SITE_DESCRIPTION, url: PUBLIC_SITE_URL, images: [{ url: SITE_IMAGE, width: 1024, height: 1024, alt: 'סדר — ניהול משימות בעברית' }] },
+  twitter: { card: 'summary', title: SITE_TITLE, description: SITE_DESCRIPTION, images: [SITE_IMAGE] },
 };
 
 export default async function LandingPage() {
@@ -44,6 +49,7 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-dvh bg-paper">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_STRUCTURED_DATA).replace(/</g, '\\u003c') }} />
       <header className="border-b border-line">
         <Container className="flex items-center justify-between py-5">
           <span className="display inline-flex items-center gap-2 text-xl font-bold text-ink">
@@ -68,9 +74,9 @@ export default async function LandingPage() {
           <Container className="grid items-center gap-10 pb-16 pt-12 md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] md:gap-12 md:pb-28 md:pt-24">
             <div>
               <h1 className="display text-4xl font-bold leading-[1.15] text-ink md:text-5xl">
-                כותבים בעברית.
+                ניהול משימות בעברית.
                 <br />
-                מקבלים סדר.
+                פשוט לעשות סדר.
               </h1>
               {/* Two even lines rather than a widow: at this measure the default
                   break drops "אליה." alone onto the second line. */}
@@ -104,8 +110,8 @@ export default async function LandingPage() {
                 היום, במסך אחד
               </h2>
               <p className="mt-4 leading-relaxed text-ink-2">
-                התאריך העברי והלועזי בכותרת, מה שנגרר מקודם בקבוצה משלו, וסרגל שמראה כמה כבר נסגר.
-                פרויקטים ותוויות בצד. כל השאר הוא רשימה.
+                תאריך עברי ולועזי בכותרת, משימות באיחור בקבוצה משלהן ורשימה נקייה להיום.
+                חיפוש ומיון נפתחים לפי צורך. לפרטים ולעריכה פשוט פותחים את המשימה.
               </p>
             </div>
 
@@ -113,6 +119,7 @@ export default async function LandingPage() {
 
           <Stage className="mt-10 pb-16 md:mt-12 md:pb-24">
             <ProductShot />
+            <p className="mt-4 text-center text-sm text-muted">צילום של הממשק עם משימות לדוגמה.</p>
           </Stage>
         </section>
 
@@ -167,6 +174,18 @@ export default async function LandingPage() {
               למשימה חדשה, <Key>רווח</Key> לסימון כהושלם. החצים מזיזים תאריך — ושמאלה זה קדימה, כמו
               שקוראים.
             </p>
+          </Container>
+        </section>
+
+        <section className="border-t border-line" aria-labelledby="faq-title">
+          <Container className="py-16 md:py-24">
+            <h2 id="faq-title" className="display text-2xl font-bold md:text-3xl">שאלות על ניהול משימות בסדר</h2>
+            <dl className="mt-8 max-w-2xl space-y-6">
+              <div><dt className="font-semibold">איך מוסיפים משימה בעברית?</dt><dd className="mt-2 text-ink-2">כותבים משפט כמו ״להכין מצגת מחר בשעה 15:30 #עבודה״. סדר מזהה את התאריך, השעה והפרויקט ומציג אותם לפני שמירת המשימה.</dd></div>
+              <div><dt className="font-semibold">אפשר לעבוד על פרויקט ביחד עם חברים?</dt><dd className="mt-2 text-ink-2">כן. יוצרים פרויקט, שולחים קישור הזמנה ומנהלים משימות משותפות. אפשר לשייך משימה למשתתף, להוסיף תגובות ולעקוב אחר העבודה בתצוגת רשימה או לוח.</dd></div>
+              <div><dt className="font-semibold">מה ההבדל בין תזמון למועד הגשה?</dt><dd className="mt-2 text-ink-2">התזמון קובע מתי מתכננים לעבוד על המשימה. מועד ההגשה קובע עד מתי צריך לסיים אותה. אפשר להגדיר כל אחד מהם בנפרד ולראות את המשימות ביומן עברי ולועזי.</dd></div>
+              <div><dt className="font-semibold">אפשר להשתמש בסדר בטלפון וגם במחשב?</dt><dd className="mt-2 text-ink-2">כן. סדר פועל בדפדפן ומתאים למסכים קטנים וגדולים. נכנסים לאותו חשבון כדי לגשת למשימות ולפרויקטים גם מהטלפון וגם מהמחשב.</dd></div>
+            </dl>
           </Container>
         </section>
 

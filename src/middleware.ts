@@ -15,19 +15,39 @@ export function middleware(request: NextRequest) {
   const publicUrl = (process.env.APP_URL ?? request.nextUrl.origin).replace(/\/$/, '');
   const hasCookie = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
 
+  // A single public URL within the verified /seder/ property, including query
+  // preservation for account-deletion notices and existing campaign links.
+  if (pathname === '/' && !new URL(request.url).pathname.endsWith('/')) {
+    const url = new URL(`${publicUrl}/`);
+    url.search = request.nextUrl.search;
+    return NextResponse.redirect(url, 308);
+  }
+
+  if (pathname !== '/' && pathname.endsWith('/')) {
+    const url = new URL(`${publicUrl}${pathname.replace(/\/+$/, '')}`);
+    url.search = request.nextUrl.search;
+    return NextResponse.redirect(url, 308);
+  }
+
   if (pathname.startsWith('/app')) {
     if (!hasCookie) {
       const url = new URL(`${publicUrl}/login`);
       // Send them back where they were headed once they are in.
       url.searchParams.set('next', pathname + request.nextUrl.search);
-      return NextResponse.redirect(url);
+      const response = NextResponse.redirect(url);
+      response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+      return response;
     }
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    return response;
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  if (pathname !== '/') response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  return response;
 }
 
 export const config = {
-  matcher: ['/app/:path*', '/login', '/register'],
+  matcher: ['/', '/app/:path*', '/login', '/register', '/forgot', '/reset/:path*', '/signed-out', '/api/:path*'],
 };
