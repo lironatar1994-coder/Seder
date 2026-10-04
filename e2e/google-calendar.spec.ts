@@ -6,7 +6,7 @@ const db = new PrismaClient();
 const at = (path: string) => `${BASE_PATH}${path}`;
 async function register(page: Page) {
   const email = `google-calendar-${Date.now()}-${Math.random().toString(16).slice(2)}@seder.test`;
-  await page.goto(at('/register')); await page.getByLabel('שם', { exact: true }).fill('בודק יומן'); await page.getByLabel('אימייל', { exact: true }).fill(email); await page.getByLabel('סיסמה', { exact: true }).fill('calendar-test-123'); await page.getByRole('button', { name: 'יצירת חשבון', exact: true }).click(); await page.waitForURL('**/app/**'); return email;
+  await page.goto(at('/register')); await page.getByLabel('שם', { exact: true }).fill('בודק יומן'); await page.getByLabel('אימייל', { exact: true }).fill(email); await page.getByLabel('סיסמה', { exact: true }).fill('calendar-test-123'); await page.getByRole('button', { name: 'יצירת חשבון', exact: true }).click(); await page.waitForURL('**/app/**'); await expect(page.getByTestId('whatsapp-introduction')).toBeVisible(); await page.getByTestId('whatsapp-introduction').getByRole('button', { name: 'לא עכשיו', exact: true }).click(); return email;
 }
 test.afterAll(async () => db.$disconnect());
 test('calendar subscription reads scheduled work, isolates users and supports immediate revocation', async ({ page, browser }) => {

@@ -26,6 +26,7 @@ export interface WhatsappHealth {
   ignoredInbound: number;
   repliesSent: number;
   remindersSent: number;
+  remindersDelivered: number;
   outboundFailed: number;
   /** Sends in the window, against the worker's ceiling. */
   sent: number;
@@ -51,7 +52,7 @@ function mask(local: string): string {
 export async function readWhatsappHealth(): Promise<WhatsappHealth> {
   const since = new Date(Date.now() - WINDOW_HOURS * 60 * 60 * 1000);
 
-  const [enabledAccounts, grouped, problems] = await Promise.all([
+  const [enabledAccounts, grouped, problems, remindersDelivered] = await Promise.all([
     db.user.count({ where: { whatsappReminders: true, phone: { not: null } } }),
     db.whatsappLog.groupBy({
       by: ['direction', 'kind', 'status'],
@@ -72,6 +73,7 @@ export async function readWhatsappHealth(): Promise<WhatsappHealth> {
         user: { select: { name: true } },
       },
     }),
+    db.whatsappLog.count({ where: { kind: 'REMINDER', direction: 'OUT', createdAt: { gte: since }, deliveredAt: { not: null } } }),
   ]);
 
   const count = (match: { direction?: string; kind?: string; status?: string }) =>
@@ -91,6 +93,7 @@ export async function readWhatsappHealth(): Promise<WhatsappHealth> {
     ignoredInbound: count({ direction: 'IN', status: 'ignored' }),
     repliesSent: count({ direction: 'OUT', kind: 'REPLY', status: 'sent' }),
     remindersSent: count({ direction: 'OUT', kind: 'REMINDER', status: 'sent' }),
+    remindersDelivered,
     outboundFailed: count({ direction: 'OUT', status: 'failed' }),
     sent: count({ direction: 'OUT', status: 'sent' }),
     // Not `?? 200`: the release writes the key empty when it is unset, and

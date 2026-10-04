@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { APP_TZ, addDays, isValidTime, toDayStart } from './dates';
+import { APP_TZ, addDays, isValidTime, toDayStart, wallTimeInstant } from './dates';
 
 export interface GoogleEvent {
   id: string;
@@ -30,16 +30,8 @@ export function wallParts(at: Date) {
 /** Interpret wall time using the offset at the appointment, including DST. */
 export function calendarInstant(day: string, time: string): Date {
   if (!validDay(day) || !isValidTime(time)) throw new Error('INVALID_CALENDAR_DATE');
-  const desired = Date.parse(`${day}T${time}:00Z`);
-  let guess = desired;
-  for (let i = 0; i < 3; i++) {
-    const parts = wallParts(new Date(guess));
-    const apparent = Date.parse(`${parts.day}T${parts.time}:00Z`);
-    const delta = desired - apparent;
-    if (delta === 0) return new Date(guess);
-    guess += delta;
-  }
-  // A non-existent clock time during the spring transition needs correction.
+  const instant = wallTimeInstant(new Date(`${day}T00:00:00Z`), time);
+  if (instant) return instant;
   throw new Error('INVALID_CALENDAR_DATE');
 }
 export function validDay(day: string): boolean {

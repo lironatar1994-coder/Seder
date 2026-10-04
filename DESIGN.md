@@ -234,6 +234,10 @@ Quick-add recognizes parts of a Hebrew sentence in place, showing semantic highl
 
 The list/board switch is a recessed segmented control with a white selected segment, pressed state and a small shadow. Share is an explicit adjacent action; assignment and comments belong with tasks. Board moves support a labeled select menu in addition to pointer dragging. On phones the board initially positions the first populated column in view while retaining empty drop targets.
 
+### Messaging Previews and Service Notices
+
+Reminder introductions inherit the shared dialog, display heading and control language. A bordered, gently rounded message illustration supplies the demonstration, with useful alternative text and a visible synthetic-example caption; reuse the same illustration in its settings surface. A disconnected-service explanation uses secondary ink on the quiet second surface layer with a neutral hairline. It does not borrow deadline amber. Primary settings actions retain the shared touch height, while dismissal remains easy to reach.
+
 ## Do's and Don'ts
 
 ### Do:

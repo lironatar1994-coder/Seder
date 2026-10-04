@@ -1,5 +1,10 @@
 import type { Prisma } from '@prisma/client';
 import { REMINDER_OFF } from '@/lib/reminder';
+import { addDays } from '@/lib/dates';
+
+// API values allow up to 99,999 minutes; include those future anchors and a
+// previous day for reminders due just before midnight after a short outage.
+const reminderWindow = (day: Date) => ({ gte: addDays(day, -1), lte: addDays(day, 70) });
 
 /**
  * Which tasks are due a reminder.
@@ -40,7 +45,7 @@ const reachable: Prisma.TaskWhereInput = {
 export function timedDueWhere(day: Date): Prisma.TaskWhereInput {
   return {
     status: 'TODO',
-    scheduledFor: day,
+    scheduledFor: reminderWindow(day),
     scheduledTime: { not: null },
     remindedAt: null,
     parentId: null,
@@ -52,7 +57,7 @@ export function timedDueWhere(day: Date): Prisma.TaskWhereInput {
 export function untimedDueWhere(day: Date): Prisma.TaskWhereInput {
   return {
     status: 'TODO',
-    scheduledFor: day,
+    scheduledFor: reminderWindow(day),
     scheduledTime: null,
     remindedAt: null,
     parentId: null,

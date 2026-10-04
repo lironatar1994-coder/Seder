@@ -9,6 +9,10 @@ import { ViewTransitions } from '@/components/nav/view-transitions';
 import { ReminderDefaultsProvider } from '@/components/task/reminder-defaults';
 import { envNumber } from '@/lib/env';
 import { WorkspaceBar } from '@/components/nav/workspace-bar';
+import { WhatsappIntroduction } from '@/components/nav/whatsapp-introduction';
+import { shouldIntroduceWhatsapp } from '@/lib/whatsapp-onboarding';
+import { readWhatsappState } from '@/server/whatsapp/status';
+import { db } from '@/server/db';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // The middleware only checked that a cookie exists. This is where the session
@@ -19,6 +23,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect('/signed-out');
 
   const sidebar = await getSidebarData(user.id);
+  const [whatsappUser, whatsappState] = await Promise.all([
+    db.user.findUniqueOrThrow({ where: { id: user.id }, select: { phone: true, whatsappReminders: true, whatsappIntroSeenAt: true } }),
+    readWhatsappState(),
+  ]);
 
   // Read once here rather than threaded through every page that renders a
   // task: the reminder picker is the only consumer, and it only needs them
@@ -49,6 +57,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ViewTransitions />
       <TabBar counts={sidebar.counts} />
       <CommandPalette projects={sidebar.projects} labels={sidebar.labels} />
+      <WhatsappIntroduction userId={user.id} eligible={shouldIntroduceWhatsapp(whatsappUser)} available={whatsappState.status === 'READY' && !whatsappState.stale} />
     </div>
   );
 }

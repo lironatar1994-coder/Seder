@@ -34,13 +34,13 @@ import makeWASocket, {
 } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import { toDataURL } from 'qrcode';
-import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { mkdirSync, renameSync, writeFileSync, readFileSync, unlinkSync, existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 
 import { db } from '@/server/db';
 import { captureTask } from '@/server/tasks/capture';
 import { fromInternational, toInternational } from '@/lib/phone';
-import { dayStartInstant, today } from '@/lib/dates';
+import { today, relativeDayLabel } from '@/lib/dates';
 import {
   captureReply,
   helpMessage,
@@ -50,7 +50,8 @@ import {
   reminderMessage,
 } from './reply';
 import { toQuickAddLine } from './rewrite';
-import { decideAt, morningInstant, morningIsDue } from './schedule';
+import { decideAt } from './schedule';
+import { applyDeliveryReceipt } from './delivery';
 import { reminderFireAt } from '@/lib/reminder';
 import { timedDueWhere, untimedDueWhere } from '@/server/tasks/reminders';
 import { DailyCapReached, SendQueue } from './queue';
@@ -60,10 +61,10 @@ import { sendMail, appUrl } from '@/server/mail';
 
 const AUTH_DIR = process.env.WHATSAPP_AUTH_DIR ?? '/var/lib/seder/whatsapp-auth';
 const STATUS_FILE = process.env.WHATSAPP_STATUS_FILE ?? '/var/lib/seder/whatsapp-status.json';
+const PAIRING_REQUEST = join(dirname(STATUS_FILE), 'whatsapp-pairing-request.json');
+const TEST_REQUEST = join(dirname(STATUS_FILE), 'whatsapp-test-request.json');
 const LEAD_MINUTES = envNumber(process.env.WHATSAPP_REMINDER_LEAD, 15);
 const STALE_MINUTES = envNumber(process.env.WHATSAPP_REMINDER_STALE, 90);
-/** When a task has a date but no time, this is the hour it is worth a nudge. */
-const MORNING_HOUR = envNumber(process.env.WHATSAPP_MORNING_HOUR, 8);
 /** How long after that hour the morning note may still go out, so a worker
  *  that was down at 08:00 still sends it rather than skipping the day. */
 const MORNING_GRACE_MINUTES = envNumber(process.env.WHATSAPP_MORNING_GRACE, 180);
@@ -126,6 +127,18 @@ let connecting = false;
 let reconnectAttempt = 0;
 let reconnectTimer: NodeJS.Timeout | null = null;
 let sweeping = false;
+// Receipts can arrive before sendMessage resolves and its log has been saved.
+const receipts = new Map<string, { status: number; at: Date }>();
+let pairing = false;
+let testing = false;
+
+async function trackReceipt(id: string, status: number): Promise<void> {
+  const previous = receipts.get(id);
+  if (!previous || status > previous.status || (status === 0 && previous.status < 3)) receipts.set(id, { status, at: new Date() });
+  if (receipts.size > 300) receipts.delete(receipts.keys().next().value!);
+  const receipt = receipts.get(id)!;
+  await applyDeliveryReceipt(db, id, receipt.status, receipt.at).catch(() => {});
+}
 
 /** Recent inbound per phone, for the rate limit. */
 const inboundAt = new Map<string, number[]>();
@@ -209,6 +222,7 @@ async function record(entry: {
   body: string;
   status: 'sent' | 'failed' | 'ignored';
   error?: string;
+  messageId?: string;
 }): Promise<void> {
   try {
     await db.whatsappLog.create({
@@ -222,8 +236,13 @@ async function record(entry: {
         body: entry.body.slice(0, 2_000),
         status: entry.status,
         error: entry.error?.slice(0, 500) ?? null,
+        messageId: entry.messageId ?? null,
       },
     });
+    if (entry.messageId) {
+      const receipt = receipts.get(entry.messageId);
+      if (receipt) await applyDeliveryReceipt(db, entry.messageId, receipt.status, receipt.at);
+    }
   } catch (error) {
     // Logging must never be the thing that breaks sending — the system this
     // replaces lost a whole send cycle to exactly this, every single minute.
@@ -260,14 +279,16 @@ async function send(
   }
 
   try {
+    let messageId: string | undefined;
     await queue.run(async () => {
       const jid = await resolveJid(localPhone);
       if (!jid) throw new Error('the number is not on WhatsApp');
       const receipt = await sock!.sendMessage(jid, { text });
       rememberSent(receipt?.key?.id);
+      messageId = receipt?.key?.id ?? undefined;
     });
 
-    await record({ ...meta, phone: localPhone, direction: 'OUT', body: text, status: 'sent' });
+    await record({ ...meta, phone: localPhone, direction: 'OUT', body: text, status: 'sent', messageId });
     return true;
   } catch (error) {
     const message = error instanceof DailyCapReached ? error.message : (error as Error).message;
@@ -447,7 +468,6 @@ async function sweep(): Promise<void> {
 
   try {
     const day = today();
-    const dayStart = dayStartInstant(day).getTime();
     const now = Date.now();
 
     const tasks = await db.task.findMany({
@@ -463,7 +483,6 @@ async function sweep(): Promise<void> {
           select: { id: true, phone: true, whatsappReminders: true, reminderHour: true },
         },
       },
-      take: 100,
     });
 
     for (const task of tasks) {
@@ -502,12 +521,15 @@ async function sweep(): Promise<void> {
         continue;
       }
 
-      const sent = await send(person.phone, reminderMessage(task.title, String(task.scheduledTime)), {
+      const label = task.scheduledFor ? relativeDayLabel(task.scheduledFor, day) : undefined;
+      const sent = await send(person.phone, reminderMessage(task.title, String(task.scheduledTime), label === 'היום' ? undefined : label), {
         userId: person.id,
         kind: 'REMINDER',
       });
 
-      // Only a delivered reminder is marked. A transient failure retries on
+      // Only a send accepted by WhatsApp is marked. Delivery receipts are
+      // recorded separately; retrying an accepted send risks duplicate pings.
+      // A transient failure retries on
       // the next sweep, and the staleness window above is what stops that
       // from running forever.
       if (sent) {
@@ -515,7 +537,7 @@ async function sweep(): Promise<void> {
       }
     }
 
-    await sweepMorning(day, dayStart, now);
+    await sweepMorning(day, now);
   } catch (error) {
     console.error('[whatsapp] sweep failed:', (error as Error).message);
   } finally {
@@ -535,7 +557,7 @@ async function sweep(): Promise<void> {
  * typed it, and without that rule every afternoon addition would ping
  * instantly, since the morning hour is already behind us.
  */
-async function sweepMorning(day: Date, dayStart: number, now: number): Promise<void> {
+async function sweepMorning(day: Date, now: number): Promise<void> {
   /* Every candidate for the day, then filtered per person: the hour is an
      account setting now, so "is the morning note due?" has a different answer
      for each recipient and cannot be asked once up front. */
@@ -545,17 +567,18 @@ async function sweepMorning(day: Date, dayStart: number, now: number): Promise<v
       id: true,
       title: true,
       createdAt: true,
+      scheduledFor: true,
+      reminder: true,
       user: { select: { id: true, phone: true, whatsappReminders: true, reminderHour: true } },
       assignee: { select: { id: true, phone: true, whatsappReminders: true, reminderHour: true } },
     },
     orderBy: { createdAt: 'asc' },
-    take: 400,
   });
 
   // Grouped by whoever is doing them, not by who wrote them.
   const byPerson = new Map<
     string,
-    { phone: string; hour: number; ids: string[]; titles: string[] }
+    { userId: string; phone: string; label: string; ids: string[]; titles: string[] }
   >();
 
   for (const task of tasks) {
@@ -566,28 +589,26 @@ async function sweepMorning(day: Date, dayStart: number, now: number): Promise<v
        for today does not need announcing back to the person who just typed
        it, and without this every afternoon addition would ping immediately —
        the hour is already behind us by then. */
-    if (task.createdAt.getTime() >= morningInstant(dayStart, person.reminderHour)) continue;
+    const fireAt = reminderFireAt({ scheduledFor: task.scheduledFor, scheduledTime: null, reminder: task.reminder, reminderHour: person.reminderHour, defaultLead: LEAD_MINUTES });
+    if (!fireAt || task.createdAt.getTime() >= fireAt.getTime()) continue;
+    if (decideAt({ now, fireAt: fireAt.getTime(), staleMinutes: MORNING_GRACE_MINUTES }) !== 'send') continue;
+    const group = `${person.id}:${task.scheduledFor?.toISOString()}`;
 
-    const bucket = byPerson.get(person.id) ?? {
+    const bucket = byPerson.get(group) ?? {
+      userId: person.id,
       phone: person.phone,
-      hour: person.reminderHour,
+      label: relativeDayLabel(task.scheduledFor!, day),
       ids: [],
       titles: [],
     };
     bucket.ids.push(task.id);
     bucket.titles.push(task.title);
-    byPerson.set(person.id, bucket);
+    byPerson.set(group, bucket);
   }
 
-  for (const [userId, bucket] of byPerson) {
-    if (
-      !morningIsDue({ now, dayStart, hour: bucket.hour, graceMinutes: MORNING_GRACE_MINUTES })
-    ) {
-      continue;
-    }
-
-    const sent = await send(bucket.phone, morningMessage(bucket.titles), {
-      userId,
+  for (const bucket of byPerson.values()) {
+    const sent = await send(bucket.phone, morningMessage(bucket.titles, bucket.label), {
+      userId: bucket.userId,
       kind: 'REMINDER',
     });
 
@@ -622,11 +643,11 @@ async function connect(): Promise<void> {
   connecting = true;
 
   try {
-    mkdirSync(AUTH_DIR, { recursive: true });
+    mkdirSync(AUTH_DIR, { recursive: true, mode: 0o700 });
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
     const { version } = await fetchLatestBaileysVersion();
 
-    sock = makeWASocket({
+    const socket = makeWASocket({
       auth: state,
       logger,
       version,
@@ -634,10 +655,12 @@ async function connect(): Promise<void> {
       syncFullHistory: false,
       getMessage: async () => undefined,
     });
+    sock = socket;
 
-    sock.ev.on('creds.update', saveCreds);
+    socket.ev.on('creds.update', () => { if (sock === socket) void saveCreds(); });
 
     sock.ev.on('connection.update', async (update) => {
+      if (sock !== socket) return;
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
@@ -690,7 +713,24 @@ async function connect(): Promise<void> {
       }
     });
 
+    socket.ev.on('messages.update', async (updates) => {
+      if (sock !== socket) return;
+      for (const { key, update } of updates) {
+        if (!key.id || !key.fromMe || typeof update.status !== 'number') continue;
+        await trackReceipt(key.id, update.status);
+      }
+    });
+    socket.ev.on('message-receipt.update', async (updates) => {
+      if (sock !== socket) return;
+      for (const { key, receipt } of updates) {
+        if (!key.id || !key.fromMe) continue;
+        const status = receipt.readTimestamp ? 4 : receipt.receiptTimestamp ? 3 : null;
+        if (status !== null) await trackReceipt(key.id, status);
+      }
+    });
+
     sock.ev.on('messages.upsert', async ({ type, messages }) => {
+      if (sock !== socket) return;
       for (const message of messages) {
         /* `notify` is WhatsApp saying this just happened. A message the
            operator types on their own phone reaches us as `append` instead —
@@ -729,6 +769,46 @@ async function connect(): Promise<void> {
   }
 }
 
+/** Authenticated web action writes a short-lived request; no shell from UI. */
+async function checkPairingRequest(): Promise<void> {
+  if (pairing || connecting || !existsSync(PAIRING_REQUEST)) return;
+  pairing = true;
+  try {
+    const raw = readFileSync(PAIRING_REQUEST, 'utf8');
+    unlinkSync(PAIRING_REQUEST);
+    const request = JSON.parse(raw) as { requestedAt?: number };
+    if (!request.requestedAt || Math.abs(Date.now() - request.requestedAt) > 90_000 || connected) return;
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+    const old = sock;
+    sock = null;
+    old?.end(undefined);
+    const authPath = resolve(AUTH_DIR);
+    const archive = `${authPath}.unpaired-${Date.now()}`;
+    if (dirname(archive) !== dirname(authPath) || authPath === dirname(authPath)) throw new Error('invalid auth path');
+    if (existsSync(authPath)) renameSync(authPath, archive);
+    reconnectAttempt = 0;
+    setStatus('INITIALIZING');
+    await connect();
+  } catch (error) {
+    setStatus('ERROR', null, (error as Error).message);
+  } finally { pairing = false; }
+}
+
+async function checkTestRequest(): Promise<void> {
+  if (testing || !existsSync(TEST_REQUEST)) return;
+  testing = true;
+  try {
+    const raw = readFileSync(TEST_REQUEST, 'utf8');
+    unlinkSync(TEST_REQUEST);
+    const request = JSON.parse(raw) as { userId?: string; requestedAt?: number };
+    if (!request.requestedAt || Math.abs(Date.now() - request.requestedAt) > 90_000 || !request.userId) return;
+    const user = await db.user.findUnique({ where: { id: request.userId }, select: { id: true, email: true, phone: true, whatsappReminders: true } });
+    if (!ADMIN_EMAIL || !user?.phone || !user.whatsappReminders || user.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) return;
+    await send(user.phone, 'בדיקת תזכורות: החיבור לסדר פעיל.', { userId: user.id, kind: 'REMINDER' });
+  } catch (error) { console.error('[whatsapp] test request failed:', (error as Error).message); }
+  finally { testing = false; }
+}
+
 /* -- lifecycle ------------------------------------------------------------- */
 
 async function shutdown(signal: string): Promise<void> {
@@ -749,6 +829,8 @@ setStatus('INITIALIZING');
 setInterval(() => void sweep(), SWEEP_MS);
 // Proof of life, whatever the state. A stale file now means a stopped process.
 setInterval(writeStatus, HEARTBEAT_MS);
+setInterval(() => void checkPairingRequest(), 3_000);
+setInterval(() => void checkTestRequest(), 3_000);
 
 // A drop that lasts is an outage; a drop that heals in four seconds is Tuesday.
 setInterval(() => {

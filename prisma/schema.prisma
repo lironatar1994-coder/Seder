@@ -43,6 +43,8 @@ model User {
   /// Both off until asked for: a number on file is not permission for either.
   whatsappCapture   Boolean @default(false)
   whatsappReminders Boolean @default(false)
+  /// Feature introduction is shown once per account, across devices.
+  whatsappIntroSeenAt DateTime?
 
   /// The hour a reminder fires for a task that has a day but no time of its
   /// own — 0–23, Israel time. One setting for the whole account rather than a
@@ -309,6 +311,10 @@ model WhatsappLog {
   /// sent | failed | ignored
   status    String
   error     String?
+  /// WhatsApp's message ID lets receipt updates prove delivery independently.
+  messageId String? @unique
+  deliveredAt DateTime?
+  readAt DateTime?
 
   createdAt DateTime @default(now())
 

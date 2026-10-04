@@ -19,6 +19,8 @@ async function register(page: Page, name = 'בודק') {
   await page.getByLabel('סיסמה').fill('bodek-1234');
   await page.getByRole('button', { name: 'יצירת חשבון' }).click();
   await page.waitForURL('**/app/today');
+  await expect(page.getByTestId('whatsapp-introduction')).toBeVisible();
+  await page.getByTestId('whatsapp-introduction').getByRole('button', { name: 'לא עכשיו', exact: true }).click();
   return email;
 }
 

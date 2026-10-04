@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-04T08:06:12.765Z",
+  "generatedAt": "2026-10-04T09:26:16.000Z",
   "title": "Design System: סדר",
   "extensions": {
     "colorMeta": {
@@ -604,7 +604,28 @@
       "systemBoundary": "Authenticated workspace and shared incumbent tokens",
       "surfaceBrief": ".impeccable/surfaces/src-app-app-layout-tsx.md",
       "inheritedLandingBrief": ".impeccable/surfaces/src-app-page-tsx.md",
-      "shippingRasters": "No new or replaced generated rasters. Preserved landing shots are inherited interface captures using synthetic demo tasks."
+      "whatsappSurfaceBrief": ".impeccable/surfaces/src-components-nav-whatsapp-introduction-tsx.md",
+      "shippingRasters": "The earlier task-workspace release created no generated rasters; its preserved landing shots are inherited captures with synthetic demo tasks. The WhatsApp extension adds one generated reminder demonstration, reused in the introduction and settings.",
+      "whatsappRaster": {
+        "source": "design/assets/whatsapp-reminder-preview.png",
+        "sourceProvenance": "Exact generation prompt embedded in the source raster and retained in design/assets/whatsapp-reminder-preview.prompt.txt.",
+        "shipping": "public/images/whatsapp-reminder-preview.webp",
+        "shippingProvenance": "public/images/whatsapp-reminder-preview.webp.json",
+        "shippingBytes": 42844,
+        "label": "Synthetic reminder demonstration, visibly labeled as an illustration in both uses."
+      },
+      "whatsappReview": {
+        "captures": [
+          ".impeccable/review/whatsapp/desktop.png",
+          ".impeccable/review/whatsapp/mobile.png",
+          ".impeccable/review/whatsapp/user-320-dark.png",
+          ".impeccable/review/whatsapp/settings-desktop.png",
+          ".impeccable/review/whatsapp/settings-mobile.png"
+        ],
+        "disposition": "ship",
+        "scope": "Verdict pass scored the offline-notice semantic-color fix resolved; it is not a whole-surface or live-delivery certification.",
+        "liveLimit": "At the 2026-10-04 review, production was LOGGED_OUT. Live delivery requires a service-phone QR scan and remains unverified."
+      }
     }
   },
   "components": [

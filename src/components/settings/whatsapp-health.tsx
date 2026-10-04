@@ -71,6 +71,9 @@ export function WhatsappHealthPanel({ health }: { health: WhatsappHealth }) {
           של <span className="num font-semibold text-ink-2">{health.dailyCap}</span>
         </span>
         <span>
+          תזכורות עם אישור מסירה: <span className="num font-semibold text-ink-2">{health.remindersDelivered}</span>
+        </span>
+        <span>
           תשובות: <span className="num font-semibold text-ink-2">{health.repliesSent}</span>
         </span>
         <span>

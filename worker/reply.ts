@@ -90,8 +90,8 @@ export function captureReply(result: QuickAddResult): string {
 }
 
 /** The reminder that goes out before a scheduled task. */
-export function reminderMessage(title: string, time: string): string {
-  return `תזכורת: *${title}*\nמתחיל בשעה ${time}.`;
+export function reminderMessage(title: string, time: string, dayLabel?: string): string {
+  return `תזכורת: *${title}*\n${dayLabel ? `${dayLabel} · ` : ''}מתחיל בשעה ${time}.`;
 }
 
 /** Past this the list stops being a reminder and starts being a wall. */
@@ -105,14 +105,14 @@ const MORNING_MAX = 10;
  * arriving separately at 08:00 is how a person mutes the number — and how the
  * number spends its daily send budget before nine.
  */
-export function morningMessage(titles: string[]): string {
+export function morningMessage(titles: string[], dayLabel = 'היום'): string {
   if (titles.length === 0) return '';
-  if (titles.length === 1) return `היום: *${titles[0]}*`;
+  if (titles.length === 1) return `${dayLabel}: *${titles[0]}*`;
 
   const shown = titles.slice(0, MORNING_MAX);
   const rest = titles.length - shown.length;
 
-  const lines = [`היום (${titles.length}):`, ...shown.map((title) => `• ${title}`)];
+  const lines = [`${dayLabel} (${titles.length}):`, ...shown.map((title) => `• ${title}`)];
   if (rest > 0) lines.push(`ועוד ${rest}.`);
 
   return lines.join('\n');

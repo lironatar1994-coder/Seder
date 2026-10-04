@@ -38,7 +38,7 @@ export default async function WhatsappSettingsPage() {
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
       take: 10,
-      select: { id: true, body: true, direction: true, status: true, createdAt: true },
+      select: { id: true, body: true, direction: true, status: true, createdAt: true, deliveredAt: true, readAt: true },
     }),
   ]);
 
@@ -53,11 +53,13 @@ export default async function WhatsappSettingsPage() {
         capture={row?.whatsappCapture ?? false}
         reminders={row?.whatsappReminders ?? false}
         reminderHour={row?.reminderHour ?? 8}
-        state={state}
+        state={operator ? state : { ...state, qr: null, reason: null }}
         isAdmin={operator}
         recent={recent.map((log) => ({
           ...log,
           createdAt: TIME.format(log.createdAt),
+          delivered: Boolean(log.deliveredAt),
+          read: Boolean(log.readAt),
         }))}
       />
       {health && <WhatsappHealthPanel health={health} />}

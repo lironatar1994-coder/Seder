@@ -12,12 +12,15 @@ import {
   updatePhoneAction,
   setWhatsappSwitchAction,
   setReminderHourAction,
+  requestWhatsappPairingAction,
+  sendWhatsappTestAction,
   type WhatsappSwitch,
 } from '@/server/settings/whatsapp';
 import { hourLabel } from '@/lib/reminder';
 import type { SettingsState } from '@/server/settings/actions';
 import type { WhatsappState } from '@/server/whatsapp/status';
 import { SettingRow, SettingsSection, SavedNote } from './shell';
+import { WhatsappPreview } from './whatsapp-preview';
 
 function SaveButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
@@ -55,7 +58,7 @@ export function WhatsappForm({
   state: WhatsappState;
   /** Only the operator pairs the number, so only they see the code. */
   isAdmin: boolean;
-  recent: { id: string; body: string; direction: string; status: string; createdAt: string }[];
+  recent: { id: string; body: string; direction: string; status: string; createdAt: string; delivered: boolean; read: boolean }[];
 }) {
   const router = useRouter();
   const [phoneState, phoneAction] = useActionState<SettingsState, FormData>(updatePhoneAction, {});
@@ -68,6 +71,9 @@ export function WhatsappForm({
   const [hourSaved, setHourSaved] = useState(false);
   const [switchError, setSwitchError] = useState<Partial<Record<WhatsappSwitch, string>>>({});
   const [, startToggle] = useTransition();
+  const [servicePending, startService] = useTransition();
+  const [serviceNote, setServiceNote] = useState('');
+  const [serviceError, setServiceError] = useState('');
 
   useEffect(() => {
     if (phoneState.saved) setShowSaved(true);
@@ -85,10 +91,10 @@ export function WhatsappForm({
   // then: a connected service has nothing to say that is worth a request every
   // ten seconds on every settings page.
   useEffect(() => {
-    if (state.status !== 'NEEDS_SCAN' && state.status !== 'INITIALIZING') return;
+    if (!isAdmin && state.status !== 'NEEDS_SCAN' && state.status !== 'INITIALIZING') return;
     const timer = setInterval(() => router.refresh(), 10_000);
     return () => clearInterval(timer);
-  }, [state.status, router]);
+  }, [state.status, isAdmin, router]);
 
   const connection = CONNECTION[state.status] ?? CONNECTION.OFFLINE;
   const dirty = value.trim() !== (phone ? formatPhone(phone) : '');
@@ -111,6 +117,8 @@ export function WhatsappForm({
 
   return (
     <>
+      <div className="mb-6 max-w-sm"><WhatsappPreview /></div>
+      {(state.status !== 'READY' || state.stale) && <p role="status" className="mb-5 rounded-lg border border-line bg-surface-2 p-3 text-sm text-ink-2">שירות הוואטסאפ אינו מחובר כרגע. התזכורות יתחילו להישלח אחרי שמנהל השירות יחבר אותו מחדש.</p>}
       <SettingsSection
         title="וואטסאפ"
         hideTitle
@@ -251,6 +259,25 @@ export function WhatsappForm({
         </SettingRow>
       </SettingsSection>
 
+      {isAdmin && <SettingsSection title="בדיקת החיבור" description="הבדיקה נשלחת רק למספר השמור בחשבון שלך.">
+        <div className="flex flex-wrap gap-2 py-3">
+          {state.status !== 'READY' && state.status !== 'NEEDS_SCAN' && state.status !== 'INITIALIZING' && <Button size="sm" disabled={servicePending} onClick={() => startService(async () => {
+            setServiceError(''); setServiceNote('');
+            const result = await requestWhatsappPairingAction();
+            if (result.errors) setServiceError(result.errors.pairing ?? 'החיבור לא התחיל.');
+            else { setServiceNote('מכינים קוד לסריקה… הוא יופיע כאן בעוד כמה שניות.'); router.refresh(); }
+          })}>חיבור מחדש</Button>}
+          <Button size="sm" variant="secondary" disabled={servicePending || state.status !== 'READY' || state.stale || !phone || !onReminders} onClick={() => startService(async () => {
+            setServiceError(''); setServiceNote('');
+            const result = await sendWhatsappTestAction();
+            if (result.errors) setServiceError(result.errors.test ?? 'הבדיקה לא נשלחה.');
+            else { setServiceNote('הבדיקה ממתינה לשליחה. אישור המסירה יופיע בהודעות האחרונות.'); router.refresh(); }
+          })}>שליחת תזכורת בדיקה</Button>
+        </div>
+        {serviceNote && <p role="status" className="pb-3 text-sm text-muted">{serviceNote}</p>}
+        <FieldError>{serviceError}</FieldError>
+      </SettingsSection>}
+
       {isAdmin && state.qr && state.status === 'NEEDS_SCAN' && (
         <SettingsSection
           title="חיבור מכשיר"
@@ -295,11 +322,7 @@ export function WhatsappForm({
                     "sent" — showing one or the other dropped the timestamp
                     from exactly the rows worth timestamping. */}
                 <span className="num shrink-0 text-xs text-muted">{row.createdAt}</span>
-                {row.status !== 'sent' && (
-                  <span className="shrink-0 text-xs font-semibold text-p2">
-                    {row.status === 'failed' ? 'נכשלה' : 'לא טופלה'}
-                  </span>
-                )}
+                {row.direction === 'OUT' && <span className="shrink-0 text-xs font-semibold text-muted">{row.status === 'failed' ? 'נכשלה' : row.status === 'ignored' ? 'לא נשלחה' : row.read ? 'נקראה' : row.delivered ? 'נמסרה' : 'נשלחה'}</span>}
               </li>
             ))}
           </ul>

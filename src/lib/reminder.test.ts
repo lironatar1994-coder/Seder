@@ -143,6 +143,17 @@ describe('hourLabel', () => {
   });
 });
 
+describe('clock change reminder timing', () => {
+  it('uses the offset at a spring appointment and at the morning hour', () => {
+    const input = { scheduledFor: new Date('2026-03-27T00:00:00Z'), scheduledTime: '09:30', reminder: '0', reminderHour: 8, defaultLead: 15 };
+    expect(reminderFireAt(input)?.toISOString()).toBe('2026-03-27T06:30:00.000Z');
+    expect(reminderFireAt({ ...input, scheduledTime: null })?.toISOString()).toBe('2026-03-27T05:00:00.000Z');
+  });
+  it('uses the offset after the autumn clock change', () => {
+    expect(reminderFireAt({ scheduledFor: new Date('2026-10-25T00:00:00Z'), scheduledTime: '09:30', reminder: '0', reminderHour: 8, defaultLead: 15 })?.toISOString()).toBe('2026-10-25T07:30:00.000Z');
+  });
+});
+
 describe('isReminderOff', () => {
   it('is only true for the explicit off', () => {
     expect(isReminderOff(REMINDER_OFF)).toBe(true);

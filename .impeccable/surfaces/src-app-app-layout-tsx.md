@@ -40,12 +40,17 @@ Review evidence: `.impeccable/review/desktop.png`, `mobile.png`, `phone-320-dark
 opening the mobile board on a populated column. That verdict is scoped to those fixes.
 Existing short spring-token detector warnings were judged immaterial by the reviewer.
 
-Raster provenance: this workspace change created no generated or replacement shipping
+Raster provenance: the earlier task-workspace release documented above created no generated or replacement shipping
 rasters. Review PNGs are local captures of seeded demonstration state, not customer
 data. The preserved landing images in `src/components/landing/shots/` are inherited
 real interface captures containing synthetic demo content; they are not newly
 generated imagery and may show an older workspace composition/date. Refreshing those
 landing demonstrations is outside this authenticated-surface change.
+
+The later WhatsApp introduction/settings extension adds a generated message illustration;
+its provenance and separate, narrowly scoped review are recorded in
+`src-components-nav-whatsapp-introduction-tsx.md`. The earlier review verdict above
+does not cover that extension.
 
 Known limits: focus is a browser session timer, not team presence or a productivity
 measure. Board mode is a browser preference, not a synchronized team setting. Local

@@ -93,6 +93,8 @@ export function ViewTransitions() {
       // A skipped or interrupted transition is not an error worth surfacing:
       // the navigation still happened, it just did not animate.
       transition.finished.catch(() => {});
+      transition.ready.catch(() => {});
+      transition.updateCallbackDone.catch(() => {});
     }
 
     /* Capture, so this runs before React's handler on the root container.

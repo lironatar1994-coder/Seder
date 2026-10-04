@@ -17,7 +17,7 @@
  * actually pages somebody at 08:00 is testable without a clock or a socket.
  */
 
-import { dayStartInstant } from '@/lib/dates';
+import { wallTimeInstant } from '@/lib/dates';
 
 /** Explicitly no reminder, as stored. */
 export const REMINDER_OFF = 'off';
@@ -117,17 +117,10 @@ export function reminderFireAt(input: FireAtInput): Date | null {
   if (!input.scheduledFor) return null;
   if (isReminderOff(input.reminder)) return null;
 
-  const dayStart = dayStartInstant(input.scheduledFor).getTime();
   const hasTime = Boolean(input.scheduledTime);
-
-  let anchor: number;
-  if (hasTime) {
-    const offset = minutesOfDay(input.scheduledTime!);
-    if (offset === null) return null;
-    anchor = dayStart + offset * 60_000;
-  } else {
-    anchor = dayStart + input.reminderHour * 60 * 60_000;
-  }
+  const at = wallTimeInstant(input.scheduledFor, input.scheduledTime ?? hourLabel(input.reminderHour));
+  if (!at) return null;
+  const anchor = at.getTime();
 
   // A task with no time has no "before" worth honouring — the anchor is
   // already an arbitrary hour someone chose, so shifting it by ten minutes
@@ -143,13 +136,4 @@ export function reminderFireAt(input: FireAtInput): Date | null {
         : 0;
 
   return new Date(anchor - lead * 60_000);
-}
-
-/** Minutes past midnight for "HH:mm", or null. */
-function minutesOfDay(time: string): number | null {
-  const match = /^(\d{1,2}):([0-5]\d)$/.exec(time.trim());
-  if (!match) return null;
-  const hours = Number(match[1]);
-  if (hours > 23) return null;
-  return hours * 60 + Number(match[2]);
 }

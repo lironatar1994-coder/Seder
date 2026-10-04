@@ -66,6 +66,14 @@ afterAll(async () => {
 });
 
 describe('timedDueWhere', () => {
+  it('selects tomorrow`s task and yesterday`s late reminder for fire-time checks', async () => {
+    const future = await task({ scheduledTime: '09:30', reminder: '1440' });
+    const previous = await task({ scheduledTime: '23:55', reminder: '0' });
+    await db.task.update({ where: { id: future }, data: { scheduledFor: new Date(DAY.getTime() + 86400000) } });
+    await db.task.update({ where: { id: previous }, data: { scheduledFor: new Date(DAY.getTime() - 86400000) } });
+    const found = await db.task.findMany({ where: timedDueWhere(DAY), select: { id: true } });
+    expect(found.map(t => t.id)).toEqual(expect.arrayContaining([future, previous]));
+  });
   it('includes a task that never asked for anything in particular', async () => {
     // The regression. `reminder` is null for every task nobody has touched,
     // and the obvious filter spellings drop exactly those.
@@ -100,6 +108,12 @@ describe('timedDueWhere', () => {
 });
 
 describe('untimedDueWhere', () => {
+  it('selects a future task whose day-before reminder fires today', async () => {
+    const id = await task({ reminder: '1440' });
+    await db.task.update({ where: { id }, data: { scheduledFor: new Date(DAY.getTime() + 86400000) } });
+    const found = await db.task.findMany({ where: untimedDueWhere(DAY), select: { id: true } });
+    expect(found.map(t => t.id)).toContain(id);
+  });
   it('includes a dated task with no time and no opinion', async () => {
     const id = await task({ scheduledTime: null, reminder: null });
     const found = await db.task.findMany({ where: untimedDueWhere(DAY), select: { id: true } });

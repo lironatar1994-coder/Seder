@@ -790,6 +790,25 @@ is always visible, `prefers-reduced-motion` is respected — but certification i
 
 Project reordering is the remaining server action that still needs a sidebar interaction.
 
+## WhatsApp reminders and feature introduction
+
+Users who have not enabled reminders see a dismissible introduction once per account.
+It uses a generated Hebrew WhatsApp demonstration, also visible in Settings → WhatsApp.
+Saving a phone does not enable either reminders or incoming task capture automatically.
+
+The operator can choose **חיבור מחדש** when the service pairing has expired, then scan
+the QR with the service phone (WhatsApp → Linked devices). Previous authentication files
+are archived outside the release directory. Only `SEDER_ADMIN_EMAIL` can see pairing codes,
+request a new pairing or send a test to that account's saved, opted-in number.
+
+Outbound message IDs and delivery/read receipts are persisted. **נשלחה** means WhatsApp
+accepted the send; **נמסרה** and **נקראה** require separate receipt evidence. An old send log
+alone cannot prove delivery. Reminder timing covers day-before leads, midnight boundaries
+and Israel's DST changes. The worker must be paired before live delivery can be verified.
+
+Raster provenance: built-in image generation; source and exact prompt in `design/assets/`.
+The compressed shipping illustration is `public/images/whatsapp-reminder-preview.webp`.
+
 ## Known warning
 
 `prisma` prints a deprecation notice about `package.json#prisma`. The seed config still works on

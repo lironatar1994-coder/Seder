@@ -9,6 +9,8 @@ async function register(page: Page, next?: string) {
   await page.getByLabel('סיסמה', { exact: true }).fill('workspace-test-123');
   await page.getByRole('button', { name: 'יצירת חשבון', exact: true }).click();
   await page.waitForURL('**/app/**');
+  await expect(page.getByTestId('whatsapp-introduction')).toBeVisible();
+  await page.getByTestId('whatsapp-introduction').getByRole('button', { name: 'לא עכשיו', exact: true }).click();
   return email;
 }
 async function add(page: Page, text: string) {

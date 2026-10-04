@@ -74,6 +74,20 @@ export function dayStartInstant(day: Date): Date {
   return guess;
 }
 
+/** Resolve a local clock using the offset at that hour, rather than midnight. */
+export function wallTimeInstant(day: Date, time: string): Date | null {
+  const match = /^(\d{1,2}):([0-5]\d)$/.exec(time.trim());
+  if (!match || Number(match[1]) > 23) return null;
+  const desired = day.getTime() + (Number(match[1]) * 60 + Number(match[2])) * 60_000;
+  let guess = desired;
+  for (let i = 0; i < 3; i++) {
+    const apparent = guess + offsetMinutes(new Date(guess), APP_TZ) * 60_000;
+    if (apparent === desired) return new Date(guess);
+    guess += desired - apparent;
+  }
+  return null; // Nonexistent local time during the spring clock change.
+}
+
 export function addDays(date: Date, days: number): Date {
   const next = new Date(date.getTime());
   next.setUTCDate(next.getUTCDate() + days);
