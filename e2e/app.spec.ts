@@ -641,7 +641,13 @@ test.describe('tasks', () => {
 
     await page.getByRole('button', { name: /פתיחת לארגן פגישה/ }).click();
     const panel = page.getByRole('dialog');
+    for (const label of ['הערות', 'תגובה חדשה', 'פריט חדש ברשימת המשנה']) {
+      await expect(panel.getByLabel(label, { exact: true })).toHaveCSS('direction', 'rtl');
+    }
+    await panel.getByLabel('הערות', { exact: true }).fill('Meeting notes 16:30');
+    await expect(panel.getByLabel('הערות', { exact: true })).toHaveCSS('direction', 'ltr');
     await panel.getByLabel('הערות').fill('לוודא שיש חדר ישיבות');
+    await expect(panel.getByLabel('הערות', { exact: true })).toHaveCSS('direction', 'rtl');
     await panel.getByLabel('פריט חדש ברשימת המשנה').fill('לשלוח זימון');
     await panel.getByLabel('פריט חדש ברשימת המשנה').press('Enter');
 

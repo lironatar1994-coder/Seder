@@ -303,7 +303,7 @@ Flat lists carry day-to-day work. Board cards use a white/charcoal work surface,
 
 ### Inputs / Fields
 
-Shared fields use the work surface, strong line, normal body size and lg corners. Hover strengthens the boundary; focus uses accent; invalid fields use urgency red and a written error. Free text is direction-aware. Display's search and select fields use their observed 0.4rem corners and 44px minimum height inside a compact popover. Task-detail attributes remain labeled, but their values are visually plain until hovered or focused rather than each becoming a filled button.
+Shared fields use the work surface, strong line, normal body size and lg corners. Hover strengthens the boundary; focus uses accent; invalid fields use urgency red and a written error. Free text is direction-aware: empty automatic-direction fields rest in RTL so Hebrew placeholders align at the reading start; entered Latin content resolves LTR. The time editor anchors the value beside its clock indicator while keeping HH:MM in LTR order. Display's search and select fields use their observed 0.4rem corners and 44px minimum height inside a compact popover. Task-detail attributes remain labeled, but their values are visually plain until hovered or focused rather than each becoming a filled button.
 
 ### Navigation
 

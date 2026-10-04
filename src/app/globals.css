@@ -309,10 +309,29 @@
     text-align: start;
   }
 
+  /* Empty dir=auto fields default to LTR: a Hebrew placeholder is not a value.
+     Once typing starts, the attribute resolves Hebrew or Latin normally. */
+  input[dir="auto"]:placeholder-shown,
+  textarea[dir="auto"]:placeholder-shown {
+    direction: rtl;
+  }
+
   input::placeholder,
   textarea::placeholder {
     color: var(--muted);
     opacity: 1;
+  }
+
+  /* Right-anchor the clock value without reversing HH:MM. */
+  .time-picker-input {
+    direction: rtl;
+  }
+
+  .time-picker-input::-webkit-datetime-edit {
+    direction: ltr;
+    display: inline-flex;
+    justify-content: flex-end;
+    inline-size: 100%;
   }
 
   /* The surfaces the browser draws.
