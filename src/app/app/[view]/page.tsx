@@ -7,6 +7,10 @@ import { VIEWS, isViewSlug, type ViewSlug } from '@/lib/constants';
 import { ViewHeader } from '@/components/nav/view-header';
 import { TaskList } from '@/components/task/task-list';
 import { TodayInsights } from '@/components/task/today-insights';
+import { getGoogleEvents } from '@/server/google/queries';
+import { GoogleEventList, GoogleSyncBar } from '@/components/calendar/google-events';
+import { db } from '@/server/db';
+import { today, addDays } from '@/lib/dates';
 
 /* Empty screens are invitations, not apologies — each one says what this view
    is for and offers the next action. */
@@ -16,7 +20,7 @@ const EMPTY: Record<ViewSlug, { title: string; body: string }> = {
     body: 'כל משימה שעוד לא שויכה לפרויקט יושבת כאן — גם אם כבר יש לה תאריך. הכול מסודר.',
   },
   today: {
-    title: 'אין כלום להיום',
+    title: 'אין משימות להיום',
     body: 'שום דבר לא מתוזמן להיום ואין דדליינים פתוחים. אפשר למשוך משהו מ״בקרוב״ או להוסיף משימה.',
   },
   upcoming: {
@@ -71,9 +75,14 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
     );
   }
 
-  const [data, sidebar] = await Promise.all([
+  const showGoogle = view === 'today' || view === 'upcoming';
+  const from = view === 'upcoming' ? addDays(today(), 1) : today();
+  const to = view === 'upcoming' ? addDays(today(), 30) : today();
+  const [data, sidebar, googleEvents, googleConnection] = await Promise.all([
     getViewTasks(user.id, view),
     getSidebarData(user.id),
+    showGoogle ? getGoogleEvents(user.id, from.toISOString().slice(0, 10), to.toISOString().slice(0, 10)) : Promise.resolve([]),
+    showGoogle ? db.googleCalendarConnection.findUnique({ where: { userId: user.id }, select: { lastError: true } }) : Promise.resolve(null),
   ]);
 
   return (
@@ -86,6 +95,8 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
       />
       <div className={view === 'today' ? 'today-workspace' : undefined}>
       <div className="min-w-0">
+      {googleConnection && <GoogleSyncBar connected lastError={googleConnection.lastError} />}
+      <GoogleEventList events={googleEvents} showDates={view === 'upcoming'} />
       <TaskList
         groups={data.groups}
         context={{ view }}

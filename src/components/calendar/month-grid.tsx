@@ -6,6 +6,8 @@ import type { CalendarDay } from '@/lib/calendar';
 import { WEEKDAY_HEADERS } from '@/lib/calendar';
 import type { CalendarEntry } from '@/server/tasks/queries';
 import { EntryChip } from './entry-chip';
+import { GoogleEventRow } from './google-events';
+import type { GoogleEventDTO } from '@/lib/calendar-event-types';
 
 /** Beyond this a cell would overflow; the rest collapse into a counter. */
 const MAX_CHIPS = 3;
@@ -13,12 +15,14 @@ const MAX_CHIPS = 3;
 export function MonthGrid({
   weeks,
   entriesByDay,
+  googleEventsByDay = {},
   selectedDay,
   onSelectDay,
   onOpenTask,
 }: {
   weeks: { key: string; days: CalendarDay[] }[];
   entriesByDay: Record<string, CalendarEntry[]>;
+  googleEventsByDay?: Record<string, GoogleEventDTO[]>;
   selectedDay: string | null;
   onSelectDay: (iso: string) => void;
   onOpenTask: (taskId: string) => void;
@@ -48,6 +52,7 @@ export function MonthGrid({
               key={day.iso}
               day={day}
               entries={entriesByDay[day.iso] ?? []}
+              googleEvents={googleEventsByDay[day.iso] ?? []}
               selected={selectedDay === day.iso}
               onSelectDay={onSelectDay}
               onOpenTask={onOpenTask}
@@ -62,22 +67,25 @@ export function MonthGrid({
 function DayCell({
   day,
   entries,
+  googleEvents,
   selected,
   onSelectDay,
   onOpenTask,
 }: {
   day: CalendarDay;
   entries: CalendarEntry[];
+  googleEvents: GoogleEventDTO[];
   selected: boolean;
   onSelectDay: (iso: string) => void;
   onOpenTask: (taskId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day:${day.iso}`, data: { iso: day.iso } });
 
-  const visible = entries.slice(0, MAX_CHIPS);
-  const hidden = entries.length - visible.length;
+  const visibleGoogle = googleEvents.slice(0, googleEvents.length > 0 && entries.length > 0 ? 1 : MAX_CHIPS);
+  const visible = entries.slice(0, MAX_CHIPS - visibleGoogle.length);
+  const hidden = entries.length + googleEvents.length - visible.length - visibleGoogle.length;
 
-  const dayLabel = `${day.weekdayLong} ${day.dayOfMonth}, ${entries.length} פריטים`;
+  const dayLabel = `${day.weekdayLong} ${day.dayOfMonth}, ${entries.length + googleEvents.length} פריטים`;
 
   /* Shared by both, so the two layouts cannot drift into showing different
      dates. The Hebrew month is named once, on Rosh Chodesh, rather than
@@ -134,6 +142,7 @@ function DayCell({
       </button>
 
       <div className="flex min-h-0 flex-1 flex-col gap-0.5">
+        {visibleGoogle.map(event => <GoogleEventRow key={event.id} event={event} compact />)}
         {visible.map((entry) => (
           <EntryChip key={entry.key} entry={entry} compact onOpen={onOpenTask} />
         ))}

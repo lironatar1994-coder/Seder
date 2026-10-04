@@ -51,6 +51,7 @@ export default defineConfig({
       MAIL_PREVIEW: '1',
       SMTP_URL: '',
       RESEND_API_KEY: '',
+      GOOGLE_CALENDAR_ENABLED: '0',
       APP_URL: `${ORIGIN}${BASE_PATH}`,
       NEXT_DIST_DIR: DIST_DIR,
     },

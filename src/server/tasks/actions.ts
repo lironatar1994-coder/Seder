@@ -83,6 +83,8 @@ const COMPLETE_SELECT = {
   recurrence: true,
   scheduledFor: true,
   scheduledTime: true,
+  durationMinutes: true,
+  assigneeId: true,
   deadline: true,
   position: true,
   labels: { select: { labelId: true } },
@@ -98,6 +100,8 @@ type Completable = {
   recurrence: string | null;
   scheduledFor: Date | null;
   scheduledTime: string | null;
+  durationMinutes: number;
+  assigneeId: string | null;
   deadline: Date | null;
   position: string;
   labels: { labelId: string }[];
@@ -141,6 +145,8 @@ async function completeOne(userId: string, task: Completable): Promise<Repeat | 
         whenBucket: 'SCHEDULED',
         scheduledFor: completedOccurrence,
         scheduledTime: task.scheduledTime,
+        durationMinutes: task.durationMinutes,
+        assigneeId: task.assigneeId,
         deadline: task.deadline,
         position: task.position,
         recurrenceParentId: task.id,

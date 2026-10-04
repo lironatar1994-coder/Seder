@@ -65,6 +65,7 @@ export const createTaskSchema = z.object({
   whenBucket: z.enum(WHEN_BUCKETS).default('ANYTIME'),
   scheduledFor: dayStringSchema,
   scheduledTime: timeStringSchema,
+  durationMinutes: z.number().int().min(1).max(1440).optional(),
   deadline: dayStringSchema,
   labelIds: z.array(z.string().cuid()).max(20).default([]),
   recurrence: z.string().max(60).nullable().optional(),

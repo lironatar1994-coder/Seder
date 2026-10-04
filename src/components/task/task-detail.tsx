@@ -255,6 +255,13 @@ export function TaskDetail({
         </Popover>
       </MetaRow>
 
+      {task.scheduledTime && <MetaRow label="משך המשימה">
+        <select aria-label="משך המשימה בדקות" value={task.durationMinutes ?? 30} onChange={event => { const durationMinutes = Number(event.target.value); patch({ durationMinutes }); run(() => updateTaskAction({ id: task.id, durationMinutes })); }} className="h-9 w-full rounded-lg border border-line-strong bg-surface px-2 text-sm text-ink">
+          {[15, 30, 45, 60, 90, 120].map(minutes => <option key={minutes} value={minutes}>{minutes} דקות</option>)}
+          {task.durationMinutes && ![15, 30, 45, 60, 90, 120].includes(task.durationMinutes) && <option value={task.durationMinutes}>{task.durationMinutes} דקות</option>}
+        </select>
+      </MetaRow>}
+
       {/* Two separate questions, so two separate controls: when you plan to
           work on it, and when it is actually due. */}
       <MetaRow label="מועד הגשה">

@@ -9,6 +9,8 @@ import { relativeDayLabel, today, weekdayName } from '@/lib/dates';
 import type { CalendarEntry } from '@/server/tasks/queries';
 import { Composer } from '@/components/task/composer';
 import { EntryRow } from './entry-row';
+import { GoogleEventRow } from './google-events';
+import type { GoogleEventDTO } from '@/lib/calendar-event-types';
 
 /**
  * One day, opened from the grid.
@@ -19,6 +21,7 @@ import { EntryRow } from './entry-row';
 export function DayPanel({
   iso,
   entries,
+  googleEvents = [],
   projects,
   labels,
   onClose,
@@ -26,6 +29,7 @@ export function DayPanel({
 }: {
   iso: string;
   entries: CalendarEntry[];
+  googleEvents?: GoogleEventDTO[];
   projects: { id: string; name: string; color: string }[];
   labels: { id: string; name: string; color: string }[];
   onClose: () => void;
@@ -51,7 +55,7 @@ export function DayPanel({
         >
           <DialogPrimitive.Title className="sr-only">{`${weekday} ${lockup.gregorianFull}`}</DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
-            המשימות של היום הזה
+            המשימות והאירועים של היום הזה
           </DialogPrimitive.Description>
 
           <header className="flex items-start justify-between gap-3 border-be border-line px-4 py-3">
@@ -88,7 +92,8 @@ export function DayPanel({
               autoFocus={false}
             />
 
-            {scheduled.length === 0 && deadlines.length === 0 && (
+            {googleEvents.map(event => <GoogleEventRow key={event.id} event={event} />)}
+            {scheduled.length === 0 && deadlines.length === 0 && googleEvents.length === 0 && (
               <p className="px-1 text-sm text-muted">היום הזה פנוי. אפשר להוסיף משימה למעלה.</p>
             )}
 

@@ -30,6 +30,7 @@ rollback() {
   set +e
   if [ "$paused" = 1 ]; then
     pm2 stop seder-live seder-whatsapp >/dev/null 2>&1
+    pm2 stop seder-calendar >/dev/null 2>&1 || true
     if [ "$switched" = 1 ]; then
       mv "$current" "$release.failed"
       [[ ! -d "$previous" ]] || mv "$previous" "$current"
@@ -51,6 +52,7 @@ trap rollback ERR
 echo '[INFO] Stopping writes briefly for the database backup and release switch...'
 paused=1
 pm2 stop seder-live seder-whatsapp >/dev/null
+pm2 stop seder-calendar >/dev/null 2>&1 || true
 if [ -f "$database" ]; then sqlite3 "$database" ".backup '$backup/database.db'"; chmod 600 "$backup/database.db"; fi
 (cd "$release" && DATABASE_URL="file:$database" npx prisma migrate deploy)
 mv "$current" "$previous"

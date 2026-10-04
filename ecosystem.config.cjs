@@ -33,6 +33,17 @@ const shared = productionEnv();
 module.exports = {
   apps: [
     {
+      name: 'seder-calendar',
+      cwd: '/root/Seder',
+      script: 'node_modules/tsx/dist/cli.mjs',
+      args: '--conditions=react-server worker/calendar.ts',
+      env: { NODE_ENV: 'production', ...shared },
+      max_memory_restart: '250M',
+      autorestart: true,
+      restart_delay: 10_000,
+      time: true,
+    },
+    {
       name: 'seder-live',
       cwd: '/root/Seder',
       script: 'node_modules/next/dist/bin/next',

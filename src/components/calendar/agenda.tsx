@@ -12,6 +12,8 @@ import { Composer } from '@/components/task/composer';
 import { registerComposer } from '@/components/task/compose-bus';
 import { useIsPhone } from '@/components/ui/use-is-phone';
 import { EntryRow } from './entry-row';
+import { GoogleEventRow } from './google-events';
+import type { GoogleEventDTO } from '@/lib/calendar-event-types';
 
 /**
  * The calendar, on a phone.
@@ -37,6 +39,7 @@ export interface AgendaProps {
   /** Pre-chunked weeks; month mode only. Week mode passes a single row. */
   weeks: CalendarDay[][];
   entriesByDay: Record<string, CalendarEntry[]>;
+  googleEventsByDay?: Record<string, GoogleEventDTO[]>;
   projects: { id: string; name: string; color: string }[];
   labels: { id: string; name: string; color: string }[];
   /** From `?d=` — which day the strip should open on. */
@@ -50,6 +53,7 @@ export function Agenda({
   days,
   weeks,
   entriesByDay,
+  googleEventsByDay = {},
   projects,
   labels,
   initialDay,
@@ -215,7 +219,7 @@ export function Agenda({
                 type="button"
                 data-strip-day={day.iso}
                 aria-current={selected ? 'date' : undefined}
-                aria-label={`${day.weekdayLong} ${day.dayOfMonth}, ${entries.length} פריטים`}
+                aria-label={`${day.weekdayLong} ${day.dayOfMonth}, ${entries.length + (googleEventsByDay[day.iso]?.length ?? 0)} פריטים`}
                 onClick={() => pickDay(reachable ? day.iso : (startIso ?? day.iso))}
                 className={cn(
                   'flex min-h-11 flex-col items-center justify-center gap-1 py-1.5',
@@ -242,6 +246,7 @@ export function Agenda({
                 {/* A row of dots that is always the same height, so the cells
                     do not jitter between weeks with and without work. */}
                 <span className="flex h-1 items-center gap-0.5">
+                  {(googleEventsByDay[day.iso] ?? []).slice(0, Math.max(0, MAX_DOTS - entries.length)).map(event => <span key={event.id} className="size-1 rounded-full bg-accent" />)}
                   {entries.slice(0, MAX_DOTS).map((entry) => (
                     <span
                       key={entry.key}
@@ -277,9 +282,10 @@ export function Agenda({
               // Clears the sticky strip when a day is scrolled to.
               className="scroll-mt-28 border-be border-line py-3 last:border-be-0"
             >
-              <DayHeading day={day} count={entries.length} />
+              <DayHeading day={day} count={entries.length + (googleEventsByDay[day.iso]?.length ?? 0)} />
+              <div className="space-y-1">{(googleEventsByDay[day.iso] ?? []).map(event => <GoogleEventRow key={event.id} event={event} />)}</div>
 
-              {entries.length === 0 && composerIso !== day.iso && (
+              {entries.length === 0 && !(googleEventsByDay[day.iso]?.length) && composerIso !== day.iso && (
                 <p className="px-1 pb-1 text-sm text-muted">פנוי.</p>
               )}
 

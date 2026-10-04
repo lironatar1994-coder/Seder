@@ -58,6 +58,9 @@ model User {
   resetTokens PasswordResetToken[]
   comments    TaskComment[]
   savedFilters SavedFilter[]
+  googleCalendar GoogleCalendarConnection?
+  googleOAuthStates GoogleOAuthState[]
+  calendarFeed CalendarFeed?
 
   /// Projects other people have let this user into.
   memberships   ProjectMember[]
@@ -206,6 +209,7 @@ model Task {
   scheduledFor  DateTime?
   /// "HH:mm", 24-hour. Israeli UIs do not use AM/PM.
   scheduledTime String?
+  durationMinutes Int @default(30)
   /// Things' real differentiator: "do it whenever, but it is due Thursday".
   deadline      DateTime?
 
@@ -263,6 +267,7 @@ model Task {
   subtasks Task[]      @relation("Subtasks")
   labels   TaskLabel[]
   comments TaskComment[]
+  googleLinks GoogleTaskLink[]
 
   @@index([userId, status, scheduledFor])
   @@index([userId, status, whenBucket])
@@ -358,4 +363,87 @@ model SavedFilter {
   createdAt DateTime @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@index([userId, createdAt])
+}
+
+model GoogleOAuthState {
+  id String @id @default(cuid())
+  stateHash String @unique
+  userId String
+  sessionId String
+  verifier String
+  expiresAt DateTime
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([expiresAt])
+}
+
+model GoogleCalendarConnection {
+  id String @id @default(cuid())
+  userId String @unique
+  accountEmail String
+  refreshToken String
+  accessToken String
+  accessExpiresAt DateTime
+  taskCalendarId String?
+  taskSyncToken String?
+  showEvents Boolean @default(true)
+  syncTasks Boolean @default(true)
+  syncAllDay Boolean @default(true)
+  lastSyncAt DateTime?
+  lastError String?
+  leaseUntil DateTime?
+  leaseOwner String?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sources GoogleCalendarSource[]
+  taskLinks GoogleTaskLink[]
+}
+
+model GoogleCalendarSource {
+  id String @id @default(cuid())
+  connectionId String
+  googleId String
+  name String
+  enabled Boolean @default(false)
+  connection GoogleCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  events GoogleCalendarEvent[]
+  @@unique([connectionId, googleId])
+}
+
+model GoogleCalendarEvent {
+  id String @id @default(cuid())
+  sourceId String
+  googleId String
+  title String
+  startAt DateTime
+  endAt DateTime
+  startDay String
+  endDay String
+  allDay Boolean
+  htmlLink String?
+  location String?
+  source GoogleCalendarSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  @@unique([sourceId, googleId])
+  @@index([sourceId, startDay, endDay])
+}
+
+// Keep the mapping after deletion so the next sweep can remove its Google event.
+model GoogleTaskLink {
+  id String @id @default(cuid())
+  connectionId String
+  taskId String?
+  eventId String
+  fingerprint String
+  taskUpdatedAt DateTime
+  connection GoogleCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  @@unique([connectionId, taskId])
+  @@unique([connectionId, eventId])
+}
+
+model CalendarFeed {
+  id String @id @default(cuid())
+  userId String @unique
+  tokenHash String @unique
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

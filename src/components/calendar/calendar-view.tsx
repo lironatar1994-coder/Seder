@@ -31,6 +31,8 @@ import { WeekGrid } from './week-grid';
 import { DayPanel } from './day-panel';
 import { Agenda } from './agenda';
 import { ChipPreview } from './entry-chip';
+import type { GoogleEventDTO } from '@/lib/calendar-event-types';
+import { GoogleSyncBar } from './google-events';
 
 type Mode = 'month' | 'week';
 
@@ -41,13 +43,16 @@ interface Props {
   projects: { id: string; name: string; color: string }[];
   labels: { id: string; name: string; color: string }[];
   selectedDay: string | null;
+  googleEventsByDay: Record<string, GoogleEventDTO[]>;
+  googleConnected: boolean;
+  googleError?: string | null;
 }
 
 function isMonth(grid: MonthGridData | WeekGridData): grid is MonthGridData {
   return 'weeks' in grid;
 }
 
-export function CalendarView({ mode, grid, calendar, projects, labels, selectedDay }: Props) {
+export function CalendarView({ mode, grid, calendar, projects, labels, selectedDay, googleEventsByDay, googleConnected, googleError }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [, startTransition] = useTransition();
@@ -243,6 +248,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
         </div>
       </header>
 
+      <GoogleSyncBar connected={googleConnected} lastError={googleError} />
       <div className="max-md:hidden">
       <DndContext
         // Without an explicit id, dnd-kit numbers its accessibility
@@ -261,6 +267,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
         {isMonth(grid) ? (
           <MonthGrid
             weeks={grid.weeks}
+            googleEventsByDay={googleEventsByDay}
             entriesByDay={entriesByDay}
             selectedDay={panelDay}
             onSelectDay={setPanelDay}
@@ -269,6 +276,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
         ) : (
           <WeekGrid
             days={grid.days}
+            googleEventsByDay={googleEventsByDay}
             entriesByDay={entriesByDay}
             selectedDay={panelDay}
             onSelectDay={setPanelDay}
@@ -290,6 +298,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
       </div>
 
       <Agenda
+        googleEventsByDay={googleEventsByDay}
         days={grid.days}
         weeks={isMonth(grid) ? grid.weeks.map((week) => week.days) : [grid.days]}
         entriesByDay={entriesByDay}
@@ -311,6 +320,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
 
       {panelDay && (
         <DayPanel
+          googleEvents={googleEventsByDay[panelDay] ?? []}
           iso={panelDay}
           entries={entriesByDay[panelDay] ?? []}
           projects={projects}

@@ -52,11 +52,22 @@ if [ -f "$SECRETS_FILE" ]; then
   . "$SECRETS_FILE"
 fi
 
+# Encryption keys are stable, outside releases and never included in Git.
+if [ -z "${GOOGLE_TOKEN_ENCRYPTION_KEY:-}" ]; then
+  GOOGLE_TOKEN_ENCRYPTION_KEY="$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('base64'))")"
+  printf "\nGOOGLE_TOKEN_ENCRYPTION_KEY='%s'\n" "$GOOGLE_TOKEN_ENCRYPTION_KEY" >> "$SECRETS_FILE"
+  chmod 600 "$SECRETS_FILE"
+fi
+
 cat > .env.production <<ENV
 DATABASE_URL="file:$DATABASE_FILE"
 APP_URL="https://$DOMAIN$BASE_PATH"
 MAIL_FROM="${MAIL_FROM:-סדר <no-reply@$DOMAIN>}"
 RESEND_API_KEY="${RESEND_API_KEY:-}"
+GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID:-}"
+GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET:-}"
+GOOGLE_TOKEN_ENCRYPTION_KEY="$GOOGLE_TOKEN_ENCRYPTION_KEY"
+GOOGLE_CALENDAR_ENABLED="${GOOGLE_CALENDAR_ENABLED:-0}"
 WHATSAPP_AUTH_DIR="$WHATSAPP_AUTH_DIR"
 WHATSAPP_STATUS_FILE="$WHATSAPP_STATUS_FILE"
 SEDER_ADMIN_EMAIL="${SEDER_ADMIN_EMAIL:-}"
@@ -88,6 +99,7 @@ fi
 
 echo '[INFO] Starting Seder...'
 pm2 startOrReload ecosystem.config.cjs --only "$APP_NAME" --update-env
+pm2 startOrReload ecosystem.config.cjs --only 'seder-calendar' --update-env
 
 # Reloaded separately, and never fatal. A WhatsApp socket that will not come up
 # is a degraded feature; the site failing to deploy because of it would be a

@@ -33,6 +33,47 @@ the matching account address; signed-out recipients return to the invitation aft
 or login. Owners can cancel invitations and remove members. Account deletion preserves work
 authored in another person's project.
 
+## Google Calendar
+
+Open **Settings → Calendars** (`/app/settings/calendar`). The direct connection uses
+Google OAuth with PKCE, session-bound one-use state and encrypted access/refresh tokens.
+Users choose which calendars to show in Today, Upcoming and desktop/mobile calendar views.
+Google meetings stay read-only in Seder and link back to Google for editing.
+
+Scheduled personal tasks and tasks explicitly assigned to the user in shared projects sync
+to a separate Google calendar named **סדר**. Name, notes, date, time and duration changes
+sync in both directions. Local changes win when both sides changed since the last export.
+All-day export is optional. Completion marks an event with a checkmark; task deletion removes
+the mapped event. Deleting a mapped Google event clears the task's schedule without deleting
+the task. Recurring tasks export their current occurrence and then the next on completion;
+Google recurrence rules are not imported. The window is 31 days back and 365 days ahead.
+The background process `seder-calendar` checks about once per minute; initial exports are
+paced in batches of up to 100. Manual sync is available. No sync writes target personal calendars.
+
+One-time operator setup:
+
+1. Enable Google Calendar API in your Google Cloud project.
+2. Configure an OAuth **Web application** client and the consent screen. Register
+   `https://lawebs.co.il/seder/api/google/callback` as an authorized redirect URI
+   (and `http://localhost:3000/seder/api/google/callback` for local development).
+3. Store `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `GOOGLE_CALENDAR_ENABLED='1'`
+   in `/var/lib/seder/secrets.env`. `deploy_linux.sh` generates and preserves a random
+   `GOOGLE_TOKEN_ENCRYPTION_KEY` there. Never rotate this key without migrating existing tokens.
+   For local use set a fresh 32-byte base64 key in the ignored `.env` file.
+4. Request only `calendar.calendarlist.readonly`, `calendar.events.readonly` and
+   `calendar.app.created`. Google may require sensitive-scope verification before public use;
+   testing-mode apps must list their permitted test users.
+5. Deploy, then each user connects and grants their own Google permissions.
+
+Disconnect removes the encrypted credentials and imported cache from Seder. Existing Google
+events remain; the Google-account permissions page can revoke the provider grant. Disabling
+task export removes only mapped Seder events, preserving manually created events.
+
+A **calendar subscription link** also works without OAuth configuration. It is a read-only ICS
+feed: add its private URL through Google Calendar's **Other calendars → From URL**. Google
+controls refresh timing. Regeneration or revocation invalidates the old URL immediately.
+Only a token hash is stored; the full URL is shown once. Treat it as a read-access secret.
+
 ## Publishing from Windows
 
 ```powershell
@@ -742,7 +783,7 @@ its own direction. Email, time and date fields are forced to `dir="ltr"`. Numera
 
 ## Not built yet
 
-Calendar sync, offline sync, dragging projects into a different sidebar order, reordering
+Offline sync, dragging projects into a different sidebar order, reordering
 sections, email verification on sign-up, and
 a formal IS 5568 accessibility certification. The build meets the WCAG AA floor — contrast is encoded at the token layer, focus
 is always visible, `prefers-reduced-motion` is respected — but certification is its own pass.

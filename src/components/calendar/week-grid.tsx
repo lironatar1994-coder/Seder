@@ -6,6 +6,8 @@ import { cn } from '@/lib/cn';
 import type { CalendarDay } from '@/lib/calendar';
 import type { CalendarEntry } from '@/server/tasks/queries';
 import { EntryChip } from './entry-chip';
+import { GoogleEventRow } from './google-events';
+import type { GoogleEventDTO } from '@/lib/calendar-event-types';
 
 /**
  * The week, as seven readable columns rather than a pixel-positioned hour grid.
@@ -18,12 +20,14 @@ import { EntryChip } from './entry-chip';
 export function WeekGrid({
   days,
   entriesByDay,
+  googleEventsByDay = {},
   selectedDay,
   onSelectDay,
   onOpenTask,
 }: {
   days: CalendarDay[];
   entriesByDay: Record<string, CalendarEntry[]>;
+  googleEventsByDay?: Record<string, GoogleEventDTO[]>;
   selectedDay: string | null;
   onSelectDay: (iso: string) => void;
   onOpenTask: (taskId: string) => void;
@@ -38,6 +42,7 @@ export function WeekGrid({
             key={day.iso}
             day={day}
             entries={entriesByDay[day.iso] ?? []}
+            googleEvents={googleEventsByDay[day.iso] ?? []}
             selected={selectedDay === day.iso}
             onSelectDay={onSelectDay}
             onOpenTask={onOpenTask}
@@ -51,12 +56,14 @@ export function WeekGrid({
 function WeekColumn({
   day,
   entries,
+  googleEvents,
   selected,
   onSelectDay,
   onOpenTask,
 }: {
   day: CalendarDay;
   entries: CalendarEntry[];
+  googleEvents: GoogleEventDTO[];
   selected: boolean;
   onSelectDay: (iso: string) => void;
   onOpenTask: (taskId: string) => void;
@@ -105,6 +112,7 @@ function WeekColumn({
       </button>
 
       <div className="flex min-h-0 flex-1 flex-col gap-1 p-1.5">
+        {googleEvents.map(event => <GoogleEventRow key={event.id} event={event} compact />)}
         {timed.map((entry) => (
           <EntryChip key={entry.key} entry={entry} onOpen={onOpenTask} />
         ))}

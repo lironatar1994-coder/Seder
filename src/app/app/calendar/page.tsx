@@ -5,6 +5,8 @@ import { getCalendarView, getSidebarData } from '@/server/tasks/queries';
 import { today } from '@/lib/dates';
 import { buildMonthGrid, buildWeekGrid, parseMonthAnchor, parseISODay } from '@/lib/calendar';
 import { CalendarView } from '@/components/calendar/calendar-view';
+import { db } from '@/server/db';
+import { getGoogleEvents, groupGoogleEvents } from '@/server/google/queries';
 
 export const metadata: Metadata = { title: 'לוח שנה · סדר' };
 
@@ -33,9 +35,11 @@ export default async function CalendarPage({
       : buildMonthGrid(parseMonthAnchor(params.m, base), base);
 
   const days = 'weeks' in grid ? grid.days : grid.days;
-  const [calendar, sidebar] = await Promise.all([
+  const [calendar, sidebar, googleEvents, connection] = await Promise.all([
     getCalendarView(user.id, days[0].iso, days[days.length - 1].iso),
     getSidebarData(user.id),
+    getGoogleEvents(user.id, days[0].iso, days[days.length - 1].iso),
+    db.googleCalendarConnection.findUnique({ where: { userId: user.id }, select: { lastError: true } }),
   ]);
 
   return (
@@ -46,6 +50,9 @@ export default async function CalendarPage({
       projects={sidebar.projects}
       labels={sidebar.labels}
       selectedDay={params.d && /^\d{4}-\d{2}-\d{2}$/.test(params.d) ? params.d : null}
+      googleEventsByDay={groupGoogleEvents(googleEvents, days[0].iso, days[days.length - 1].iso)}
+      googleConnected={Boolean(connection)}
+      googleError={connection?.lastError}
     />
   );
 }
