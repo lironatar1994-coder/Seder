@@ -765,6 +765,7 @@
           "placement": "Compact underlined action beneath each customer identity, with a 44px target and an accessible name containing the stored recipient email.",
           "feedback": "Wrapping sent, error and truthful local preview states; pending and resend cooldown disable repeat requests.",
           "access": "Verify current database role=admin before any target/email lookup; accept only role=user recipients and their stored email. The administrator receives no token and chooses no password.",
+          "privacy": "Recovery URLs are excluded from visitor analytics.",
           "recovery": "Existing one-hour single-use recovery changes password and sessions only upon recipient completion. Concurrent issuance enforces at least 60 seconds between requests and at most three live tokens; the public response remains unchanged.",
           "review": "Local ship verdict in .impeccable/review/admin-reset-review.md, with desktop/mobile/narrow/dark/feedback captures and 44px, overflow and privacy checks. Reported execution: nine new backend tests, six existing mail tests and ten targeted browser scenarios; deployment and live email delivery require separate evidence."
         },

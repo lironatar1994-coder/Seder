@@ -19,6 +19,7 @@ reset token or sets the customer's password; password/session state changes only
 the recipient uses the hour-long, single-use link. Concurrent issue requests are serialized,
 with a one-minute resend interval and at most three unexpired links per account. Public
 recovery retains an identical response for registered and unregistered addresses.
+Recovery URLs are excluded from visitor signals so reset tokens are never sent to analytics.
 
 Provision an administrator on the server with `DATABASE_URL=file:/var/lib/seder/seder.db node scripts/create-admin.mjs <email>`.
 The script refuses an existing address, creates no starter tasks, generates an Argon2id password

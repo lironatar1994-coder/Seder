@@ -83,6 +83,10 @@ test('administrator sends a recovery link on mobile and the recipient alone comp
     const link = mail.text.match(/https?:\/\/[^\s]+\/reset\/[A-Za-z0-9_-]+/)[0];
     const context = await browser.newContext();
     const recipientPage = await context.newPage();
+    const visitorPaths: string[] = [];
+    recipientPage.on('request', (request) => {
+      if (request.url().includes('/.well-known/vee-visitor-signal') && request.postData()) visitorPaths.push(JSON.parse(request.postData()!).path);
+    });
     await recipientPage.goto(link);
     await recipientPage.getByLabel('סיסמה חדשה', { exact: true }).fill(nextPassword);
     await recipientPage.getByLabel('שוב, לוודא').fill(nextPassword);
@@ -93,6 +97,7 @@ test('administrator sends a recovery link on mobile and the recipient alone comp
     await recipientPage.getByLabel('סיסמה', { exact: true }).fill(nextPassword);
     await recipientPage.getByRole('button', { name: 'כניסה', exact: true }).click();
     await recipientPage.waitForURL('**/app/today');
+    expect(visitorPaths.some((path) => /\/reset\//.test(path))).toBe(false);
     await context.close();
   } finally { await db.user.deleteMany({ where: { id: recipient.id } }); }
 });

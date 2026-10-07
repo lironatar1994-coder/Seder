@@ -72,7 +72,8 @@ export function VisitorSignal() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (/^(?:\/seder)?\/admin(?:\/|$)/.test(pathname || '')) return;
+    // Recovery URLs carry an authentication secret, never an analytics path.
+    if (/^(?:\/seder)?\/(?:admin|reset)(?:\/|$)/.test(pathname || '')) return;
     const path = monitoredPath(pathname || '/');
     const startedAt = performance.now();
     let maximumScroll = 0;
