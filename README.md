@@ -2,6 +2,28 @@
 
 Production: **[lawebs.co.il/seder](https://lawebs.co.il/seder)** · PM2 process `seder-live` · internal port `3107`.
 
+## Administration
+
+Dedicated administrator accounts enter `/admin` directly. They see customer totals, authenticated
+activity, a 14-day task trend, service configuration/status, and a searchable user list with counts.
+Personal task text, phone numbers, credentials, provider tokens and raw errors are excluded. The page
+checks the live database role before every cross-account read; regular accounts receive 404.
+Public registration always creates a regular user and cannot set a role. `/admin` is private,
+uncached, excluded from visitor signals and search indexing. Administrator accounts are excluded
+from customer metrics and cannot enter the personal `/app` workspace.
+
+Provision an administrator on the server with `DATABASE_URL=file:/var/lib/seder/seder.db node scripts/create-admin.mjs <email>`.
+The script refuses an existing address, creates no starter tasks, generates an Argon2id password
+and prints the generated password once. Password changes remain available within the dashboard,
+and the existing emailed recovery flow applies. Provisioning is never a public API.
+
+`lastActiveAt` records authenticated use at most once per ten minutes. The migration backfills
+only known session creation timestamps; background task changes are not visits. Weekly figures
+cover a rolling seven-day window; daily charts use the Jerusalem calendar. Connection labels
+distinguish configured providers, linked users, stale WhatsApp heartbeats and outbound failures.
+The existing `SEDER_ADMIN_EMAIL` account retains its WhatsApp service permissions. Dedicated
+administrators can also pair the WhatsApp service; existing personal accounts are not promoted.
+
 Deploy from Windows with `./deploy.ps1`. The release script runs the checks, keeps the SQLite
 database outside the application directory, creates a database backup, swaps releases with
 rollback, applies Prisma migrations, configures nginx and HTTPS, and verifies the service locally.

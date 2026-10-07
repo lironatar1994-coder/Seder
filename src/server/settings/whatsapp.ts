@@ -10,6 +10,7 @@ import { writeFile, link, unlink } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { readWhatsappState, WHATSAPP_STATUS_FILE } from '@/server/whatsapp/status';
+import { isServiceOperator } from '@/lib/account-role';
 
 function refresh() {
   revalidatePath('/app', 'layout');
@@ -31,8 +32,7 @@ export async function markWhatsappIntroductionSeenAction(): Promise<void> {
 /** Only the named operator may replace a logged-out service pairing. */
 export async function requestWhatsappPairingAction(): Promise<SettingsState> {
   const { user } = await requireSession();
-  const admin = process.env.SEDER_ADMIN_EMAIL?.trim().toLowerCase();
-  if (!admin || user.email.toLowerCase() !== admin) return { errors: { pairing: 'רק מנהל השירות יכול לחבר את המכשיר.' } };
+  if (!isServiceOperator(user, process.env.SEDER_ADMIN_EMAIL)) return { errors: { pairing: 'רק מנהל השירות יכול לחבר את המכשיר.' } };
   const state = await readWhatsappState();
   if (state.status === 'READY' && !state.stale) return { errors: { pairing: 'השירות כבר מחובר.' } };
   if (state.stale || state.status === 'OFFLINE') return { errors: { pairing: 'השירות אינו מגיב. צריך להפעיל אותו בשרת.' } };
@@ -48,8 +48,7 @@ export async function requestWhatsappPairingAction(): Promise<SettingsState> {
 /** An explicit test sends to this account's saved, opted-in number only. */
 export async function sendWhatsappTestAction(): Promise<SettingsState> {
   const { user } = await requireSession();
-  const admin = process.env.SEDER_ADMIN_EMAIL?.trim().toLowerCase();
-  if (!admin || user.email.toLowerCase() !== admin) return { errors: { test: 'רק מנהל השירות יכול לשלוח בדיקת חיבור.' } };
+  if (!isServiceOperator(user, process.env.SEDER_ADMIN_EMAIL)) return { errors: { test: 'רק מנהל השירות יכול לשלוח בדיקת חיבור.' } };
   const row = await db.user.findUniqueOrThrow({ where: { id: user.id }, select: { phone: true, whatsappReminders: true } });
   if (!row.phone || !row.whatsappReminders) return { errors: { test: 'צריך לשמור מספר ולהפעיל קבלת תזכורות.' } };
   const state = await readWhatsappState();

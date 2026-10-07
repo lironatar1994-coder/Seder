@@ -19,7 +19,7 @@ import {
 } from '@/server/auth/reset';
 import { MAX_FAILED_LOGINS, LOGIN_LOCK_MS } from '@/lib/constants';
 import { keysBetween } from '@/lib/ordering';
-import { safeAuthRedirect } from '@/lib/auth-redirect';
+import { accountDestination } from '@/lib/account-role';
 
 export interface AuthFormState {
   errors?: Record<string, string>;
@@ -50,7 +50,7 @@ export async function registerAction(
 
   let userId: string;
   try {
-    const user = await db.user.create({ data: { name, email, passwordHash } });
+    const user = await db.user.create({ data: { name, email, passwordHash, role: 'user' } });
     userId = user.id;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -64,7 +64,7 @@ export async function registerAction(
 
   await seedStarterContent(userId);
   await createSession(userId);
-  redirect(safeAuthRedirect(formData.get('next')));
+  redirect(accountDestination({ role: 'user' }, formData.get('next')));
 }
 
 export async function loginAction(
@@ -121,7 +121,7 @@ export async function loginAction(
   }
 
   await createSession(user.id);
-  redirect(safeAuthRedirect(formData.get('next')));
+  redirect(accountDestination(user, formData.get('next')));
 }
 
 export interface ResetFormState {

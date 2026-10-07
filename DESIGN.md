@@ -323,6 +323,14 @@ The הוספת משימה settings page at /app/settings/quick-add inherits the 
 
 Picker choices stay separate from the title, replace matching sentence tokens, and are validated by the server. Typed day and hour values override their corresponding picker values independently. Explicit date clearing overrides Today/calendar defaults; choosing Inbox overrides the current project. Saving a task resets capture to route defaults. Picker keys stay inside the open picker; Escape closes it and preserves the task draft. Desktop capture is inline with an accessible cancel icon; phone capture is a bottom sheet above the keyboard. A route without a task list routes Add to Today and opens the sheet there. This is a product mechanism and a feedback moment, not an ornamental illustration.
 
+### Administration Surface
+
+The dedicated /admin Operate surface extends this neutral RTL world with a compact header, four tabular metrics, a fourteen-day paired-bar chart beside concise service states, and a searchable table of 25 customer rows per page. Password change stays closed behind a disclosure. Its main column is capped at 1120px; chart and services stack below 960px, and the metrics become a 2 × 2 grid below 600px. Phone activity sits under identity, with long names and emails wrapping. Keep the one-scan reading order and the user's brief: no surplus text, headings or buttons.
+
+Created bars use `--muted`; completed bars use `--swatch-teal`. Written legends and each focusable day's accessible count label preserve meaning beyond color. Hover or visible keyboard focus reveals actual date/counts; the first and last four tooltips anchor inward. Refresh is a pending state with reduced motion respected. Service text distinguishes configuration from delivery or uptime, and a stale WhatsApp heartbeat from a connection state. Missing activity says `אין נתון`.
+
+This surface shows customer identity, aggregate counts, activity and connections; private task content, credentials and raw provider errors remain outside its visual vocabulary. Its brief records current-database administrator checks, customer-only metrics and separate operator provisioning. Local 1440/390/320/dark captures received a ship verdict in `.impeccable/review/admin-review.md`. Reported supporting execution is 352 unit tests, 98 browser scenarios and local search/password/pagination checks; production deployment and administrator creation require separate live checks. These administration findings do not extend the review scope of other surfaces.
+
 ## Do's and Don'ts
 
 ### Do:

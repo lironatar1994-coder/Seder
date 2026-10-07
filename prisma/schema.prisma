@@ -22,6 +22,10 @@ model User {
   name         String
   passwordHash String
   createdAt    DateTime @default(now())
+  /// Provisioned by the operator only. Public registration always creates users.
+  role         String   @default("user")
+  /// Authenticated requests, throttled to one write per ten minutes.
+  lastActiveAt DateTime?
 
   // Login throttling. Reset on any successful sign-in.
   failedLoginCount Int       @default(0)
@@ -76,6 +80,8 @@ model User {
   /// which is authorship: the person who wrote a task and the person doing it
   /// are usually the same and sometimes are not.
   assignedTasks Task[]          @relation("Assignee")
+
+  @@index([role, lastActiveAt])
 }
 
 /// Same shape as Session: the emailed link carries a random token, only its

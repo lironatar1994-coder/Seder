@@ -27,6 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // /signed-out clears stale cookies before showing the sign-in page.
   const user = await getCurrentUser();
   if (!user) redirect('/signed-out');
+  if (user.role === 'admin') redirect('/admin');
 
   const sidebar = await getSidebarData(user.id);
   const [whatsappUser, whatsappState] = await Promise.all([

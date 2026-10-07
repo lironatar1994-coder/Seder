@@ -742,6 +742,32 @@
       "taskTitleFloor": "16px",
       "hebrewLetterSpacing": "normal"
     },
+    "surfaces": {
+      "administration": {
+        "route": "/admin",
+        "mode": "Operate",
+        "brief": ".impeccable/surfaces/src-app-admin-page-tsx.md",
+        "sources": ["src/app/admin/page.tsx", "src/app/admin/admin.module.css", "src/components/admin/controls.tsx"],
+        "world": "Existing neutral RTL surfaces, Assistant labels, Inter tabular figures and flat hairline rows.",
+        "structure": "Compact header; four metrics; 14-day paired bars and service states; searchable 25-row customer pages; closed password disclosure.",
+        "responsive": "1120px main maximum; chart/services stack below 960px; 2 by 2 metrics and activity below identity below 600px; wrapped names/emails at 320px.",
+        "chart": {
+          "created": "var(--muted)",
+          "completed": "var(--swatch-teal)",
+          "interaction": "Actual daily counts on hover or visible keyboard focus, with accessible labels and inward anchoring for the first and last four tooltips."
+        },
+        "dataTruth": "Customer metrics use role=user. Latest authenticated request activity is throttled 10 minutes, with historical session-creation backfill. Service configuration and stale-heartbeat states do not claim delivery or uptime.",
+        "access": "Each cross-account query verifies current database role=admin. Dedicated accounts redirect to /admin; provisioning uses a separate operator-only script.",
+        "privacy": "No private task content, phone numbers, credentials/tokens or raw provider errors.",
+        "review": {
+          "verdict": "ship",
+          "record": ".impeccable/review/admin-review.md",
+          "scope": "Local surface with synthetic customers in a separate database; 1440px, 390px, 320px and desktop dark captures.",
+          "reportedChecks": "352 unit tests, 98 browser scenarios and meaningful local search/password/pagination checks; not rerun by documenter.",
+          "liveChecks": "Production deployment and administrator creation require separate live checks."
+        }
+      }
+    },
     "provenance": {
       "source": "src/app/globals.css and current source components",
       "authority": "User-pinned Todoist canon; code-led replacement after explicit rejection.",

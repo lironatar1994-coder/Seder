@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/lib/constants';
+import { safeAuthRedirect } from '@/lib/auth-redirect';
 
 /**
  * Clears a session cookie that no longer refers to a live session, then sends
@@ -22,7 +23,7 @@ export function GET(request: NextRequest) {
   const publicUrl = (process.env.APP_URL ?? request.nextUrl.origin).replace(/\/$/, '');
   const url = new URL(`${publicUrl}/login`);
 
-  if (next && next.startsWith('/app')) url.searchParams.set('next', next);
+  if (next) url.searchParams.set('next', safeAuthRedirect(next));
 
   const response = NextResponse.redirect(url);
   response.cookies.delete(SESSION_COOKIE);

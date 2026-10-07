@@ -10,6 +10,7 @@ export interface SessionUser {
   email: string;
   name: string;
   defaultView: string;
+  role: string;
   /** The hour an untimed task's reminder fires. */
   reminderHour: number;
 }
@@ -37,6 +38,7 @@ export async function createSession(userId: string): Promise<void> {
   await db.session.create({
     data: { tokenHash: hashToken(token), userId, expiresAt },
   });
+  await db.user.update({ where: { id: userId }, data: { lastActiveAt: new Date() } });
 
   const jar = await cookies();
   jar.set(SESSION_COOKIE, token, {
@@ -64,7 +66,7 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
     select: {
       id: true,
       expiresAt: true,
-      user: { select: { id: true, email: true, name: true, defaultView: true, reminderHour: true } },
+      user: { select: { id: true, email: true, name: true, role: true, lastActiveAt: true, defaultView: true, reminderHour: true } },
     },
   });
 
@@ -81,6 +83,16 @@ export const getCurrentSession = cache(async (): Promise<CurrentSession | null> 
   if (remaining < SESSION_RENEW_AFTER_MS) {
     const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
     await db.session.update({ where: { id: session.id }, data: { expiresAt } }).catch(() => {});
+  }
+
+  // Conditional update also throttles concurrent tabs. No task content is used
+  // to infer a visit, and background workers do not count as active users.
+  const activityCutoff = new Date(Date.now() - 10 * 60_000);
+  if (!session.user.lastActiveAt || session.user.lastActiveAt < activityCutoff) {
+    await db.user.updateMany({
+      where: { id: session.user.id, OR: [{ lastActiveAt: null }, { lastActiveAt: { lt: activityCutoff } }] },
+      data: { lastActiveAt: new Date() },
+    });
   }
 
   return { sessionId: session.id, user: session.user };

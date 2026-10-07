@@ -29,7 +29,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  if (pathname.startsWith('/app')) {
+  if (pathname === '/app' || pathname.startsWith('/app/') || pathname === '/admin' || pathname.startsWith('/admin/')) {
     if (!hasCookie) {
       const url = new URL(`${publicUrl}/login`);
       // Send them back where they were headed once they are in.
@@ -40,6 +40,7 @@ export function middleware(request: NextRequest) {
     }
     const response = NextResponse.next();
     response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    if (pathname === '/admin' || pathname.startsWith('/admin/')) response.headers.set('Cache-Control', 'private, no-store, max-age=0');
     return response;
   }
 
@@ -49,5 +50,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/app/:path*', '/login', '/register', '/forgot', '/reset/:path*', '/signed-out', '/api/:path*'],
+  matcher: ['/', '/app/:path*', '/admin/:path*', '/login', '/register', '/forgot', '/reset/:path*', '/signed-out', '/api/:path*'],
 };

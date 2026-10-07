@@ -2,7 +2,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { markWhatsappIntroductionSeenAction, requestWhatsappPairingAction, sendWhatsappTestAction } from './whatsapp';
 import { join } from 'node:path';
 const mocks = vi.hoisted(() => ({
-  session: { user: { id: 'my-account', email: 'operator@seder.test' } },
+  session: { user: { id: 'my-account', email: 'operator@seder.test', role: 'user' } },
   updateMany: vi.fn(), findUniqueOrThrow: vi.fn(), count: vi.fn(), write: vi.fn(), link: vi.fn(), unlink: vi.fn(), state: vi.fn(),
 }));
 vi.mock('server-only', () => ({}));
@@ -14,6 +14,7 @@ vi.mock('node:fs/promises', () => ({ writeFile: mocks.write, link: mocks.link, u
 beforeEach(() => {
   vi.clearAllMocks(); vi.stubEnv('SEDER_ADMIN_EMAIL', 'operator@seder.test');
   mocks.session.user.email = 'operator@seder.test';
+  mocks.session.user.role = 'user';
   mocks.state.mockResolvedValue({ status: 'READY', stale: false });
   mocks.findUniqueOrThrow.mockResolvedValue({ phone: '0541234567', whatsappReminders: true });
   mocks.count.mockResolvedValue(0); mocks.write.mockResolvedValue(undefined);
@@ -35,6 +36,13 @@ describe('WhatsApp operator and user boundaries', () => {
     expect(await requestWhatsappPairingAction()).toEqual({ saved: true });
     expect(mocks.link).toHaveBeenCalledWith(expect.stringContaining('whatsapp-pairing-request.json.'), join('/var/lib/seder', 'whatsapp-pairing-request.json'));
     expect(mocks.write).toHaveBeenCalledWith(expect.stringContaining('whatsapp-pairing-request.json.'), expect.any(String), { mode: 0o600, flag: 'wx' });
+  });
+  it('allows the dedicated administrator to pair without replacing the existing operator email', async () => {
+    mocks.session.user.email = 'dedicated-admin@seder.test';
+    mocks.session.user.role = 'admin';
+    mocks.state.mockResolvedValue({ status: 'LOGGED_OUT', stale: false });
+    expect(await requestWhatsappPairingAction()).toEqual({ saved: true });
+    expect(mocks.write).toHaveBeenCalled();
   });
   it('cannot test before opt-in or while disconnected', async () => {
     mocks.findUniqueOrThrow.mockResolvedValue({ phone: '0541234567', whatsappReminders: false });

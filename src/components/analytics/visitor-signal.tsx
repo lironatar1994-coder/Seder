@@ -72,6 +72,7 @@ export function VisitorSignal() {
   const pathname = usePathname();
 
   useEffect(() => {
+    if (/^(?:\/seder)?\/admin(?:\/|$)/.test(pathname || '')) return;
     const path = monitoredPath(pathname || '/');
     const startedAt = performance.now();
     let maximumScroll = 0;
