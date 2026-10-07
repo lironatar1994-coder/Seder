@@ -12,6 +12,14 @@ Public registration always creates a regular user and cannot set a role. `/admin
 uncached, excluded from visitor signals and search indexing. Administrator accounts are excluded
 from customer metrics and cannot enter the personal `/app` workspace.
 
+Each customer row includes **איפוס סיסמה**. A current database administrator may send
+a recovery link only to the customer's stored email address. Delivery status, previews,
+failures and resend cooldowns are shown inline. The administrator never receives the
+reset token or sets the customer's password; password/session state changes only when
+the recipient uses the hour-long, single-use link. Concurrent issue requests are serialized,
+with a one-minute resend interval and at most three unexpired links per account. Public
+recovery retains an identical response for registered and unregistered addresses.
+
 Provision an administrator on the server with `DATABASE_URL=file:/var/lib/seder/seder.db node scripts/create-admin.mjs <email>`.
 The script refuses an existing address, creates no starter tasks, generates an Argon2id password
 and prints the generated password once. Password changes remain available within the dashboard,

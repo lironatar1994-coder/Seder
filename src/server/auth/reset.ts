@@ -11,6 +11,10 @@ export const RESET_TTL_MS = 1000 * 60 * 60;
  *  be used to flood an inbox or to widen the guessing surface. */
 const MAX_LIVE_TOKENS = 3;
 
+export type PasswordResetOutcome =
+  | { status: 'sent' | 'preview' | 'failed' | 'not_found' }
+  | { status: 'rate_limited'; retryAfterSeconds: number };
+
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
@@ -18,36 +22,32 @@ function hashToken(token: string): string {
 /**
  * Issues a reset link, if the address belongs to an account.
  *
- * Returns nothing either way: the caller must show the same message for a known
- * and an unknown address, or the form becomes a way to test which emails are
- * registered.
+ * The public caller must ignore the outcome and show one generic response.
+ * Only the authenticated administrator may report delivery errors or throttling.
+ * No caller receives the raw token or reset URL.
  */
-export async function requestPasswordReset(email: string): Promise<void> {
+export async function requestPasswordReset(email: string): Promise<PasswordResetOutcome> {
   const user = await db.user.findUnique({ where: { email }, select: { id: true, name: true } });
-  if (!user) return;
-
-  // Clear anything expired, then cap what is outstanding.
-  await db.passwordResetToken.deleteMany({
-    where: { userId: user.id, expiresAt: { lt: new Date() } },
-  });
-
-  const live = await db.passwordResetToken.count({ where: { userId: user.id } });
-  if (live >= MAX_LIVE_TOKENS) return;
-  const recent = await db.passwordResetToken.findFirst({ where: { userId: user.id, createdAt: { gt: new Date(Date.now() - 60_000) } } });
-  if (recent) return;
+  if (!user) return { status: 'not_found' };
 
   const token = randomBytes(32).toString('base64url');
-  const issued = await db.passwordResetToken.create({
-    data: {
-      tokenHash: hashToken(token),
-      userId: user.id,
-      expiresAt: new Date(Date.now() + RESET_TTL_MS),
-    },
+  const issued = await db.$transaction(async (tx) => {
+    const now = new Date();
+    await tx.passwordResetToken.deleteMany({ where: { userId: user.id, expiresAt: { lte: now } } });
+    const live = await tx.passwordResetToken.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' }, select: { createdAt: true, expiresAt: true } });
+    if (live[0] && live[0].createdAt.getTime() > now.getTime() - 60_000) {
+      return { retryAfterSeconds: Math.max(1, Math.ceil((live[0].createdAt.getTime() + 60_000 - now.getTime()) / 1000)) };
+    }
+    if (live.length >= MAX_LIVE_TOKENS) {
+      return { retryAfterSeconds: Math.max(1, Math.ceil((Math.min(...live.map((row) => row.expiresAt.getTime())) - now.getTime()) / 1000)) };
+    }
+    return tx.passwordResetToken.create({ data: { tokenHash: hashToken(token), userId: user.id, expiresAt: new Date(now.getTime() + RESET_TTL_MS) }, select: { id: true } });
   });
+  if ('retryAfterSeconds' in issued) return { status: 'rate_limited', retryAfterSeconds: issued.retryAfterSeconds };
 
   const link = `${appUrl()}/reset/${token}`;
 
-  try { await sendMail({
+  try { const delivery = await sendMail({
     to: email,
     subject: 'איפוס סיסמה · סדר',
     html: emailHtml('איפוס הסיסמה', `שלום ${user.name}, הקישור לאיפוס הסיסמה תקף לשעה אחת וניתן לשימוש פעם אחת.`, link, 'בחירת סיסמה חדשה'),
@@ -62,9 +62,12 @@ export async function requestPasswordReset(email: string): Promise<void> {
       '',
       'סדר',
     ].join('\n'),
-  }); } catch {
+  });
+    return { status: delivery.delivered ? 'sent' : 'preview' };
+  } catch {
     await db.passwordResetToken.deleteMany({ where: { id: issued.id } });
     console.error('[Seder] Password recovery delivery failed; token removed.');
+    return { status: 'failed' };
   }
 }
 

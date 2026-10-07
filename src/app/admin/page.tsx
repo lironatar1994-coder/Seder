@@ -3,7 +3,7 @@ import { ChevronDown, LogOut, Mail, MessageCircle, CalendarDays } from 'lucide-r
 import { getAdminOverview } from '@/server/admin/overview';
 import { logoutAction } from '@/server/auth/actions';
 import { ThemeToggle } from '@/components/nav/theme-toggle';
-import { AdminRefresh, AdminSearch, AdminPassword, AdminPairing } from '@/components/admin/controls';
+import { AdminRefresh, AdminSearch, AdminPassword, AdminPairing, AdminUserReset } from '@/components/admin/controls';
 import styles from './admin.module.css';
 
 export const dynamic = 'force-dynamic';
@@ -102,7 +102,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         {data.users.length > 0 ? <table className={styles.table}>
           <thead><tr><th scope="col">משתמש</th><th scope="col" className={styles.activityColumn}>פעילות אחרונה</th><th scope="col">משימות</th><th scope="col">חיבורים</th></tr></thead>
           <tbody>{data.users.map((user) => <tr key={user.id}>
-            <td><strong><bdi>{user.name}</bdi></strong><span className={styles.email}><bdi>{user.email}</bdi></span><time className={styles.mobileActivity} dateTime={user.lastActiveAt?.toISOString()}>{lastActive(user.lastActiveAt, data.now)}</time></td>
+            <td><strong><bdi>{user.name}</bdi></strong><span className={styles.email}><bdi>{user.email}</bdi></span><time className={styles.mobileActivity} dateTime={user.lastActiveAt?.toISOString()}>{lastActive(user.lastActiveAt, data.now)}</time><AdminUserReset userId={user.id} email={user.email} /></td>
             <td className={styles.activityColumn}><time dateTime={user.lastActiveAt?.toISOString()} title={user.lastActiveAt ? FULL_DATE.format(user.lastActiveAt) : undefined}>{lastActive(user.lastActiveAt, data.now)}</time><span className={styles.metadata}>נרשם <bdi>{DATE.format(user.createdAt)}</bdi></span></td>
             <td><span className={styles.taskCounts}><bdi>{NUMBER.format(user.open)}</bdi> פתוחות<span className={styles.completedCount}><bdi>{NUMBER.format(user.completed)}</bdi> הושלמו</span></span><span className={styles.metadata}>{user.projects} פרויקטים</span></td>
             <td><div className={styles.userConnections}>{user.whatsapp && <span title="וואטסאפ פעיל"><MessageCircle size={17} aria-hidden /><span className="sr-only">וואטסאפ פעיל</span></span>}{user.google && <span title={user.googleError ? 'יומן Google: תקלה בסנכרון' : 'יומן Google מחובר'} data-error={user.googleError || undefined}><CalendarDays size={17} aria-hidden /><span className="sr-only">{user.googleError ? 'יומן Google: תקלה בסנכרון' : 'יומן Google מחובר'}</span></span>}{!user.whatsapp && !user.google && <span className={styles.metadata}>ללא</span>}</div></td>

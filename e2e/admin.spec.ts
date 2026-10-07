@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { PrismaClient } from '@prisma/client';
 import { hash } from '@node-rs/argon2';
-import { BASE_PATH } from '../playwright.config';
+import { readFileSync } from 'node:fs';
+import { BASE_PATH, MAIL_LOG } from '../playwright.config';
 
 const db = new PrismaClient();
 const email = `admin-e2e-${Date.now()}@seder.test`;
@@ -56,4 +57,42 @@ test('anonymous and forged-cookie visits are sent to sign-in', async ({ page, co
   await page.goto(at('/admin'));
   await page.waitForURL('**/login?next=*');
   await expect(page.locator('[data-admin-shell]')).toHaveCount(0);
+});
+
+test('administrator sends a recovery link on mobile and the recipient alone completes the reset', async ({ page, browser }) => {
+  const recipientEmail = `admin-reset-recipient-${Date.now()}@seder.test`;
+  const originalPassword = 'original-user-password-1234';
+  const nextPassword = 'recipient-new-password-5678';
+  const recipient = await db.user.create({ data: { email: recipientEmail, name: 'משתמש לאיפוס', passwordHash: await hash(originalPassword) } });
+  try {
+    await db.session.create({ data: { userId: recipient.id, tokenHash: `reset-session-${Date.now()}`, expiresAt: new Date(Date.now() + 86_400_000) } });
+    await page.goto(at('/login'));
+    await page.getByLabel('אימייל').fill(email);
+    await page.getByLabel('סיסמה', { exact: true }).fill(password);
+    await page.getByRole('button', { name: 'כניסה', exact: true }).click();
+    await page.waitForURL('**/admin');
+    await page.setViewportSize({ width: 320, height: 780 });
+    await page.getByRole('searchbox').fill(recipientEmail);
+    const reset = page.getByRole('button', { name: `שליחת קישור לאיפוס סיסמה אל ${recipientEmail}`, exact: true });
+    await expect(reset).toBeVisible();
+    await reset.click();
+    await expect(page.getByRole('status').getByText('נוצרה תצוגת בדיקה. מייל לא נשלח')).toBeVisible();
+    await expect(reset).toBeDisabled();
+    expect(await db.session.count({ where: { userId: recipient.id } })).toBe(1);
+    const mail = readFileSync(MAIL_LOG, 'utf8').trim().split('\n').map((line) => JSON.parse(line)).filter((item) => item.to === recipientEmail).at(-1);
+    const link = mail.text.match(/https?:\/\/[^\s]+\/reset\/[A-Za-z0-9_-]+/)[0];
+    const context = await browser.newContext();
+    const recipientPage = await context.newPage();
+    await recipientPage.goto(link);
+    await recipientPage.getByLabel('סיסמה חדשה', { exact: true }).fill(nextPassword);
+    await recipientPage.getByLabel('שוב, לוודא').fill(nextPassword);
+    await recipientPage.getByRole('button', { name: 'שמירת סיסמה חדשה' }).click();
+    await expect(recipientPage).toHaveURL(/\/login\?reset=1/);
+    expect(await db.session.count({ where: { userId: recipient.id } })).toBe(0);
+    await recipientPage.getByLabel('אימייל').fill(recipientEmail);
+    await recipientPage.getByLabel('סיסמה', { exact: true }).fill(nextPassword);
+    await recipientPage.getByRole('button', { name: 'כניסה', exact: true }).click();
+    await recipientPage.waitForURL('**/app/today');
+    await context.close();
+  } finally { await db.user.deleteMany({ where: { id: recipient.id } }); }
 });

@@ -760,6 +760,14 @@
         "dataTruth": "Customer metrics use role=user. Latest authenticated request activity is throttled 10 minutes, with historical session-creation backfill. Service configuration and stale-heartbeat states do not claim delivery or uptime.",
         "access": "Each cross-account query verifies current database role=admin. Dedicated accounts redirect to /admin; provisioning uses a separate operator-only script.",
         "privacy": "No private task content, phone numbers, credentials/tokens or raw provider errors.",
+        "resetAction": {
+          "label": "איפוס סיסמה",
+          "placement": "Compact underlined action beneath each customer identity, with a 44px target and an accessible name containing the stored recipient email.",
+          "feedback": "Wrapping sent, error and truthful local preview states; pending and resend cooldown disable repeat requests.",
+          "access": "Verify current database role=admin before any target/email lookup; accept only role=user recipients and their stored email. The administrator receives no token and chooses no password.",
+          "recovery": "Existing one-hour single-use recovery changes password and sessions only upon recipient completion. Concurrent issuance enforces at least 60 seconds between requests and at most three live tokens; the public response remains unchanged.",
+          "review": "Local ship verdict in .impeccable/review/admin-reset-review.md, with desktop/mobile/narrow/dark/feedback captures and 44px, overflow and privacy checks. Reported execution: nine new backend tests, six existing mail tests and ten targeted browser scenarios; deployment and live email delivery require separate evidence."
+        },
         "review": {
           "verdict": "ship",
           "record": ".impeccable/review/admin-review.md",

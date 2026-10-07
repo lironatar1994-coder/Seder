@@ -331,6 +331,8 @@ Created bars use `--muted`; completed bars use `--swatch-teal`. Written legends 
 
 This surface shows customer identity, aggregate counts, activity and connections; private task content, credentials and raw provider errors remain outside its visual vocabulary. Its brief records current-database administrator checks, customer-only metrics and separate operator provisioning. Local 1440/390/320/dark captures received a ship verdict in `.impeccable/review/admin-review.md`. Reported supporting execution is 352 unit tests, 98 browser scenarios and local search/password/pagination checks; production deployment and administrator creation require separate live checks. These administration findings do not extend the review scope of other surfaces.
 
+Each customer identity includes a compact, underlined `איפוס סיסמה` button with a generous target (44px), labeled for the stored recipient email. Pending and resend cooldown disable repeat requests; wrapping feedback distinguishes sent, error and truthful local preview states. A current administrator check precedes customer lookup, and only the recipient completes the existing one-hour, single-use recovery; password and sessions change upon completion. The addition's local ship evidence is recorded in `.impeccable/review/admin-reset-review.md`; deployment and live email delivery require separate evidence.
+
 ## Do's and Don'ts
 
 ### Do:

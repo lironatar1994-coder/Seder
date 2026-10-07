@@ -8,6 +8,7 @@ import { Button, IconButton } from '@/components/ui/button';
 import { Input, Label, FieldError } from '@/components/ui/field';
 import { changePasswordAction, type SettingsState } from '@/server/settings/actions';
 import { requestWhatsappPairingAction } from '@/server/settings/whatsapp';
+import { sendUserPasswordResetAction, type AdminResetState } from '@/server/admin/actions';
 import styles from '@/app/admin/admin.module.css';
 
 export function AdminRefresh() {
@@ -68,6 +69,26 @@ export function AdminPassword() {
     <div className={styles.passwordSubmit}><PasswordSubmit />{state.saved && <span role="status">הסיסמה עודכנה</span>}</div>
     {state.errors?._ && <p role="alert">{state.errors._}</p>}
   </form>;
+}
+
+export function AdminUserReset({ userId, email }: { userId: string; email: string }) {
+  const [state, setState] = useState<AdminResetState | null>(null);
+  const [cooldown, setCooldown] = useState(false);
+  const [pending, startTransition] = useTransition();
+  useEffect(() => {
+    if (!state?.retryAfterSeconds) return;
+    setCooldown(true);
+    const timer = setTimeout(() => setCooldown(false), state.retryAfterSeconds * 1000);
+    return () => clearTimeout(timer);
+  }, [state]);
+  return <div className={styles.userReset}>
+    <button type="button" className={styles.resetButton} disabled={pending || cooldown} title="שליחת קישור לאימייל של המשתמש" aria-label={`שליחת קישור לאיפוס סיסמה אל ${email}`} onClick={() => startTransition(async () => {
+      setState(null);
+      try { setState(await sendUserPasswordResetAction(userId)); }
+      catch { setState({ status: 'error', message: 'הקישור לא נשלח. אפשר לנסות שוב' }); }
+    })}>{pending ? 'שולחים…' : 'איפוס סיסמה'}</button>
+    {state && <span role={state.status === 'error' ? 'alert' : 'status'} className={styles.resetFeedback} data-error={state.status === 'error' || undefined}>{state.message}</span>}
+  </div>;
 }
 
 export function AdminPairing({ status, stale, qr }: { status: string; stale: boolean; qr: string | null }) {
