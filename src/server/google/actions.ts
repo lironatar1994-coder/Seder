@@ -17,7 +17,7 @@ export async function syncGoogleAction() {
 }
 export async function updateGoogleSettings(input: unknown) {
   const user = await requireUser();
-  const parsed = z.object({ showEvents: z.boolean(), syncTasks: z.boolean(), syncAllDay: z.boolean(), calendars: z.array(z.string().max(500)).max(20) }).safeParse(input);
+  const parsed = z.object({ showEvents: z.boolean(), calendars: z.array(z.string().max(500)).max(20) }).strict().safeParse(input);
   if (!parsed.success) return { ok: false, error: 'INVALID' };
   const connection = await db.googleCalendarConnection.findUnique({ where: { userId: user.id }, include: { sources: true } });
   if (!connection || parsed.data.calendars.some(id => !connection.sources.some(source => source.id === id))) return { ok: false, error: 'INVALID' };
@@ -25,7 +25,7 @@ export async function updateGoogleSettings(input: unknown) {
   try {
     const { calendars, ...settings } = parsed.data;
     await db.$transaction(async tx => {
-      await tx.googleCalendarConnection.update({ where: { id: connection.id }, data: settings });
+      await tx.googleCalendarConnection.update({ where: { id: connection.id }, data: { ...settings, syncTasks: false, syncAllDay: false } });
       await tx.googleCalendarSource.updateMany({ where: { connectionId: connection.id }, data: { enabled: false } });
       await tx.googleCalendarSource.updateMany({ where: { connectionId: connection.id, id: { in: calendars } }, data: { enabled: true } });
     });

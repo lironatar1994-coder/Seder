@@ -9,23 +9,17 @@ async function register(page: Page) {
   await page.goto(at('/register')); await page.getByLabel('שם', { exact: true }).fill('בודק יומן'); await page.getByLabel('אימייל', { exact: true }).fill(email); await page.getByLabel('סיסמה', { exact: true }).fill('calendar-test-123'); await page.getByRole('button', { name: 'יצירת חשבון', exact: true }).click(); await page.waitForURL('**/app/**'); await expect(page.getByTestId('whatsapp-introduction')).toBeVisible(); await page.getByTestId('whatsapp-introduction').getByRole('button', { name: 'לא עכשיו', exact: true }).click(); return email;
 }
 test.afterAll(async () => db.$disconnect());
-test('calendar subscription reads scheduled work, isolates users and supports immediate revocation', async ({ page, browser }) => {
-  const email = await register(page); const user = await db.user.findUniqueOrThrow({ where: { email } });
-  await db.task.create({ data: { userId: user.id, title: 'משימה פרטית ליומן', whenBucket: 'SCHEDULED', scheduledFor: today(), scheduledTime: '09:30', durationMinutes: 60, position: 'a0' } });
-  await page.goto(at('/app/settings/calendar'));
+test('calendar connection is concise and exposes no Google write-back controls', async ({ page }) => {
+  await register(page); await page.goto(at('/app/settings/calendar'));
   await expect(page.getByRole('button', { name: 'חיבור יומן Google', exact: true })).toBeDisabled();
-  await expect(page.getByText('החיבור ל־Google עדיין לא זמין.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'יצירת קישור מנוי', exact: true })).toBeHidden();
+  await expect(page.getByText('אירועי Google מופיעים אוטומטית בסדר. לקריאה בלבד.', { exact: true })).toBeVisible();
+  await expect(page.getByText('סנכרון משימות ל־Google', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'יצירת קישור מנוי', exact: true })).toHaveCount(0);
   for (const width of [1440, 390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.screenshot({ path: `.local-artifacts/google-calendar/unavailable-${width}.png`, fullPage: true, animations: 'disabled' });
+    await page.screenshot({ path: `.local-artifacts/google-calendar/readonly-${width}.png`, fullPage: true, animations: 'disabled' });
   }
-  await page.locator('summary').filter({ hasText: 'קישור מנוי ליומן' }).click();
-  await page.getByRole('button', { name: 'יצירת קישור מנוי', exact: true }).click(); const url = await page.getByLabel('קישור המנוי שלכם').inputValue();
-  const response = await page.request.get(url); expect(response.status()).toBe(200); expect(response.headers()['content-type']).toContain('text/calendar'); expect(await response.text()).toContain('SUMMARY:משימה פרטית ליומן');
-  const outsider = await browser.newPage(); await register(outsider); await outsider.goto(at('/app/settings/calendar')); await outsider.locator('summary').filter({ hasText: 'קישור מנוי ליומן' }).click(); await outsider.getByRole('button', { name: 'יצירת קישור מנוי', exact: true }).click(); const otherUrl = await outsider.getByLabel('קישור המנוי שלכם').inputValue(); expect(await (await outsider.request.get(otherUrl)).text()).not.toContain('משימה פרטית ליומן'); await outsider.close();
-  await page.getByRole('button', { name: 'יצירת קישור חדש', exact: true }).click(); await expect(page.getByLabel('קישור המנוי שלכם')).not.toHaveValue(url); expect((await page.request.get(url)).status()).toBe(404); const newUrl = await page.getByLabel('קישור המנוי שלכם').inputValue(); await page.getByRole('button', { name: 'ביטול קישור המנוי', exact: true }).click(); await expect(page.getByLabel('קישור המנוי שלכם')).toHaveCount(0); expect((await page.request.get(newUrl)).status()).toBe(404); await page.reload(); await expect(page.getByLabel('קישור המנוי שלכם')).toHaveCount(0);
 });
 test('cached Google events appear alongside tasks across desktop and mobile, without leaking to other accounts', async ({ page, browser }) => {
   const email = await register(page); const user = await db.user.findUniqueOrThrow({ where: { email } }); const start = today(); const end = addDays(start, 1);

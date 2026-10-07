@@ -442,7 +442,7 @@ model GoogleCalendarEvent {
   @@index([sourceId, startDay, endDay])
 }
 
-// Keep the mapping after deletion so the next sweep can remove its Google event.
+// Legacy export metadata retained for rollback. Read-only imports ignore it.
 model GoogleTaskLink {
   id String @id @default(cuid())
   connectionId String

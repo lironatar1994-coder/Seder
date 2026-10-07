@@ -4,6 +4,7 @@ import { db } from '@/server/db';
 import { hashState, openToken, sealToken } from '@/server/google/crypto';
 import { APP_URL, CALLBACK_URL, GOOGLE_SCOPES, googleConfigured, googleToken } from '@/server/google/client';
 import type { GoogleCalendarListEntry } from '@/server/google/sync';
+import { syncGoogleCalendar } from '@/server/google/sync';
 
 export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
@@ -32,10 +33,12 @@ export async function GET(request: NextRequest) {
     if (previous && previous.accountEmail !== primary.id) return finish('disconnect-first');
     if (!token.refresh_token && !previous) return finish('failed');
     if (previous?.leaseUntil && previous.leaseUntil > new Date()) return finish('busy');
-    await db.googleCalendarConnection.upsert({ where: { userId: session.user.id },
-      create: { userId: session.user.id, accountEmail: primary.id, refreshToken: sealToken(token.refresh_token!), accessToken: sealToken(token.access_token), accessExpiresAt: new Date(Date.now() + token.expires_in * 1000) },
-      update: { ...(token.refresh_token ? { refreshToken: sealToken(token.refresh_token) } : {}), accessToken: sealToken(token.access_token), accessExpiresAt: new Date(Date.now() + token.expires_in * 1000), lastError: null, lastSyncAt: null },
+    const connection = await db.googleCalendarConnection.upsert({ where: { userId: session.user.id },
+      create: { userId: session.user.id, accountEmail: primary.id, refreshToken: sealToken(token.refresh_token!), accessToken: sealToken(token.access_token), accessExpiresAt: new Date(Date.now() + token.expires_in * 1000), syncTasks: false, syncAllDay: false },
+      update: { ...(token.refresh_token ? { refreshToken: sealToken(token.refresh_token) } : {}), accessToken: sealToken(token.access_token), accessExpiresAt: new Date(Date.now() + token.expires_in * 1000), lastError: null, lastSyncAt: null, syncTasks: false, syncAllDay: false },
     });
+    // Populate Seder immediately; the worker maintains it after connection.
+    await syncGoogleCalendar(connection.id);
     return finish('connected');
   } catch {
     // Authorization codes, tokens and Google responses never enter logs.

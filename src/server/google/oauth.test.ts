@@ -5,6 +5,8 @@ import { NextRequest } from 'next/server';
 import { db } from '../db';
 import { hashState, sealToken, openToken } from './crypto';
 import { GOOGLE_SCOPES } from './client';
+import { syncGoogleCalendar } from './sync';
+vi.mock('./sync', () => ({ syncGoogleCalendar: vi.fn(async () => ({ ok: true })) }));
 import { GET as connect } from '../../app/api/google/connect/route';
 import { GET as callback } from '../../app/api/google/callback/route';
 
@@ -16,6 +18,7 @@ let userId: string;
 const endpoint = 'http://localhost:3000/seder/api/google';
 beforeAll(() => { if (!existsSync('prisma/google-oauth-test.db')) writeFileSync('prisma/google-oauth-test.db', ''); execFileSync(process.execPath, ['node_modules/prisma/build/index.js', 'migrate', 'deploy'], { env: { ...process.env, DATABASE_URL: 'file:./google-oauth-test.db' }, stdio: 'pipe' }); });
 beforeEach(async () => {
+  vi.mocked(syncGoogleCalendar).mockClear();
   vi.stubEnv('GOOGLE_CLIENT_ID', 'fake-client'); vi.stubEnv('GOOGLE_CLIENT_SECRET', 'fake-secret'); vi.stubEnv('GOOGLE_TOKEN_ENCRYPTION_KEY', Buffer.alloc(32, 7).toString('base64')); vi.stubEnv('GOOGLE_CALENDAR_ENABLED', '1'); vi.stubEnv('APP_URL', 'http://localhost:3000/seder');
   const user = await db.user.create({ data: { name: 'OAuth test', email: `oauth-${crypto.randomUUID()}@seder.test`, passwordHash: 'unused' } }); userId = user.id; auth.session = { user: { id: userId }, sessionId: 'signed-in-session' };
 });
@@ -40,6 +43,8 @@ describe('Google OAuth session binding and token exchange', () => {
   });
   it('consumes once, stores encrypted tokens and denies callback replay', async () => {
     fakeGoogle(); const state = await pendingState(); expect((await callback(request(state))).headers.get('location')).toContain('google=connected'); const connection = await db.googleCalendarConnection.findUniqueOrThrow({ where: { userId } }); expect(connection.refreshToken).not.toContain('refresh-token'); expect(openToken(connection.refreshToken)).toBe('refresh-token'); expect(connection.accountEmail).toBe('google-user@gmail.com');
+    expect(connection.syncTasks).toBe(false); expect(connection.syncAllDay).toBe(false);
+    expect(syncGoogleCalendar).toHaveBeenCalledWith(connection.id);
     expect((await callback(request(state))).headers.get('location')).toContain('google=invalid'); expect(fetch).toHaveBeenCalledTimes(2);
   });
   it('handles cancellation and missing consent without retaining a connection', async () => {

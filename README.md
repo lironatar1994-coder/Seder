@@ -70,21 +70,18 @@ authored in another person's project.
 Open **Settings → Calendars** (`/app/settings/calendar`). The direct connection uses
 Google OAuth with PKCE, session-bound one-use state and encrypted access/refresh tokens.
 The page starts with one connect action. Sync preferences appear after connection,
-inside an expandable section; the optional subscription link and administrator setup
-are also collapsed. Until the server has its Google credentials, the connect button
+inside an expandable section; administrator setup and management of any legacy
+subscription link are also collapsed. Until the server has its Google credentials, the connect button
 is disabled with a short availability message.
 Users choose which calendars to show in Today, Upcoming and desktop/mobile calendar views.
 Google meetings stay read-only in Seder and link back to Google for editing.
 
-Scheduled personal tasks and tasks explicitly assigned to the user in shared projects sync
-to a separate Google calendar named **סדר**. Name, notes, date, time and duration changes
-sync in both directions. Local changes win when both sides changed since the last export.
-All-day export is optional. Completion marks an event with a checkmark; task deletion removes
-the mapped event. Deleting a mapped Google event clears the task's schedule without deleting
-the task. Recurring tasks export their current occurrence and then the next on completion;
-Google recurrence rules are not imported. The window is 31 days back and 365 days ahead.
-The background process `seder-calendar` checks about once per minute; initial exports are
-paced in batches of up to 100. Manual sync is available. No sync writes target personal calendars.
+Google → Seder is strictly one-way. The only OAuth scopes are calendar-list read access
+and event read access. All Calendar API requests are GETs: Seder cannot create, edit or
+delete Google calendars/events, and no Seder tasks are exported. Imported events update
+automatically in the Seder calendar, Today and Upcoming. The window is 31 days back
+and 365 days ahead; recurring events are expanded by Google. The `seder-calendar`
+worker checks about once per minute. Manual refresh is also available.
 
 One-time operator setup:
 
@@ -96,16 +93,15 @@ One-time operator setup:
    in `/var/lib/seder/secrets.env`. `deploy_linux.sh` generates and preserves a random
    `GOOGLE_TOKEN_ENCRYPTION_KEY` there. Never rotate this key without migrating existing tokens.
    For local use set a fresh 32-byte base64 key in the ignored `.env` file.
-4. Request only `calendar.calendarlist.readonly`, `calendar.events.readonly` and
-   `calendar.app.created`. Google may require sensitive-scope verification before public use;
+4. Request only `calendar.calendarlist.readonly` and `calendar.events.readonly`. Google may require sensitive-scope verification before public use;
    testing-mode apps must list their permitted test users.
 5. Deploy, then each user connects and grants their own Google permissions.
 
 Disconnect removes the encrypted credentials and imported cache from Seder. Existing Google
-events remain; the Google-account permissions page can revoke the provider grant. Disabling
-task export removes only mapped Seder events, preserving manually created events.
+events remain; the Google-account permissions page can revoke the provider grant.
 
-A **calendar subscription link** also works without OAuth configuration. It is a read-only ICS
+Existing **calendar subscription links** remain valid and can be revoked in settings.
+They are separate from the Google read-only connection. It is a read-only ICS
 feed: add its private URL through Google Calendar's **Other calendars → From URL**. Google
 controls refresh timing. Regeneration or revocation invalidates the old URL immediately.
 Only a token hash is stored; the full URL is shown once. Treat it as a read-access secret.

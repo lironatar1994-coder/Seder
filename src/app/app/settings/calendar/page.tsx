@@ -7,7 +7,7 @@ import { GoogleCalendarSettings } from '@/components/settings/google-calendar-se
 export const metadata = { title: 'יומנים · סדר' };
 export default async function CalendarSettingsPage({ searchParams }: { searchParams: Promise<{ google?: string }> }) {
   const user = await getCurrentUser(); if (!user) notFound();
-  const connection = await db.googleCalendarConnection.findUnique({ where: { userId: user.id }, select: { accountEmail: true, showEvents: true, syncTasks: true, syncAllDay: true, lastSyncAt: true, lastError: true, sources: { select: { id: true, name: true, enabled: true }, orderBy: { name: 'asc' } } } });
+  const connection = await db.googleCalendarConnection.findUnique({ where: { userId: user.id }, select: { accountEmail: true, showEvents: true, lastSyncAt: true, lastError: true, sources: { select: { id: true, name: true, enabled: true }, orderBy: { name: 'asc' } } } });
   const feed = await db.calendarFeed.findUnique({ where: { userId: user.id }, select: { id: true } });
   return <GoogleCalendarSettings configured={googleConfigured()} connection={connection ? { ...connection, lastSyncAt: connection.lastSyncAt?.toISOString() ?? null } : null} feedback={(await searchParams).google} feedActive={Boolean(feed)} setupCallback={process.env.SEDER_ADMIN_EMAIL?.toLowerCase() === user.email.toLowerCase() && !googleConfigured() ? CALLBACK_URL() : null} />;
 }
