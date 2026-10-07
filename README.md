@@ -69,6 +69,10 @@ authored in another person's project.
 
 Open **Settings → Calendars** (`/app/settings/calendar`). The direct connection uses
 Google OAuth with PKCE, session-bound one-use state and encrypted access/refresh tokens.
+The page starts with one connect action. Sync preferences appear after connection,
+inside an expandable section; the optional subscription link and administrator setup
+are also collapsed. Until the server has its Google credentials, the connect button
+is disabled with a short availability message.
 Users choose which calendars to show in Today, Upcoming and desktop/mobile calendar views.
 Google meetings stay read-only in Seder and link back to Google for editing.
 
