@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { CalendarDays, Check, ChevronDown, LoaderCircle, RefreshCw } from 'lucide-react';
 import type { GoogleSettingsDTO } from '@/lib/calendar-event-types';
 import { revokeCalendarFeedAction, disconnectGoogleAction, syncGoogleAction, updateGoogleSettings } from '@/server/google/actions';
@@ -77,7 +78,7 @@ export function GoogleCalendarSettings({ configured, connection, feedback, feedA
         <Check className="size-4 shrink-0" aria-hidden />
         <span>{reconnect ? 'נדרש חיבור מחדש' : 'חשבון מחובר'}</span>
         <bdi dir="ltr" className="min-w-0 break-all">{connection.accountEmail}</bdi>
-      </div> : <p className="mt-1 text-sm text-muted">אירועי Google מופיעים אוטומטית בסדר. לקריאה בלבד.</p>}
+      </div> : <p className="mt-1 text-sm text-muted">אירועי Google מופיעים אוטומטית בסדר. <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">לקריאה בלבד.</Link></p>}
 
       <div className="mt-5">
         {!connection || reconnect ? <>

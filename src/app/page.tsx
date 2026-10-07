@@ -207,6 +207,7 @@ export default async function LandingPage() {
             <BrandMark size={24} />
             סדר
           </span>
+          <Link href="/privacy" className="min-h-11 py-2 underline-offset-4 hover:text-ink hover:underline">פרטיות</Link>
           <Link
             href="/login"
             className="underline-offset-4 transition-colors hover:text-ink hover:underline"
