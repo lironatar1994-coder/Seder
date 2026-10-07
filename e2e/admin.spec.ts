@@ -23,14 +23,70 @@ test('dedicated admin signs in to its dashboard, searches, and cannot enter the 
   await expect(page.getByRole('heading', { name: 'ניהול', exact: true })).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
   await page.getByRole('searchbox').fill('no-such-account-unique');
+  await expect(page).toHaveURL((url) => url.searchParams.get('q') === 'no-such-account-unique');
+  await expect(page.getByRole('searchbox')).toHaveValue('no-such-account-unique');
   await expect(page.getByText('לא נמצאו משתמשים לחיפוש הזה')).toBeVisible();
   await page.getByRole('searchbox').fill('');
+  await expect(page).toHaveURL((url) => !url.searchParams.has('q'));
   await expect(page.getByRole('searchbox')).toHaveValue('');
   await page.goto(at('/app/today'));
   await page.waitForURL('**/admin');
   await page.setViewportSize({ width: 320, height: 780 });
   await page.getByRole('button', { name: 'יציאה', exact: true }).click();
   await page.waitForURL('**/login');
+});
+
+test('admin search preserves a newer edit while the previous response is still arriving', async ({ page }) => {
+  await page.goto(at('/login'));
+  await page.getByLabel('אימייל').fill(email);
+  await page.getByLabel('סיסמה', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'כניסה', exact: true }).click();
+  await page.waitForURL('**/admin');
+  let release!: () => void;
+  let received!: () => void;
+  const responseGate = new Promise<void>((resolve) => { release = resolve; });
+  const requestReceived = new Promise<void>((resolve) => { received = resolve; });
+  await page.route((url) => url.pathname === at('/admin'), async (route) => {
+    if (route.request().method() !== 'POST' || !route.request().postData()?.includes('first-search')) return route.continue();
+    const response = await route.fetch();
+    received();
+    await responseGate;
+    await route.fulfill({ response });
+  });
+  try {
+    const search = page.getByRole('searchbox');
+    await search.fill('first-search');
+    await requestReceived;
+    await search.fill('latest-search');
+    release();
+    await expect(page).toHaveURL((url) => url.searchParams.get('q') === 'latest-search');
+    await expect(search).toHaveValue('latest-search');
+    await expect(page.getByText('לא נמצאו משתמשים לחיפוש הזה')).toBeVisible();
+  } finally { release(); }
+});
+
+test('admin user pagination retains the search through reload and browser history', async ({ page }) => {
+  const prefix = `admin-pagination-${Date.now()}-`;
+  await db.user.createMany({ data: Array.from({ length: 26 }, (_, index) => ({ email: `${prefix}${index}@seder.test`, name: `בדיקת עמוד ${index}`, passwordHash: 'unused-test-hash' })) });
+  try {
+    await page.goto(at('/login'));
+    await page.getByLabel('אימייל').fill(email);
+    await page.getByLabel('סיסמה', { exact: true }).fill(password);
+    await page.getByRole('button', { name: 'כניסה', exact: true }).click();
+    await page.waitForURL('**/admin');
+    await page.getByRole('searchbox').fill(prefix);
+    await expect(page).toHaveURL((url) => url.searchParams.get('q') === prefix);
+    await expect(page.getByRole('table').getByRole('row')).toHaveCount(26);
+    await page.getByRole('link', { name: 'הבא', exact: true }).click();
+    await expect(page).toHaveURL((url) => url.searchParams.get('q') === prefix && url.searchParams.get('page') === '2');
+    await expect(page.getByRole('table').getByRole('row')).toHaveCount(2);
+    await page.reload();
+    await expect(page.getByRole('searchbox')).toHaveValue(prefix);
+    await expect(page.getByRole('table').getByRole('row')).toHaveCount(2);
+    await page.goBack();
+    await expect(page).toHaveURL((url) => url.searchParams.get('q') === prefix && !url.searchParams.has('page'));
+    await expect(page.getByRole('table').getByRole('row')).toHaveCount(26);
+  } finally { await db.user.deleteMany({ where: { email: { startsWith: prefix } } }); }
 });
 
 test('ordinary registration cannot promote itself or read admin data', async ({ page }) => {

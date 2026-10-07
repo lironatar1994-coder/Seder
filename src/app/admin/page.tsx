@@ -1,29 +1,16 @@
-import Link from 'next/link';
 import { ChevronDown, LogOut, Mail, MessageCircle, CalendarDays } from 'lucide-react';
 import { getAdminOverview } from '@/server/admin/overview';
 import { logoutAction } from '@/server/auth/actions';
 import { ThemeToggle } from '@/components/nav/theme-toggle';
-import { AdminRefresh, AdminSearch, AdminPassword, AdminPairing, AdminUserReset } from '@/components/admin/controls';
+import { AdminRefresh, AdminPassword, AdminPairing } from '@/components/admin/controls';
 import styles from './admin.module.css';
+import { AdminUsers } from '@/components/admin/users';
 
 export const dynamic = 'force-dynamic';
 
 const NUMBER = new Intl.NumberFormat('he-IL');
 const TIME = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
 const DATE = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric' });
-const FULL_DATE = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-function lastActive(date: Date | null, now: Date) {
-  if (!date) return 'אין נתון';
-  const minutes = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 60_000));
-  if (minutes < 10) return 'עכשיו';
-  if (minutes < 60) return `לפני ${minutes} דקות`;
-  if (minutes < 24 * 60) {
-    const hours = Math.floor(minutes / 60);
-    return hours === 1 ? 'לפני שעה' : hours === 2 ? 'לפני שעתיים' : `לפני ${hours} שעות`;
-  }
-  return DATE.format(date);
-}
 
 const WA: Record<string, string> = {
   READY: 'מחובר', NEEDS_SCAN: 'ממתין לסריקה', INITIALIZING: 'מתחבר', DISCONNECTED: 'מנסה להתחבר',
@@ -37,7 +24,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const chartMax = Math.max(1, ...data.days.flatMap((day) => [day.created, day.completed]));
   const chartCreated = data.days.reduce((sum, day) => sum + day.created, 0);
   const chartCompleted = data.days.reduce((sum, day) => sum + day.completed, 0);
-  const paginationUrl = (page: number) => `/admin?${new URLSearchParams({ ...(data.search ? { q: data.search } : {}), page: String(page) })}`;
 
   return <div className={styles.shell} data-admin-shell>
     <header className={styles.header}>
@@ -97,19 +83,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </section>
       </div>
 
-      <section className={styles.users} aria-labelledby="users-title">
-        <div className={styles.usersHeading}><div className={styles.sectionHeading}><h2 id="users-title">משתמשים</h2><span>{NUMBER.format(data.filteredCount)}</span></div><AdminSearch value={data.search} /></div>
-        {data.users.length > 0 ? <table className={styles.table}>
-          <thead><tr><th scope="col">משתמש</th><th scope="col" className={styles.activityColumn}>פעילות אחרונה</th><th scope="col">משימות</th><th scope="col">חיבורים</th></tr></thead>
-          <tbody>{data.users.map((user) => <tr key={user.id}>
-            <td><strong><bdi>{user.name}</bdi></strong><span className={styles.email}><bdi>{user.email}</bdi></span><time className={styles.mobileActivity} dateTime={user.lastActiveAt?.toISOString()}>{lastActive(user.lastActiveAt, data.now)}</time><AdminUserReset userId={user.id} email={user.email} /></td>
-            <td className={styles.activityColumn}><time dateTime={user.lastActiveAt?.toISOString()} title={user.lastActiveAt ? FULL_DATE.format(user.lastActiveAt) : undefined}>{lastActive(user.lastActiveAt, data.now)}</time><span className={styles.metadata}>נרשם <bdi>{DATE.format(user.createdAt)}</bdi></span></td>
-            <td><span className={styles.taskCounts}><bdi>{NUMBER.format(user.open)}</bdi> פתוחות<span className={styles.completedCount}><bdi>{NUMBER.format(user.completed)}</bdi> הושלמו</span></span><span className={styles.metadata}>{user.projects} פרויקטים</span></td>
-            <td><div className={styles.userConnections}>{user.whatsapp && <span title="וואטסאפ פעיל"><MessageCircle size={17} aria-hidden /><span className="sr-only">וואטסאפ פעיל</span></span>}{user.google && <span title={user.googleError ? 'יומן Google: תקלה בסנכרון' : 'יומן Google מחובר'} data-error={user.googleError || undefined}><CalendarDays size={17} aria-hidden /><span className="sr-only">{user.googleError ? 'יומן Google: תקלה בסנכרון' : 'יומן Google מחובר'}</span></span>}{!user.whatsapp && !user.google && <span className={styles.metadata}>ללא</span>}</div></td>
-          </tr>)}</tbody>
-        </table> : <p className={styles.usersEmpty} role="status">{data.search ? 'לא נמצאו משתמשים לחיפוש הזה' : 'המשתמשים הראשונים יופיעו כאן אחרי ההרשמה'}</p>}
-        {data.pages > 1 && <nav className={styles.pagination} aria-label="עמודי משתמשים">{data.page > 1 && <Link href={paginationUrl(data.page - 1)}>הקודם</Link>}<span>{data.page} מתוך {data.pages}</span>{data.page < data.pages && <Link href={paginationUrl(data.page + 1)}>הבא</Link>}</nav>}
-      </section>
+      <AdminUsers initial={{ now: data.now, search: data.search, page: data.page, pages: data.pages, filteredCount: data.filteredCount, users: data.users }} />
 
       <footer className={styles.footer}><bdi>{data.admin.email}</bdi><details className={styles.password}><summary>סיסמה <ChevronDown size={15} aria-hidden /></summary><AdminPassword /></details></footer>
     </main>

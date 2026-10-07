@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { existsSync, writeFileSync } from 'node:fs';
-import { sendUserPasswordResetAction } from './actions';
+import { searchAdminUsersAction, sendUserPasswordResetAction } from './actions';
 import { requestPasswordReset, findResetTarget, completePasswordReset } from '../auth/reset';
 import { requestResetAction } from '../auth/actions';
 
@@ -35,6 +35,29 @@ beforeEach(async () => {
   mocks.mail.mockResolvedValue({ delivered: true, provider: 'smtp', id: 'accepted-message' });
 });
 afterAll(async () => { await mocks.db?.user.deleteMany({ where: { email: { startsWith: prefix } } }); await mocks.db?.$disconnect(); });
+
+describe('administrator user search', () => {
+  it('rejects ordinary accounts and missing sessions before reading the user list', async () => {
+    const count = vi.spyOn(mocks.db.user, 'count');
+    try {
+      mocks.session!.user.role = 'user';
+      await expect(searchAdminUsersAction('')).rejects.toThrow('NOT_FOUND');
+      mocks.session = null;
+      await expect(searchAdminUsersAction('')).rejects.toThrow('REDIRECT');
+      expect(count).not.toHaveBeenCalled();
+    } finally { count.mockRestore(); }
+  });
+  it('returns only the filtered customer list, clamps pagination and omits secrets', async () => {
+    const result = await searchAdminUsersAction(`  ${email}  `, 999);
+    expect(result).toMatchObject({ search: email, page: 1, pages: 1, filteredCount: 1 });
+    expect(result.users).toHaveLength(1);
+    expect(result.users[0]).toMatchObject({ id: targetId, email });
+    expect(JSON.stringify(result)).not.toMatch(/passwordHash|tokenHash|unchanged-password-hash|administrator-password-hash/);
+    expect((await searchAdminUsersAction(`${prefix}admin@seder.test`)).users).toEqual([]);
+    expect((await searchAdminUsersAction('missing-search-customer')).users).toEqual([]);
+    expect(mocks.mail).not.toHaveBeenCalled();
+  });
+});
 
 describe('administrator password recovery', () => {
   it('rejects ordinary accounts and missing sessions before sending anything', async () => {

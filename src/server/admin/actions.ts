@@ -3,6 +3,11 @@
 import { db } from '@/server/db';
 import { requireAdministrator } from './access';
 import { requestPasswordReset } from '@/server/auth/reset';
+import { getAdminUsers } from './users';
+
+export async function searchAdminUsersAction(search: string, page = 1) {
+  return getAdminUsers({ q: typeof search === 'string' ? search : '', page: String(page) });
+}
 
 export type AdminResetState = {
   status: 'sent' | 'preview' | 'rate_limited' | 'error';

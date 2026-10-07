@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, useTransition, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { RefreshCw, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { RefreshCw } from 'lucide-react';
 import { Button, IconButton } from '@/components/ui/button';
 import { Input, Label, FieldError } from '@/components/ui/field';
 import { changePasswordAction, type SettingsState } from '@/server/settings/actions';
@@ -24,30 +24,6 @@ export function AdminRefresh() {
   return <IconButton label="רענון הנתונים" disabled={pending} onClick={() => startTransition(() => router.refresh())} className={styles.iconButton}>
     <RefreshCw size={18} aria-hidden className={pending ? styles.refreshing : undefined} />
   </IconButton>;
-}
-
-export function AdminSearch({ value }: { value: string }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-  const [input, setInput] = useState(value);
-  const [, startTransition] = useTransition();
-  const current = params.toString();
-  useEffect(() => setInput(value), [value]);
-  useEffect(() => {
-    if (input.trim() === value) return;
-    const timer = setTimeout(() => {
-      const next = new URLSearchParams(current);
-      if (input.trim()) next.set('q', input.trim().slice(0, 100)); else next.delete('q');
-      next.delete('page');
-      startTransition(() => router.replace(`${pathname}${next.size ? `?${next}` : ''}`, { scroll: false }));
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [input, value, current, pathname, router]);
-  return <div className={styles.search}>
-    <Search size={17} aria-hidden />
-    <input aria-label="חיפוש משתמשים לפי שם או אימייל" type="search" dir="auto" value={input} onChange={(event) => setInput(event.target.value)} placeholder="שם או אימייל" maxLength={100} />
-  </div>;
 }
 
 function PasswordSubmit() {
