@@ -750,6 +750,7 @@
         "sources": ["src/app/admin/page.tsx", "src/app/admin/admin.module.css", "src/components/admin/controls.tsx"],
         "world": "Existing neutral RTL surfaces, Assistant labels, Inter tabular figures and flat hairline rows.",
         "structure": "Compact header; four metrics; 14-day paired bars and service states; searchable 25-row customer pages; closed password disclosure.",
+        "headerAccessibility": "Accessible control labels persist at mobile widths. Logout retains aria-label and title of יציאה when visible text is hidden; the browser scenario logs out after resizing to 320px.",
         "responsive": "1120px main maximum; chart/services stack below 960px; 2 by 2 metrics and activity below identity below 600px; wrapped names/emails at 320px.",
         "chart": {
           "created": "var(--muted)",

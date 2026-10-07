@@ -27,6 +27,7 @@ test('dedicated admin signs in to its dashboard, searches, and cannot enter the 
   await expect(page.getByRole('searchbox')).toHaveValue('');
   await page.goto(at('/app/today'));
   await page.waitForURL('**/admin');
+  await page.setViewportSize({ width: 320, height: 780 });
   await page.getByRole('button', { name: 'יציאה', exact: true }).click();
   await page.waitForURL('**/login');
 });

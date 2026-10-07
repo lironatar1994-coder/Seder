@@ -46,7 +46,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <time className={styles.updated} dateTime={data.now.toISOString()}>עודכן <bdi>{TIME.format(data.now)}</bdi></time>
         <AdminRefresh />
         <ThemeToggle />
-        <form action={logoutAction}><button className={styles.logout} type="submit"><LogOut size={17} aria-hidden /><span>יציאה</span></button></form>
+        <form action={logoutAction}><button className={styles.logout} type="submit" aria-label="יציאה" title="יציאה"><LogOut size={17} aria-hidden /><span>יציאה</span></button></form>
       </div>
     </header>
 
