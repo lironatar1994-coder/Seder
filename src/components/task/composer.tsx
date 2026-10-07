@@ -9,6 +9,8 @@ import { useToast } from '@/components/ui/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/overlays';
 import { DatePickerPanel, type WhenValue } from '@/components/calendar/date-picker';
 import { relativeDayLabel, today } from '@/lib/dates';
+import { dateTone, schedulePresentation } from '@/lib/date-presentation';
+import { useTaskNow } from './task-clock';
 import { quickAddSchedule, reconcileQuickAddSelection, withoutQuickAddTokens, type QuickAddSelection } from '@/lib/quick-add-selection';
 import { ComposerProperties } from './composer-properties';
 import { useComposerPreferences } from './composer-preferences';
@@ -98,6 +100,7 @@ export function Composer({
   autoFocus?: boolean;
   variant?: 'inline' | 'sheet';
 }) {
+  const now = useTaskNow();
   const [text, setText] = useState('');
   const [selection, setSelection] = useState<QuickAddSelection>({});
   const [dateOpen, setDateOpen] = useState(false);
@@ -132,6 +135,8 @@ export function Composer({
   );
   const chips = useMemo(() => parsed?.tokens ?? [], [parsed]);
   const schedule = quickAddSchedule(parsed, context, selection);
+  const scheduleDate = schedule.date ? new Date(`${schedule.date}T00:00:00.000Z`) : null;
+  const scheduleStyle = scheduleDate ? schedulePresentation(scheduleDate, schedule.time, now) : null;
   const projectId = selection.projectId !== undefined ? selection.projectId : parsed.projectName
     ? projects.find(project => project.name === parsed.projectName)?.id ?? null : context.projectId ?? null;
   const projectName = selection.projectId !== undefined
@@ -377,10 +382,11 @@ export function Composer({
           return <Popover key={field} open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <button type="button" disabled={pending} aria-label={accessible} title={accessible} data-composer-field={field}
-                className={cn(controlClass, 'max-w-full', preferences.showLabels ? 'max-w-56' : 'justify-center px-2.5', selectedFields[field] && 'text-accent')}>
+                data-date-tone={field === 'date' ? scheduleStyle?.dateTone ?? 'none' : field === 'deadline' && deadline ? dateTone(new Date(`${deadline}T00:00:00Z`), now) : undefined}
+                className={cn(controlClass, 'max-w-full', preferences.showLabels ? 'max-w-56' : 'justify-center px-2.5')}>
                 <Icon className="size-4 shrink-0" style={field === 'priority' && priority !== 4 ? { color: `var(--p${priority})` } : undefined} aria-hidden />
                 {preferences.showLabels && <span dir="auto" className="min-w-0 truncate">{fieldValues[field]}</span>}
-                {field === 'date' && schedule.time && <span dir="ltr" className="num shrink-0 text-xs">{schedule.time}</span>}
+                {field === 'date' && schedule.time && <span dir="ltr" data-time-overdue={scheduleStyle?.timeOverdue ?? false} className="num shrink-0 text-sm text-muted">{schedule.time}</span>}
                 {!preferences.showLabels && field === 'labels' && labelNames.length > 0 && <span className="num text-xs">{labelNames.length}</span>}
                 {!preferences.showLabels && field === 'priority' && priority !== 4 && <span className="num text-xs">{priority}</span>}
               </button>

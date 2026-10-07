@@ -195,7 +195,7 @@ function resolve(value, vars) {
 /* -------------------------------------------------------------------- audit */
 
 const SURFACES = ['paper', 'surface', 'surface-2', 'surface-sunk'];
-const TEXT_ON_SURFACE = ['ink', 'ink-2', 'muted', 'flag', 'p1', 'p3'];
+const TEXT_ON_SURFACE = ['ink', 'ink-2', 'muted', 'flag', 'p1', 'p3', 'date-today', 'date-tomorrow', 'date-week', 'date-later'];
 
 let failures = 0;
 

@@ -1,5 +1,11 @@
 # Todoist reference study — 2026-10-04
 
+## Layout refinement — 2026-10-08
+
+Rechecked Todoist's official [mobile navigation guide](https://www.todoist.com/help/todoist/features/customize-the-todoist-navigation-bar-L4qpkI0xj) and [date and time guide](https://www.todoist.com/help/todoist/features/schedule-a-date-and-time-for-your-todoist-tasks-q7VobO). The navigation guide removes destinations from Browse when they already have their own bottom tab. Seder follows that disclosure rule and names its Hebrew entry תפריט. Its fixed compact header groups capture and search; only destinations, projects and labels scroll.
+
+The user's date-color rule is Seder's own: today green, tomorrow amber, two through six days ahead blue, seven or more purple. Only the overdue day or today's elapsed hour turns red, never both together. The picker has a visible ללא תאריך action. Task titles grow from 16 to 17px; text, completion controls, metadata and separators share stable row alignment. These refinements preserve the neutral Todoist-inspired canvas and full touch targets.
+
 The user's supplied phone screenshot rejects the previous Seder visual system. This brief
 replaces its aesthetic commitments while preserving the app's working features and data.
 

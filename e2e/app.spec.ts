@@ -644,7 +644,7 @@ test.describe('composer pickers', () => {
     await composer.getByRole('button', { name: /^בחירת תאריך/ }).click();
     await page.getByTestId('date-picker').getByRole('button', { name: 'היום', exact: true }).click();
     await composer.getByRole('button', { name: /^בחירת תאריך/ }).click();
-    await page.getByTestId('date-picker').getByRole('button', { name: 'ניקוי', exact: true }).click();
+    await page.getByTestId('date-picker').getByRole('button', { name: 'ללא תאריך', exact: true }).click();
     await composer.getByRole('button', { name: /^בחירת פרויקט/ }).click();
     await page.getByRole('group', { name: 'פרויקטים', exact: true }).getByRole('button', { name: 'תיבה נכנסת', exact: true }).click();
     await composer.getByRole('button', { name: 'הוספה', exact: true }).click();

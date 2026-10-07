@@ -166,20 +166,20 @@ export const TaskRow = memo(function TaskRow({
         }}
         // Compact rows retain a full touch target, including one-line tasks.
         className={cn(
-          'relative min-w-0 flex-1 text-start',
+          'task-content relative flex min-w-0 flex-1 flex-col items-stretch gap-1 text-start',
           '[@media(pointer:coarse)]:min-h-11',
           "before:absolute before:inset-x-0 before:content-['']",
           '[@media(pointer:coarse)]:before:-inset-y-2',
         )}
         aria-label={`פתיחת ${task.title}`}
       >
-        <span className="relative inline-block max-w-full align-top">
+        <span className="relative block w-fit max-w-full">
           {/* dir="auto" so a task typed in English resolves its own direction
               instead of inheriting Hebrew and reordering its punctuation. */}
           <span
             dir="auto"
             className={cn(
-              'block break-words text-base leading-snug',
+              'task-title block break-words',
               done || completing ? 'text-muted' : 'text-ink',
             )}
           >
@@ -197,12 +197,12 @@ export const TaskRow = memo(function TaskRow({
         </span>
 
         {task.notes && (
-          <span dir="auto" className="mt-0.5 line-clamp-1 block text-sm text-muted">
+          <span dir="auto" className="line-clamp-1 block text-sm text-muted">
             {task.notes}
           </span>
         )}
 
-        <span className="task-metadata mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="task-metadata flex flex-wrap items-center gap-x-2 gap-y-1 leading-5">
           {task.scheduledFor && (
             <WhenChip date={task.scheduledFor} time={task.scheduledTime} muted={done} compact />
           )}

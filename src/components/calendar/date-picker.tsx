@@ -7,6 +7,8 @@ import { cn } from '@/lib/cn';
 import { buildMonthGrid, WEEKDAY_HEADERS, parseISODay } from '@/lib/calendar';
 import { addDays, today, weekdayName, formatShortDate } from '@/lib/dates';
 import { hebrewDayMonth } from '@/lib/hebrew-date';
+import { dateTone } from '@/lib/date-presentation';
+import { useTaskNow } from '@/components/task/task-clock';
 import type { WhenBucket } from '@/lib/constants';
 
 export interface WhenValue {
@@ -41,7 +43,8 @@ export function DatePickerPanel({
   onPick: (value: WhenValue) => void;
   onClear: () => void;
 }) {
-  const base = today();
+  const now = useTaskNow();
+  const base = today(now);
   const [anchor, setAnchor] = useState<Date>(value ? parseISODay(value) : base);
   const [timeOpen, setTimeOpen] = useState(false);
   const grid = buildMonthGrid(anchor, base);
@@ -92,14 +95,16 @@ export function DatePickerPanel({
               <button
                 type="button"
                 onClick={() => onPick({ ...option.value, time })}
+                aria-pressed={active}
+                data-date-tone={option.value.bucket === 'SCHEDULED' ? dateTone(parseISODay(option.value.date), now) : 'none'}
                 className={cn(
-                  'flex w-full items-center gap-2.5 rounded-md px-2 py-1 text-start text-sm transition-colors',
-                  active ? 'bg-accent-soft font-semibold text-accent' : 'text-ink hover:bg-surface-2',
+                  'date-option flex min-h-9 w-full items-center gap-2.5 rounded-md px-2 text-start text-sm transition-colors [@media(pointer:coarse)]:min-h-11',
+                  active ? 'bg-surface-2 font-semibold' : 'hover:bg-surface-2',
                 )}
               >
-                <Icon className="size-4 shrink-0 text-muted" aria-hidden />
+                <Icon className="size-4 shrink-0" aria-hidden />
                 <span className="flex-1">{option.label}</span>
-                {option.hint && <span className="num text-xs text-muted">{option.hint}</span>}
+                {option.hint && <span className="text-xs text-muted">{option.key === 'next' ? <span className="num">{option.hint}</span> : option.hint}</span>}
               </button>
             </li>
           );
@@ -138,22 +143,26 @@ export function DatePickerPanel({
 
         {grid.days.map((day) => {
           const active = selected === day.iso;
+          const tone = dateTone(parseISODay(day.iso), now);
           return (
             <button
               key={day.iso}
               type="button"
               onClick={() => onPick({ bucket: 'SCHEDULED', date: day.iso, time })}
               aria-current={active ? 'date' : undefined}
+              aria-label={`${weekdayName(parseISODay(day.iso))}, ${formatShortDate(parseISODay(day.iso))}`}
+              aria-pressed={active}
+              data-date-tone={active || day.isToday ? tone : undefined}
               className={cn(
                 // A fixed height rather than aspect-square: six square rows in
                 // a 288px popover push the time field and the clear button
                 // below the fold on a laptop.
-                'num grid h-7 place-items-center rounded-md text-xs transition-colors',
+                'date-cell num grid h-7 place-items-center rounded-md text-xs transition-colors',
                 !day.inMonth && 'text-line-strong',
                 day.inMonth && !active && 'text-ink hover:bg-surface-2',
                 day.isWeekend && day.inMonth && !active && 'text-muted',
-                day.isToday && !active && 'font-bold text-accent',
-                active && 'bg-accent font-bold text-[var(--on-accent)]',
+                day.isToday && !active && 'font-bold',
+                active && 'bg-surface-2 font-bold ring-1 ring-inset ring-current',
               )}
             >
               {day.dayOfMonth}
@@ -187,10 +196,10 @@ export function DatePickerPanel({
         <button
           type="button"
           onClick={onClear}
-          className="inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-semibold text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md px-2 text-sm font-semibold text-muted transition-colors hover:bg-surface-2 hover:text-ink [@media(pointer:coarse)]:min-h-11"
         >
-          <CalendarX2 className="size-3.5" aria-hidden />
-          ניקוי
+          <CalendarX2 className="size-4" aria-hidden />
+          ללא תאריך
         </button>
       </div>
     </div>

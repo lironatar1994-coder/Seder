@@ -1,8 +1,10 @@
 'use client';
 
-import { CalendarDays, CalendarSearch, Layers, Moon, Sun } from 'lucide-react';
+import { CalendarDays, CalendarSearch, CalendarX2, Layers, Moon, Sun } from 'lucide-react';
 import { MenuItem } from '@/components/ui/overlays';
 import { addDays, today, weekdayName } from '@/lib/dates';
+import { dateTone } from '@/lib/date-presentation';
+import { useTaskNow } from './task-clock';
 
 export interface WhenSelection {
   bucket: string;
@@ -26,24 +28,25 @@ export function WhenMenuItems({
   onSelect: (when: WhenSelection) => void;
   onMore?: () => void;
 }) {
-  const base = today();
+  const now = useTaskNow();
+  const base = today(now);
   const tomorrow = addDays(base, 1);
   // "Next week" means the coming Sunday — the Israeli week starts there.
   const nextWeek = addDays(base, ((0 - base.getUTCDay() + 7) % 7) || 7);
 
   return (
     <>
-      <MenuItem onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(base) })}>
-        <Sun className="size-4 text-muted" aria-hidden />
+      <MenuItem data-date-tone="today" onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(base) })}>
+        <Sun className="size-4" aria-hidden />
         <span className="flex-1">היום</span>
       </MenuItem>
-      <MenuItem onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(tomorrow) })}>
-        <CalendarDays className="size-4 text-muted" aria-hidden />
+      <MenuItem data-date-tone="tomorrow" onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(tomorrow) })}>
+        <CalendarDays className="size-4" aria-hidden />
         <span className="flex-1">מחר</span>
         <span className="text-xs text-muted">{weekdayName(tomorrow)}</span>
       </MenuItem>
-      <MenuItem onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(nextWeek) })}>
-        <CalendarDays className="size-4 text-muted" aria-hidden />
+      <MenuItem data-date-tone={dateTone(nextWeek, now)} onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(nextWeek) })}>
+        <CalendarDays className="size-4" aria-hidden />
         <span className="flex-1">שבוע הבא</span>
         <span className="text-xs text-muted">{weekdayName(nextWeek)}</span>
       </MenuItem>
@@ -55,8 +58,10 @@ export function WhenMenuItems({
         <Moon className="size-4 text-muted" aria-hidden />
         <span className="flex-1">מתישהו</span>
       </MenuItem>
-      {/* No separate "no date" entry: now that the Inbox is decided by
-          filing rather than by timing, "בכל עת" *is* the undated state. */}
+      <MenuItem onSelect={() => onSelect({ bucket: 'ANYTIME' })}>
+        <CalendarX2 className="size-4 text-muted" aria-hidden />
+        <span className="flex-1">ללא תאריך</span>
+      </MenuItem>
       {onMore && (
         <MenuItem onSelect={onMore}>
           <CalendarSearch className="size-4 text-muted" aria-hidden />

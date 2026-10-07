@@ -38,7 +38,7 @@ export function TabBar({ counts: _counts }: { counts: SidebarData['counts'] }) {
             <span className={cn('text-xs leading-none', active && 'font-semibold')}>{label}</span>
           </Link></li>;
         })}
-        <li className="flex-1"><button type="button" data-browse-trigger aria-label="תפריט" aria-expanded={browsing} onClick={() => window.dispatchEvent(new Event('seder:browse'))} className={cn('mobile-tab', browsing || otherView ? 'text-accent' : 'text-muted')}><Menu className="size-[1.375rem]" strokeWidth={1.6} aria-hidden /><span className="text-xs leading-none">עיון</span></button></li>
+        <li className="flex-1"><button type="button" data-browse-trigger aria-label="תפריט" aria-expanded={browsing} onClick={() => window.dispatchEvent(new Event('seder:browse'))} className={cn('mobile-tab', browsing || otherView ? 'text-ink' : 'text-muted')}><Menu className="size-[1.375rem]" strokeWidth={browsing || otherView ? 2 : 1.6} aria-hidden /><span className={cn('text-xs leading-none', (browsing || otherView) && 'font-semibold')}>תפריט</span></button></li>
       </ul>
     </nav>
   </>;

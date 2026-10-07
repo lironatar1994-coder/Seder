@@ -68,9 +68,9 @@ typography:
     letterSpacing: "normal"
   task-title:
     fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
-    fontSize: "1rem"
+    fontSize: "1.0625rem"
     fontWeight: 400
-    lineHeight: 1.375
+    lineHeight: "1.5rem"
     letterSpacing: "normal"
   control:
     fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
@@ -157,8 +157,8 @@ components:
     rounded: "{rounded.lg}"
     padding: "0.625rem 0.75rem"
   navigation-current:
-    backgroundColor: "{colors.rail-active}"
-    textColor: "{colors.accent}"
+    backgroundColor: "{colors.rail-hover}"
+    textColor: "{colors.rail-ink}"
     typography: "{typography.label}"
     rounded: "{rounded.lg}"
     padding: "0.5rem 0.75rem"
@@ -297,7 +297,7 @@ Plain Hebrew actions, clear hierarchy and gentle corners. Primary uses action/fo
 
 ### Chips
 
-Brief metadata rather than decorative badges. An upcoming deadline uses the amber wash and a flag; an overdue deadline switches to urgency red and says that its date has passed. Project dots and label chips retain their named color. On Today, the date chip suppresses a repeated Today label and keeps the time when present. A recurrence icon has a readable accessible explanation. Priority 4 has no extra badge.
+Brief metadata rather than decorative badges. Scheduled dates use fixed semantic colors across all action accents: green for today, amber for tomorrow, blue for two through six days ahead, and purple from seven days ahead. The picker, composer, detail and task rows share that meaning. A past day turns only the date red and leaves the hour gray; an elapsed hour today turns only the hour and clock red and leaves the date gray. Completed tasks are neutral. Date/hour metadata share one text size; metadata icons share 14px geometry. An upcoming deadline retains its amber wash and flag; an overdue deadline switches to urgency red and says that its date has passed. The picker offers a clearly named ללא תאריך action, clearing the hour with the scheduled date. Project dots and label chips retain their named color. A recurrence icon has a readable accessible explanation. Priority 4 has no extra badge.
 
 ### Cards / Containers
 
@@ -309,7 +309,7 @@ Shared fields use the work surface, strong line, normal body size and lg corners
 
 ### Navigation
 
-Pale neutral desktop rail, concise labels, small SVG icons and current-row wash. Selected text, icon and count all follow the accent. Mobile Inbox / Today / Upcoming / Browse uses quiet icons and labels with no overlaid task badges. Browse exposes the rest of the navigation, projects, labels and account actions, maintains the tab bar, traps its working focus and provides a close path. Settings has seven sections in a desktop column and a scrolling phone tab strip, with the persistent mobile shell. The added הוספת משימה section follows מראה and precedes יומנים.
+Pale neutral desktop rail, concise labels, 20px SVG icons and a neutral current-row wash. Selected text, icon and count use stronger neutral ink. Mobile Inbox / Today / Upcoming / תפריט uses quiet icons and labels with no overlaid task badges. The menu exposes the remaining destinations without duplicating those three tabs. Its compact header, search, capture and account stay fixed while only the destination list scrolls; focus stays inside the menu and tab bar until closed. Settings has seven sections in a desktop column and a scrolling phone tab strip, with the persistent mobile shell. The added הוספת משימה section follows מראה and precedes יומנים.
 
 ### Task Rows and Detail
 

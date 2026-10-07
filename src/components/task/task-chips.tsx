@@ -3,7 +3,8 @@
 import { CalendarDays, Clock, Flag, ListChecks, Repeat } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { describeStored } from '@/lib/recurrence';
-import { relativeDayLabel, isOverdue, isScheduleOverdue, today } from '@/lib/dates';
+import { relativeDayLabel, isOverdue, today } from '@/lib/dates';
+import { schedulePresentation } from '@/lib/date-presentation';
 import { useTaskNow } from './task-clock';
 import { swatchVar, PRIORITY_LABELS, type Priority } from '@/lib/constants';
 
@@ -24,23 +25,22 @@ export function WhenChip({
   // the tick next to it says.
   const now = useTaskNow();
   const dayLabel = relativeDayLabel(date, today(now));
-  const overdue = !muted && isScheduleOverdue(date, time, now);
-  if (compact && !time && dayLabel === 'היום') return null;
+  const presentation = schedulePresentation(date, time, now, muted);
   return (
     <span
-      className={cn(
-        'inline-flex items-center gap-1 text-xs',
-        overdue ? 'font-semibold text-p1' : muted ? 'text-muted' : 'text-ink-2',
-      )}
+      data-schedule-chip
+      className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-muted"
+      aria-label={`${dayLabel}${time ? ` בשעה ${time}` : ''}${presentation.dateTone === 'overdue' || presentation.timeOverdue ? ', באיחור' : ''}`}
     >
-      {!compact && <CalendarDays className="size-3.5 shrink-0" aria-hidden />}
-      {(!compact || dayLabel !== 'היום') ? dayLabel : overdue ? 'באיחור' : null}
+      <span data-date-tone={presentation.dateTone} className="inline-flex items-center gap-1">
+        {!compact && <CalendarDays className="size-3.5 shrink-0" aria-hidden />}
+        <span>{dayLabel}</span>
+      </span>
       {time && (
-        <>
-          {!compact && <Clock className="ms-0.5 size-3 shrink-0" aria-hidden />}
-          {/* A time is an LTR island — without isolation the colon can jump. */}
+        <span data-time-overdue={presentation.timeOverdue} className="inline-flex items-center gap-1">
+          <Clock className="size-3.5 shrink-0" aria-hidden />
           <span className="num">{time}</span>
-        </>
+        </span>
       )}
     </span>
   );
@@ -63,7 +63,7 @@ export function DeadlineChip({ date, muted }: { date: Date; muted?: boolean }) {
       )}
       title={overdue ? 'עבר את מועד ההגשה' : 'מועד הגשה'}
     >
-      <Flag className="size-3 shrink-0" aria-hidden />
+      <Flag className="size-3.5 shrink-0" aria-hidden />
       {overdue ? 'עבר המועד · ' : 'עד '}
       {relativeDayLabel(date, today(now))}
     </span>

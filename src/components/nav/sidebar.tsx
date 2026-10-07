@@ -121,7 +121,7 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
         // here, because the rule is already scoped to phone widths and an
         // attribute would have to wait for an effect to learn the same thing.
         className={cn(
-          'rail drawer z-50 flex shrink-0 flex-col border-e text-[var(--rail-ink)]',
+          'rail drawer z-50 flex min-h-0 shrink-0 flex-col overflow-hidden border-e text-[var(--rail-ink)]',
           'border-[var(--rail-line)] bg-[var(--rail)]',
           // Desktop: a static column at the inline-start edge (the right in
           // Hebrew). Mobile: a drawer sliding in from that same edge — the
@@ -130,12 +130,12 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
           'max-md:fixed max-md:inset-bs-0 max-md:inset-be-0 max-md:inset-s-0',
         )}
       >
-        <div className="rail-header flex items-center justify-between gap-1 px-4 pb-2 pt-4">
+        <div className="rail-header flex shrink-0 items-center justify-between gap-1 px-4 pb-2 pt-3">
           <Link
             href="/app"
             className="rail-label display flex min-w-0 items-center gap-2 truncate text-2xl font-bold text-[var(--rail-ink)]"
           >
-            <BrandMark size={30} priority />
+            <BrandMark size={26} priority />
             סדר
           </Link>
           <div className="flex items-center gap-1">
@@ -162,14 +162,14 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
           </div>
         </div>
 
-        <div className="rail-capture px-3 pb-4 pt-2">
-          <button type="button" className="rail-add" onClick={() => { setOpen(false); if (!requestCompose()) router.push('/app/inbox?compose=1'); }}><Plus className="size-5 shrink-0" aria-hidden /><span className="rail-label">הוספת משימה</span></button>
+        <div className="rail-capture shrink-0 px-3 pb-3 pt-1">
+          <button type="button" aria-label="הוספת משימה" className="rail-add" onClick={() => { setOpen(false); if (!requestCompose()) router.push('/app/inbox?compose=1'); }}><Plus className="size-5 shrink-0" aria-hidden /><span className="rail-label">הוספת משימה</span></button>
           <button type="button" className="rail-search" onClick={() => { setOpen(false); window.dispatchEvent(new Event('seder:search')); }}><Search className="size-4 shrink-0" aria-hidden /><span className="rail-label flex-1 text-start">חיפוש</span><kbd className="rail-label num text-xs">Ctrl K</kbd></button>
         </div>
 
         <nav
           aria-label="ניווט ראשי"
-          className="scroll-quiet flex-1 overflow-y-auto px-2 pb-4"
+          className="rail-nav scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-4"
           onClick={() => setOpen(false)}
         >
           <ul className="space-y-0.5">
@@ -179,7 +179,7 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
               const count = data.counts[view.slug];
               return (
                 <li key={view.slug}>
-                  <NavLink href={href} active={pathname === href}>
+                  <NavLink href={href} active={pathname === href} className={['inbox', 'today', 'upcoming'].includes(view.slug) ? 'mobile-tab-destination' : undefined}>
                     <Icon className="size-4 shrink-0 text-[var(--rail-muted)]" aria-hidden />
                     <span className="rail-label flex-1 truncate">{view.label}</span>
                     {count > 0 && <Count value={count} />}
@@ -227,11 +227,7 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
                 return (
                   <li key={project.id}>
                     <NavLink href={href} active={pathname === href}>
-                      <span
-                        aria-hidden
-                        className="size-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: swatchVar(project.color) }}
-                      />
+                      <span aria-hidden className="grid size-5 shrink-0 place-items-center"><span className="size-2.5 rounded-full" style={{ backgroundColor: swatchVar(project.color) }} /></span>
                       <span className="rail-label min-w-0 flex-1 truncate">{project.name}</span>
                       {/* A shared list is worth recognising before you open it:
                           its count is everyone's work, not just yours. */}
@@ -277,7 +273,7 @@ export function Sidebar({ data, user, onLogout }: SidebarProps) {
           )}
         </nav>
 
-        <div className="border-bs border-[var(--rail-line)] p-2">
+        <div className="rail-account shrink-0 border-bs border-[var(--rail-line)] p-2">
           <Menu>
             <MenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start transition-colors hover:bg-[var(--rail-hover)]">
               <span
@@ -357,10 +353,12 @@ function NavLink({
   href,
   active,
   children,
+  className,
 }: {
   href: string;
   active: boolean;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <Link
@@ -370,14 +368,15 @@ function NavLink({
          browser has an old and a new box to interpolate between. */
       style={active ? { viewTransitionName: 'nav-current' } : undefined}
       className={cn(
-        'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-120',
+        'rail-link flex min-h-10 items-center gap-3 rounded-md px-3 py-1.5 text-sm transition-colors duration-120',
         // The whole row lights up, not just the label — the icon and the count
         // used to stay grey on the selected row, which read as a highlighted
         // word rather than a row that was current. The descendant selectors
         // outrank the muted colour the icons set for themselves.
         active
-          ? 'bg-[var(--rail-active)] font-semibold text-accent [&_[data-count]]:text-accent [&_svg]:text-accent'
+          ? 'bg-[var(--rail-hover)] font-semibold text-[var(--rail-ink)] [&_[data-count]]:text-[var(--rail-ink)] [&_svg]:text-[var(--rail-ink)]'
           : 'text-[var(--rail-muted)] hover:bg-[var(--rail-hover)] hover:text-[var(--rail-ink)]',
+        className,
       )}
     >
       {children}
@@ -395,7 +394,7 @@ function Count({ value }: { value: number }) {
 
 function Section({ title, action }: { title: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-3 pb-1 pt-6">
+    <div className="flex items-center justify-between px-3 pb-1 pt-4">
       {/* No `uppercase`: Hebrew has no case, so it does nothing here and shouts
           at any project or label someone names in Latin. */}
       <h2 className="rail-label text-xs font-bold text-[var(--rail-muted)]">{title}</h2>

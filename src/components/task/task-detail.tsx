@@ -7,6 +7,8 @@ import { cn } from '@/lib/cn';
 import type { TaskDTO } from '@/server/tasks/queries';
 import { PRIORITIES, PRIORITY_LABELS, swatchVar, type Priority } from '@/lib/constants';
 import { relativeDayLabel, today } from '@/lib/dates';
+import { schedulePresentation } from '@/lib/date-presentation';
+import { useTaskNow } from './task-clock';
 import { Button, IconButton } from '@/components/ui/button';
 import { Input, Label, Textarea } from '@/components/ui/field';
 import {
@@ -82,6 +84,7 @@ export function TaskDetail({
   onClose,
   onDelete,
 }: DetailProps) {
+  const now = useTaskNow();
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [newSubtask, setNewSubtask] = useState('');
@@ -198,6 +201,7 @@ export function TaskDetail({
   };
 
   const project = projects.find((p) => p.id === task.projectId) ?? null;
+  const scheduleStyle = task.scheduledFor ? schedulePresentation(task.scheduledFor, task.scheduledTime, now, task.status !== 'TODO') : null;
   const shared = collaborators.length > 1;
   const assignee = collaborators.find((c) => c.id === task.assigneeId) ?? null;
 
@@ -219,7 +223,7 @@ export function TaskDetail({
         <div className="flex items-center gap-1">
         <Popover open={scheduleOpen} onOpenChange={setScheduleOpen}>
           <PopoverTrigger asChild>
-            <Button variant="secondary" size="sm" className="flex-1 justify-between">
+            <Button variant="secondary" size="sm" className="flex-1 justify-between" data-date-tone={scheduleStyle?.dateTone ?? 'none'}>
               {task.scheduledFor
                 ? relativeDayLabel(task.scheduledFor, today())
                 : task.whenBucket === 'ANYTIME'
@@ -260,8 +264,8 @@ export function TaskDetail({
         </Popover>
         {task.scheduledFor && <Popover open={timeOpen} onOpenChange={setTimeOpen}>
           <PopoverTrigger asChild>
-            <Button variant="secondary" size="sm" aria-label={task.scheduledTime ? 'עריכת שעה' : 'הוספת שעה'} className="shrink-0 gap-1.5">
-              <Clock className="size-3.5" aria-hidden />
+            <Button variant="secondary" size="sm" aria-label={task.scheduledTime ? 'עריכת שעה' : 'הוספת שעה'} data-time-overdue={scheduleStyle?.timeOverdue ?? false} className="shrink-0 gap-1.5 text-muted">
+              <Clock className="size-4" aria-hidden />
               {task.scheduledTime ? <span className="num" dir="ltr">{task.scheduledTime}</span> : 'שעה'}
             </Button>
           </PopoverTrigger>
