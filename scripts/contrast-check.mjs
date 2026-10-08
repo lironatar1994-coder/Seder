@@ -195,7 +195,7 @@ function resolve(value, vars) {
 /* -------------------------------------------------------------------- audit */
 
 const SURFACES = ['paper', 'surface', 'surface-2', 'surface-sunk'];
-const TEXT_ON_SURFACE = ['ink', 'ink-2', 'muted', 'flag', 'p1', 'p3', 'date-today', 'date-tomorrow', 'date-week', 'date-later'];
+const TEXT_ON_SURFACE = ['ink', 'ink-2', 'muted', 'flag', 'p1', 'p3', 'date-today', 'date-tomorrow', 'date-week', 'date-later', 'notice'];
 
 let failures = 0;
 
@@ -222,6 +222,8 @@ for (const [modeName, tokens] of [
     }
   }
   check('p4 border on paper', resolve(tokens.p4, vars), resolve(tokens.paper, vars), 3);
+  check('notice on notice-soft', resolve(tokens.notice, vars), resolve(tokens['notice-soft'], vars), 4.5);
+  check('ink on notice-soft', resolve(tokens.ink, vars), resolve(tokens['notice-soft'], vars), 4.5);
 
   console.log(`\n=== ${modeName} — every accent theme ===`);
   for (const [accentName, hue] of Object.entries(accents)) {

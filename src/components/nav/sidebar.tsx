@@ -364,9 +364,6 @@ function NavLink({
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      /* Named only while current, so exactly one element carries it and the
-         browser has an old and a new box to interpolate between. */
-      style={active ? { viewTransitionName: 'nav-current' } : undefined}
       className={cn(
         'rail-link flex min-h-10 items-center gap-3 rounded-md px-3 py-1.5 text-sm transition-colors duration-120',
         // The whole row lights up, not just the label — the icon and the count

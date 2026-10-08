@@ -221,26 +221,19 @@ export function TaskList({
 
   /* ------------------------------------------------------------ landing */
 
-  /* A new task used to be announced by a toast naming the view it went to,
-     because it might have gone anywhere — a task added from Today but dated
-     next week is not in the list you are looking at. When it *is*, the row
-     saying so beats a label saying so: it appears where it will live, tinted,
-     and settles. The toast is what happens when it went somewhere else.
-
-     Which of the two is not knowable at save time, only once the server sends
-     the list back, so the add is held here until then. */
+  // The composer confirms every save. When the new row arrives in this view,
+  // highlight it too; clear the pending id if it belongs to another view.
   const handleAdded = useCallback(
     (id: string, landedIn?: string) => {
       pendingAdd.current = { id, landedIn };
       const timer = setTimeout(() => {
-        // Still waiting: the row is not in this view, so say where it is.
+        // The row has not arrived in this view.
         if (pendingAdd.current?.id !== id) return;
         pendingAdd.current = null;
-        toast({ message: landedIn ? `נוספה ל${landedIn}` : 'נוספה משימה' });
       }, 1200);
       timers.current.add(timer);
     },
-    [toast],
+    [],
   );
 
   useEffect(() => {
@@ -313,10 +306,13 @@ export function TaskList({
   );
 
   const run = useCallback(
-    (fn: () => Promise<{ ok: boolean; error?: string }>) =>
+    (fn: () => Promise<{ ok: boolean; error?: string }>, message?: string) =>
       startTransition(async () => {
-        const result = await fn();
-        if (!result.ok) toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+        try {
+          const result = await fn();
+          if (!result.ok) toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+          else if (message) toast({ message, tone: 'success', group: 'task-row-save' });
+        } catch { toast({ message: 'השינוי לא נשמר. אפשר לנסות שוב.', tone: 'error' }); }
       }),
     [toast],
   );
@@ -347,30 +343,33 @@ export function TaskList({
           });
 
         startTransition(async () => {
-          const result = await toggleTaskAction(task.id, true);
-          if (!result.ok) {
-            restore();
-            toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
-            return;
-          }
+          try {
+            const result = await toggleTaskAction(task.id, true);
+            if (!result.ok) {
+              restore();
+              toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+              return;
+            }
 
-          // A repeating task did not finish — it moved on. Say where to, and
-          // make undo roll back both the move and the logged copy.
-          const repeat = result.repeat;
-          toast({
-            message: repeat ? `הושלם — חוזר ב${repeat.nextLabel}` : `הושלם: ${task.title}`,
-            action: {
-              label: 'ביטול',
-              onClick: () => {
-                restore();
-                run(() =>
-                  repeat
-                    ? undoRepeatAction(task.id, repeat.snapshotId, repeat.previousDate)
-                    : toggleTaskAction(task.id, false),
-                );
+            // A repeating task did not finish — it moved on. Say where to, and
+            // make undo roll back both the move and the logged copy.
+            const repeat = result.repeat;
+            toast({
+              message: repeat ? `הושלם — חוזר ב${repeat.nextLabel}` : `הושלם: ${task.title}`,
+              tone: 'success', sound: 'complete',
+              action: {
+                label: 'ביטול',
+                onClick: () => {
+                  restore();
+                  run(() =>
+                    repeat
+                      ? undoRepeatAction(task.id, repeat.snapshotId, repeat.previousDate)
+                      : toggleTaskAction(task.id, false),
+                  );
+                },
               },
-            },
-          });
+            });
+          } catch { restore(); toast({ message: 'המשימה לא הושלמה. אפשר לנסות שוב.', tone: 'error' }); }
         });
       }, COMPLETE_ANIMATION_MS);
       timers.current.add(timer);
@@ -389,33 +388,31 @@ export function TaskList({
   );
 
   const handlePriority = useCallback(
-    (task: TaskDTO, priority: Priority) => run(() => setPriorityAction(task.id, priority)),
+    (task: TaskDTO, priority: Priority) => run(() => setPriorityAction(task.id, priority), 'העדיפות עודכנה'),
     [run],
   );
 
   const handleMove = useCallback(
     (task: TaskDTO, projectId: string | null) => {
-      run(() => updateTaskAction({ id: task.id, projectId }));
       const target = projectId ? projects.find((p) => p.id === projectId)?.name : 'תיבה נכנסת';
-      if (target) toast({ message: `הועבר ל${target}` });
+      run(() => updateTaskAction({ id: task.id, projectId }), target ? `הועבר ל${target}` : 'המשימה עודכנה');
     },
-    [run, projects, toast],
+    [run, projects],
   );
 
   const handleAssign = useCallback(
     (task: TaskDTO, assigneeId: string | null) => {
-      run(() => assignTaskAction(task.id, assigneeId));
       const who = assigneeId
         ? collaborators?.find((c) => c.id === assigneeId)?.name
         : null;
-      toast({ message: who ? `הוקצה ל${who}` : 'המשימה פנויה' });
+      run(() => assignTaskAction(task.id, assigneeId), who ? `הוקצה ל${who}` : 'המשימה פנויה');
     },
-    [run, collaborators, toast],
+    [run, collaborators],
   );
 
   const handleSchedule = useCallback(
     (task: TaskDTO, when: WhenSelection) =>
-      run(() => scheduleTaskAction(task.id, { bucket: when.bucket as never, date: when.date, preset: when.preset })),
+      run(() => scheduleTaskAction(task.id, { bucket: when.bucket as never, date: when.date, preset: when.preset }), 'התזמון עודכן'),
     [run],
   );
 
@@ -429,7 +426,7 @@ export function TaskList({
           bucket: 'SCHEDULED',
           date: next.toISOString().slice(0, 10),
           time: task.scheduledTime,
-        }),
+        }), 'התזמון עודכן',
       );
     },
     [run],
@@ -497,6 +494,7 @@ export function TaskList({
         message: moved
           ? `${result.count} הושלמו · ${moved} חוזרות בהמשך`
           : `${result.count} משימות הושלמו`,
+        tone: 'success', sound: 'complete',
         action: {
           label: 'ביטול',
           onClick: () => {
@@ -858,13 +856,9 @@ function ComposerSlot({
 }) {
   if (!phone) return <div className="mb-4 animate-fade-up">{children}</div>;
 
-  /* Portalled to the body, not merely `fixed`.
-     `main` carries `view-transition-name`, which creates a stacking context —
-     so a `z-50` sheet inside it is only z-50 *within main*, and the tab bar
-     (a sibling of main, z-30) paints over the sheet's submit button. Escaping
-     to the body is what the task editor and the day panel already do, for the
-     same reason. Safe to reach for `document` here: this branch only renders
-     once `useIsPhone` has resolved, which is after hydration. */
+  /* Portalling keeps the sheet above workspace navigation and outside its
+     scrolling container. This branch renders only after phone detection,
+     so document is available after hydration. */
   return createPortal(
     <>
       <button

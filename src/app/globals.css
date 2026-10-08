@@ -71,6 +71,11 @@
   --date-week: light-dark(oklch(46% 0.135 250), oklch(76% 0.12 245));
   --date-later: light-dark(oklch(46% 0.135 300), oklch(78% 0.12 300));
 
+  /* Notification blue stays independent of task priority and appearance accents. */
+  --notice: light-dark(oklch(45% 0.15 270), oklch(78% 0.1 270));
+  --notice-soft: light-dark(oklch(97% 0.016 270), oklch(24% 0.02 270));
+  --notice-line: light-dark(oklch(86% 0.03 270), oklch(38% 0.04 270));
+
   /* project swatches — vivid enough to tell apart at dot size */
   --swatch-teal: #0d9488;
   --swatch-teal: light-dark(#0d9488, #2dd4bf);
@@ -670,14 +675,6 @@
     scroll-behavior: auto !important;
   }
 
-  /* `*` does not match view-transition pseudo-elements, so the browser's own
-     cross-fade would keep running for someone who asked for no motion. */
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
-  }
-
   /* Keep the end state readable rather than mid-animation. */
   .strike-line {
     transform: scaleX(1);
@@ -689,81 +686,7 @@
   }
 }
 
-/* ---------------------------------------------------------------------------
-   Moving between views.
-
-   Without names, a view transition snapshots the entire page as one image and
-   cross-fades it — the rail included, which makes the furniture flicker every
-   time you change view and is worse than no animation at all. Naming a thing
-   opts it out of that root snapshot and gives it its own before/after pair.
-
-   So: the rail and the tab bar are named and therefore hold still, the content
-   is named and moves, and the current-page marker is named so it *travels*
-   from the row you left to the row you arrived at instead of blinking out and
-   in. That last one is the whole effect — it is what makes the rail read as
-   one surface you are moving around inside, rather than a picture that gets
-   replaced.
-
-   `view-transition-name` must be unique per document, which is why the rail's
-   marker and the settings column's marker are named separately: on a settings
-   page both exist at once.
---------------------------------------------------------------------------- */
-@view-transition {
-  navigation: auto;
-}
-
-.view-surface {
-  view-transition-name: view;
-}
-
-.rail {
-  view-transition-name: rail;
-}
-
-.tab-bar {
-  view-transition-name: tab-bar;
-}
-
-/* The toast stack is fixed and outlives a navigation; without a name it would
-   be captured into the outgoing snapshot and appear to fly away. */
-.toast-stack {
-  view-transition-name: toasts;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  ::view-transition-old(view) {
-    animation: 130ms both seder-view-out;
-  }
-
-  ::view-transition-new(view) {
-    /* Starts after the outgoing frame has cleared, so the two never overlap as
-       a double-exposure of two different lists. */
-    animation: 220ms 70ms both seder-view-in;
-  }
-
-  /* The marker slides. `--ease-slide` is the spring the rail uses, so the two
-     motions in this corner of the screen belong to the same object. */
-  ::view-transition-group(nav-current),
-  ::view-transition-group(section-current),
-  ::view-transition-group(tab-current) {
-    animation-duration: var(--duration-slide);
-    animation-timing-function: var(--ease-slide);
-  }
-}
-
-@keyframes seder-view-out {
-  to {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
-@keyframes seder-view-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
+/* View navigation uses the persistent Next app shell. No page snapshots or fades. */
 
 /* ---------------------------------------------------------------------------
    The rail, and how it collapses.
@@ -1030,4 +953,13 @@
   .task-property { display: grid; grid-template-columns: 5.5rem minmax(0,1fr); align-items: baseline; column-gap: .75rem; padding-block: .15rem; }
   .task-property > label { font-size: .875rem; }
   .task-property-value > button, .task-property-value > select { min-block-size: 2.75rem; font-size: 1rem; }
+}
+
+.settings-header { position: sticky; inset-block-start: 0; z-index: 20; padding-block: .75rem 1.25rem; margin-block-end: 1rem; border-block-end: 1px solid var(--line); background: var(--paper); }
+body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-block-end: calc(1rem + env(safe-area-inset-bottom)); }
+@media (max-width: 767px) {
+  .toast-stack { inset-block-start: calc(5rem + env(safe-area-inset-top)); inset-block-end: auto; }
+  main:has([data-settings-shell]) .workspace-content { padding-block-end: 0; }
+  main:has([data-settings-shell]) > [aria-hidden] { display: none; }
+  .settings-header { padding-block-start: .25rem; }
 }

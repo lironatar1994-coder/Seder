@@ -16,6 +16,7 @@ import {
 import { updateDefaultViewAction } from '@/server/settings/actions';
 import { useToast } from '@/components/ui/toast';
 import { SettingRow, SettingsSection, SavedNote } from './shell';
+import { CompletionSoundSetting } from './completion-sound-setting';
 
 /** The default leads, then the other fixed choice, then the one that defers to
  *  something outside the app. */
@@ -65,9 +66,10 @@ export function AppearanceForm({ defaultView }: { defaultView: string }) {
 
   return (
     <SettingsSection title="מראה" hideTitle>
+      <CompletionSoundSetting />
       <SettingRow
         label="בהירות"
-        description="ברירת המחדל היא בהיר. ״מערכת״ עוקב אחרי ההגדרה של המכשיר ומתחלף יחד איתה."
+        description="בהיר, כהה או לפי הגדרת המכשיר."
         align="start"
       >
         {/* A segmented control rather than a dropdown: three options that are
@@ -88,7 +90,7 @@ export function AppearanceForm({ defaultView }: { defaultView: string }) {
                 aria-checked={active}
                 onClick={() => chooseMode(option.value)}
                 className={cn(
-                  'flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1.5 text-sm transition-colors duration-150',
+                  'flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1.5 text-sm transition-colors duration-150',
                   active
                     ? 'bg-accent-soft font-semibold text-accent'
                     : 'text-muted hover:bg-surface-2 hover:text-ink',
@@ -104,14 +106,13 @@ export function AppearanceForm({ defaultView }: { defaultView: string }) {
 
       <SettingRow
         label="צבע ראשי"
-        description="הצבע שנושא מצב, מיקוד והשלמה. עובד בשתי רמות הבהירות."
+        description="צבע הכפתורים והסימונים."
         align="start"
-        control="auto"
       >
         {/* Swatches, not a dropdown: the thing being chosen is the colour, so
             the colour has to be what you click. Each carries its name for
             anyone who cannot tell them apart by hue alone. */}
-        <div role="radiogroup" aria-label="צבע ראשי" className="flex flex-wrap gap-2">
+        <div role="radiogroup" aria-label="צבע ראשי" className="flex max-w-72 flex-wrap gap-2">
           {ACCENTS.map((option) => {
             const active = accent === option.value;
             return (
@@ -129,7 +130,7 @@ export function AppearanceForm({ defaultView }: { defaultView: string }) {
                 data-accent={option.value}
                 onClick={() => chooseAccent(option.value)}
                 className={cn(
-                  'accent-swatch relative grid size-9 place-items-center rounded-full',
+                  'accent-swatch relative grid size-11 place-items-center rounded-full',
                   'transition-shadow duration-150 ring-offset-2 ring-offset-[var(--surface)]',
                   active ? 'ring-2 ring-ink' : 'hover:ring-2 hover:ring-line-strong',
                 )}
@@ -158,7 +159,7 @@ export function AppearanceForm({ defaultView }: { defaultView: string }) {
             value={view}
             disabled={pending}
             onChange={(event) => chooseView(event.target.value)}
-            className="h-9 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink transition-colors hover:border-muted focus:border-accent disabled:opacity-60"
+            className="h-11 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm text-ink transition-colors hover:border-muted focus:border-accent disabled:opacity-60"
           >
             {VIEWS.map((option) => (
               <option key={option.slug} value={option.slug}>

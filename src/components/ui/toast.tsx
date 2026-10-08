@@ -10,6 +10,8 @@ import {
   useState,
 } from 'react';
 import { cn } from '@/lib/cn';
+import { CircleCheck, Info, CircleAlert, X } from 'lucide-react';
+import { playCompletionSound } from '@/lib/completion-sound';
 
 export interface ToastAction {
   label: string;
@@ -19,7 +21,9 @@ export interface ToastAction {
 export interface Toast {
   id: number;
   message: string;
-  tone?: 'default' | 'error';
+  tone?: 'default' | 'success' | 'error';
+  sound?: 'complete';
+  group?: string;
   action?: ToastAction;
   duration?: number;
 }
@@ -57,7 +61,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const toast = useCallback(
     (input: ToastInput) => {
       const id = nextId++;
-      setToasts((current) => [...current.slice(-2), { ...input, id }]);
+      setToasts((current) => [...current.filter(t => !input.group || t.group !== input.group).slice(-2), { ...input, id }]);
+      if (input.sound === 'complete') void playCompletionSound();
       const duration = input.duration ?? (input.action ? 7000 : 4000);
       timers.current.set(
         id,
@@ -89,24 +94,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         data-testid="toasts"
         aria-live="polite"
         aria-atomic="false"
-        // Lifted clear of the phone's tab bar. Undo lives in a toast, so a
-        // toast half-under the bar costs the one action that reverses a
-        // mistake — the worst thing to put out of reach.
+        // Desktop: bottom corner. Phone CSS places notices above task controls;
+        // settings has its own bottom position without workspace tabs or Add.
         className="toast-stack pointer-events-none fixed inset-be-[calc(1rem+var(--tab-bar))] inset-e-4 z-[80] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2"
       >
         {toasts.map((t) => (
           <div
             key={t.id}
+            data-toast-tone={t.tone ?? 'default'}
+            role={t.tone === 'error' ? 'alert' : undefined}
             className={cn(
               'animate-toast-in pointer-events-auto flex items-center gap-3 rounded-lg border px-4 py-3 shadow-pop',
               t.tone === 'error'
                 ? 'border-p1/30 bg-surface text-ink'
-                : 'border-line bg-surface text-ink',
+                : 'border-[var(--notice-line)] bg-[var(--notice-soft)] text-ink',
             )}
           >
-            {t.tone === 'error' && (
-              <span aria-hidden className="size-2 shrink-0 rounded-full bg-p1" />
-            )}
+            {t.tone === 'error' ? <CircleAlert className="size-5 shrink-0 text-p1" aria-hidden /> : t.tone === 'success' ? <CircleCheck className="size-5 shrink-0 text-[var(--notice)]" aria-hidden /> : <Info className="size-5 shrink-0 text-[var(--notice)]" aria-hidden />}
             <p className="min-w-0 flex-1 text-sm leading-snug">{t.message}</p>
             {t.action && (
               <button
@@ -115,11 +119,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   t.action?.onClick();
                   dismiss(t.id);
                 }}
-                className="shrink-0 rounded-sm text-sm font-semibold text-accent underline-offset-4 hover:underline"
+                className="shrink-0 rounded-sm text-sm font-semibold text-[var(--notice)] underline-offset-4 hover:underline"
               >
                 {t.action.label}
               </button>
             )}
+            <button type="button" aria-label="סגירת הודעה" onClick={() => dismiss(t.id)} className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-[var(--notice)] hover:bg-surface-2 [@media(pointer:coarse)]:size-11"><X className="size-4" aria-hidden /></button>
           </div>
         ))}
       </div>

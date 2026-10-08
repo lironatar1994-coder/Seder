@@ -314,9 +314,10 @@ February rather than skipping into March.
 
 ## Settings
 
-`/app/settings`, reachable from the sidebar, mobile Browse and the user menu. Six sections form
-a desktop navigation column and a scrolling phone tab strip; the mobile app's four-destination
-bar and separate Add action remain available.
+`/app/settings` opens a directory of seven sections. Each section has its own title,
+“All settings” link and an exit that returns to the previous task view, including after reload.
+Desktop sections also have a side directory; phones use one clear content column without
+workspace tabs or Add. Browser Back and Forward traverse sections normally.
 
 Each tab is a column of rows: label and description on the reading edge, control on the far side,
 separated by hairlines. Not a stack of cards — a card per setting makes every option look like a
@@ -326,7 +327,8 @@ separate destination when what the eye wants is one scannable column.
 |---|---|
 | פרופיל | Display name. Email is shown read-only — changing it needs a verification flow that does not exist yet, and a disabled input would imply it is merely unavailable |
 | סיסמה | Current + new + confirm. Requires the current password, and drops every **other** session |
-| מראה | Brightness (system / light / dark), accent theme, and the view the app opens on |
+| מראה | Completion sound toggle (saved on this device), brightness, accent theme, and opening view |
+| הוספת משימה | Visible composer fields, ordering and labels |
 | יומנים | Google connection and selected calendars when configured, plus the private read-only calendar subscription link |
 | וואטסאפ | Phone, separate reminder/capture preferences and personal logs; administrator pairing and service controls are role-gated |
 | חשבון | Connected devices, sign out everywhere else, and account deletion |
@@ -693,33 +695,16 @@ Three things, none of them by eye:
 
 ### Moving between views
 
-Navigation runs through `document.startViewTransition`. Next's
-`experimental.viewTransition` needs React's `unstable_ViewTransition`, which the
-stable React 19.2 here does not export — enabling it would mean running an
-experimental React for one animation — so `ViewTransitions` calls the platform
-API itself. Stable in Chromium and Safari 18; everywhere else the navigation is
-simply instant.
+Navigation uses Next links and preserves the mounted workspace shell. Only route content
+changes; the old content remains visible while the next view is loading. Native snapshot
+transitions are deliberately absent because their crossfade made navigation look like a page
+refresh. Browser tests assert zero document requests, persistent shell identity and content
+continuity on a delayed navigation.
 
-It brackets the click rather than taking it over. `preventDefault` would stop
-the same click reaching the handlers above it — the one that closes the mobile
-drawer among them — so the transition is *opened* on the way down and `<Link>`
-navigates as it always did. The listener is on capture for the same reason: by
-the bubble phase Link has already called `preventDefault`, and a guard that
-respects that would refuse to act.
-
-Naming is what makes it read as one surface. An unnamed transition snapshots
-the whole page and crossfades it, rail included, which makes the furniture
-flicker on every navigation and is worse than no animation. So the rail, the
-tab bar and the toast stack are named and hold still, the content is named and
-moves, and the current-page marker is named so it **travels** from the row you
-left to the row you arrived at. Names must be unique per document, which is why
-the rail's marker and the settings column's are named separately — on a
-settings page both exist at once, and two elements sharing a name makes the
-browser skip the entire transition, silently.
-
-Three e2e tests cover it, because none of this is visible in a screenshot: that
-a navigation went through a transition at all, that no name is used twice, and
-that the persistent chrome is named.
+Task creation and edits show blue confirmations independently of the appearance accent.
+Errors retain the entered task and show a written error. Successful completion plays a short
+ascending chime once per action or batch, with undo retained. The Appearance sound switch
+persists on the device. Audio is unlocked by user gestures and falls back silently if unavailable.
 
 ### Counts that move, rows that lift
 

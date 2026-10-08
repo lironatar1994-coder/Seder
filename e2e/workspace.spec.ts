@@ -100,6 +100,7 @@ test('saved filters persist and belong to their account', async ({ page, browser
 
 test('a signed-out invitation survives login and account creation', async ({ page, browser }) => {
   await register(page); await page.getByRole('link', { name: 'עבודה', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'עבודה', level: 1, exact: true })).toBeVisible();
   await add(page, 'משימה שנעבוד עליה ביחד');
   await page.getByRole('button', { name: 'שיתוף הפרויקט', exact: true }).click();
   await page.getByRole('button', { name: 'יצירת קישור', exact: true }).click();
@@ -170,9 +171,9 @@ test('mobile task-first layout keeps capture, Browse and display options reachab
     await expect(page.getByText('לעבור על התוכנית', { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.goto(at('/app/settings/appearance'));
-    await expect(page.getByRole('navigation', { name: 'ניווט מהיר', exact: true })).toBeInViewport();
-    await expect(page.getByRole('button', { name: 'הוספת משימה', exact: true })).toBeInViewport();
-    await page.getByRole('navigation', { name: 'ניווט מהיר', exact: true }).getByRole('link', { name: 'היום', exact: true }).click();
+    await expect(page.getByRole('navigation', { name: 'ניווט מהיר', exact: true })).toBeHidden();
+    await expect(page.locator('.mobile-add')).toBeHidden();
+    await page.getByRole('link', { name: 'חזרה למשימות', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'היום', exact: true, level: 1 })).toBeVisible();
   }
 });

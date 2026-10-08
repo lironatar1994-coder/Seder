@@ -18,20 +18,19 @@ export function SettingsSection({
 }: {
   title: string;
   description?: string;
-  /** For a page with one section already named by its tab — the heading stays
-   *  in the accessibility tree, but repeating it on screen is noise. */
+  /** For a page already named by its h1; the section keeps an accessible label. */
   hideTitle?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn('pt-10', hideTitle ? 'first:pt-4' : 'first:pt-2')}>
-      <h2 className={cn('text-sm font-bold text-ink', hideTitle && 'sr-only')}>{title}</h2>
+    <section aria-label={hideTitle ? title : undefined} className="pt-10 first:pt-2">
+      {!hideTitle && <h2 className="text-base font-bold text-ink">{title}</h2>}
       {description && (
         <p className={cn('max-w-prose text-sm text-muted', hideTitle ? 'mb-1' : 'mt-1')}>
           {description}
         </p>
       )}
-      <div className={cn('border-bs border-line', hideTitle && !description ? '' : 'mt-4')}>
+      <div className={cn(!hideTitle && 'border-bs border-line', hideTitle && !description ? '' : 'mt-4')}>
         {children}
       </div>
     </section>
@@ -71,7 +70,7 @@ export function SettingRow({
         {...(htmlFor ? { htmlFor } : {})}
         className={cn('min-w-0 flex-1', htmlFor && 'cursor-pointer')}
       >
-        <span className="block text-sm font-semibold text-ink">{label}</span>
+        <span className="block text-base font-semibold text-ink">{label}</span>
         {description && (
           <span className="mt-0.5 block max-w-prose text-sm leading-relaxed text-muted">
             {description}
@@ -111,7 +110,7 @@ export function DangerRow({
 export function SavedNote({ show, children = 'נשמר' }: { show: boolean; children?: string }) {
   if (!show) return null;
   return (
-    <span role="status" className="text-sm font-semibold text-accent">
+    <span role="status" className="text-sm font-semibold text-[var(--notice)]">
       {children}
     </span>
   );

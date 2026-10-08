@@ -355,3 +355,15 @@ The overdue group has a compact `תזמון מחדש` ghost button with a hairli
 - **Don't** use a swatch or red alone to communicate priority, lateness, an error or destructive intent.
 - **Don't** replace real task, collaboration or service state with fabricated customer content or delivery proof.
 - **Don't** treat the scoped fix verdict, local captures or documentation as proof of production deployment or the unreviewed landing.
+
+### Content continuity and settings orientation
+
+Route navigation preserves the shell and replaces content without native snapshot crossfades.
+Creation and editing receive compact blue confirmations using fixed notice tokens, independent
+of the selected accent. Completion adds one short ascending chime after a successful save;
+Appearance contains the device-local mute control.
+
+Settings opens a seven-section directory. A sticky header names the current section and provides
+All settings and Return to tasks. The return link remembers the previous workspace URL across
+reloads. Desktop uses a side directory from 1024px; smaller screens keep one column and hide
+workspace tabs and Add. Primary setting labels and controls use readable 16px text and 44px targets.

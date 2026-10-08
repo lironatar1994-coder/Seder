@@ -168,10 +168,13 @@ export function TaskDetail({
   const patch = (changes: Partial<TaskDTO>) =>
     setDraft((prev) => (prev ? { ...prev, ...changes } : prev));
 
-  const run = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
+  const run = (fn: () => Promise<{ ok: boolean; error?: string }>, message = 'השינויים נשמרו', completed = false) =>
     startTransition(async () => {
-      const result = await fn();
-      if (!result.ok) toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+      try {
+        const result = await fn();
+        if (!result.ok) toast({ message: result.error ?? 'הפעולה נכשלה', tone: 'error' });
+        else toast({ message, tone: 'success', group: `task-save-${task.id}`, sound: completed ? 'complete' : undefined });
+      } catch { toast({ message: 'השינוי לא נשמר. אפשר לנסות שוב.', tone: 'error' }); }
     });
 
   /** UTC midnight of a "YYYY-MM-DD", matching how the server stores dates. */
@@ -661,7 +664,7 @@ export function TaskDetail({
                   type="button"
                   role="checkbox"
                   aria-checked={task.status !== 'TODO'}
-                  onClick={() => run(() => toggleTaskAction(task.id, task.status === 'TODO'))}
+                  onClick={() => run(() => toggleTaskAction(task.id, task.status === 'TODO'), task.status === 'TODO' ? 'המשימה הושלמה' : 'המשימה נפתחה מחדש', task.status === 'TODO')}
                   className={cn(
                     'mt-1.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px] transition-colors',
                     task.status !== 'TODO'
@@ -737,7 +740,7 @@ export function TaskDetail({
                       type="button"
                       role="checkbox"
                       aria-checked={sub.status !== 'TODO'}
-                      onClick={() => run(() => toggleTaskAction(sub.id, sub.status === 'TODO'))}
+                      onClick={() => run(() => toggleTaskAction(sub.id, sub.status === 'TODO'), sub.status === 'TODO' ? 'הפריט הושלם' : 'הפריט נפתח מחדש', sub.status === 'TODO')}
                       aria-label={
                         sub.status !== 'TODO'
                           ? `ביטול השלמה של הפריט ${sub.title}`

@@ -93,9 +93,7 @@ export function Composer({
   vocabulary?: { projects: string[]; labels: string[] };
   projects?: ComposerProject[];
   onClose?: () => void;
-  /** Handed the saved task instead of announcing it. A caller that can show the
-   *  row — the list — says so by making it land there; one that cannot leaves
-   *  this unset and gets the toast. */
+  /** Lets a list highlight the saved row in addition to its confirmation. */
   onAdded?: (id: string, landedIn?: string) => void;
   autoFocus?: boolean;
   variant?: 'inline' | 'sheet';
@@ -206,20 +204,20 @@ export function Composer({
     if (!value || pending) return;
 
     startTransition(async () => {
-      const result = await quickAddAction(value, { ...context, selection });
-      if (!result.ok) {
-        toast({ message: result.error ?? 'לא הצלחנו לשמור את המשימה', tone: 'error' });
-        return;
+      try {
+        const result = await quickAddAction(value, { ...context, selection });
+        if (!result.ok) {
+          toast({ message: result.error ?? 'לא הצלחנו לשמור את המשימה', tone: 'error' });
+          return;
+        }
+        setText('');
+        setSelection({});
+        inputRef.current?.focus();
+        if (onAdded && result.id) onAdded(result.id, result.landedIn);
+        toast({ message: result.landedIn ? `נוספה ל${result.landedIn}` : 'נוספה משימה', tone: 'success', group: 'task-create' });
+      } catch {
+        toast({ message: 'המשימה לא נשמרה. אפשר לנסות שוב.', tone: 'error' });
       }
-      setText('');
-      setSelection({});
-      inputRef.current?.focus();
-
-      // Say where it went. A task added from Today but scheduled for next week
-      // is not in the list you are looking at, and silence reads as failure —
-      // unless the caller can put the row on screen, which says it better.
-      if (onAdded && result.id) onAdded(result.id, result.landedIn);
-      else toast({ message: result.landedIn ? `נוספה ל${result.landedIn}` : 'נוספה משימה' });
     });
   }
 

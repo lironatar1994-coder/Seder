@@ -27,6 +27,7 @@ export function TabBar({ counts: _counts }: { counts: SidebarData['counts'] }) {
     if (!requestCompose()) router.push('/app/today?compose=1');
   }
   const otherView = !TABS.some((tab) => pathname === tab.href);
+  if (pathname.startsWith('/app/settings')) return null;
   return <>
     {!browsing && <button type="button" aria-label="הוספת משימה" onClick={compose} className="mobile-add md:hidden"><Plus className="size-7" strokeWidth={2} aria-hidden /></button>}
     <nav aria-label="ניווט מהיר" className={cn('tab-bar fixed inset-be-0 inset-x-0 border-bs border-line bg-paper md:hidden', browsing ? 'z-[55]' : 'z-30')}>

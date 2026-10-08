@@ -5,8 +5,9 @@ import { getSidebarData } from '@/server/tasks/queries';
 import { Sidebar } from '@/components/nav/sidebar';
 import { TabBar } from '@/components/nav/tab-bar';
 import { CommandPalette } from '@/components/nav/command-palette';
-import { ViewTransitions } from '@/components/nav/view-transitions';
+import { WorkspaceReturnProvider } from '@/components/nav/workspace-return';
 import { NavigationScroll } from '@/components/nav/navigation-scroll';
+import { CompletionSoundGate } from '@/components/task/completion-sound-gate';
 import { ReminderDefaultsProvider } from '@/components/task/reminder-defaults';
 import { ComposerPreferencesProvider } from '@/components/task/composer-preferences';
 import { TaskClockProvider } from '@/components/task/task-clock';
@@ -45,7 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div data-app-shell className="flex h-dvh overflow-hidden bg-paper max-md:flex-col">
+    <WorkspaceReturnProvider><div data-app-shell className="flex h-dvh overflow-hidden bg-paper max-md:flex-col">
       <Sidebar data={sidebar} user={user} onLogout={logoutAction} />
       {/* Only this column scrolls — the sidebar stays put. */}
       <main className="view-surface scroll-quiet min-w-0 flex-1 overflow-y-auto">
@@ -66,11 +67,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             which is the classic bottom-navigation bug. */}
         <div aria-hidden className="h-[var(--tab-bar)]" />
       </main>
-      <ViewTransitions />
       <NavigationScroll />
+      <CompletionSoundGate />
       <TabBar counts={sidebar.counts} />
       <CommandPalette projects={sidebar.projects} labels={sidebar.labels} />
       <WhatsappIntroduction userId={user.id} eligible={shouldIntroduceWhatsapp(whatsappUser)} available={whatsappState.status === 'READY' && !whatsappState.stale} />
-    </div>
+    </div></WorkspaceReturnProvider>
   );
 }

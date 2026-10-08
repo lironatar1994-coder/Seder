@@ -116,14 +116,16 @@ test.describe('settings', () => {
   async function openSettings(page: Page) {
     await page.getByRole('button', { name: /בודק/ }).click();
     await page.getByRole('menuitem', { name: 'הגדרות' }).click();
+    await page.waitForURL('**/app/settings');
+    await page.getByTestId('settings-overview').getByRole('link', { name: 'פרופיל', exact: true }).click();
     await page.waitForURL('**/app/settings/profile');
   }
 
-  test('reachable from the user menu, with tabs', async ({ page }) => {
+  test('reachable from the user menu, with clear section navigation', async ({ page }) => {
     await register(page);
     await openSettings(page);
 
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('הגדרות');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('פרופיל');
     for (const tab of ['פרופיל', 'סיסמה', 'מראה', 'חשבון']) {
       await expect(page.getByRole('link', { name: tab, exact: true })).toBeVisible();
     }
@@ -911,78 +913,55 @@ test.describe('organising', () => {
   });
 });
 
-test.describe('view transitions', () => {
-  /**
-   * Records every `startViewTransition` call before the app loads.
-   *
-   * The animation itself cannot be asserted — it is 300ms of compositor work
-   * with no DOM to inspect. What *can* be asserted is the thing that actually
-   * breaks: that a navigation went through the transition at all. A link that
-   * slips past the interceptor still works, so nothing fails; it just jumps,
-   * and nobody notices until the whole app is inconsistent.
-   */
-  async function countTransitions(page: Page) {
-    await page.addInitScript(() => {
-      const original = document.startViewTransition?.bind(document);
-      (window as unknown as { __vt: number }).__vt = 0;
-      if (!original) return;
-      document.startViewTransition = ((callback: () => unknown) => {
-        (window as unknown as { __vt: number }).__vt += 1;
-        return original(callback as never);
-      }) as typeof document.startViewTransition;
+test.describe('content navigation', () => {
+  async function rememberShell(page: Page) {
+    await page.evaluate(() => {
+      (window as any).__document = document;
+      (window as any).__shell = document.querySelector('[data-app-shell]');
+      (window as any).__rail = document.querySelector('.rail');
+      (window as any).__snapshots = 0;
+      const start = document.startViewTransition?.bind(document);
+      if (start) document.startViewTransition = ((...args: any[]) => { (window as any).__snapshots++; return (start as any)(...args); }) as any;
     });
   }
-
-  const transitions = (page: Page) =>
-    page.evaluate(() => (window as unknown as { __vt: number }).__vt);
-
-  test('navigating between views goes through a transition', async ({ page }) => {
-    await countTransitions(page);
-    await register(page);
-
-    expect(await transitions(page)).toBe(0);
-
-    await page.getByRole('link', { name: /בקרוב/ }).first().click();
-    await page.waitForURL('**/app/upcoming');
-    expect(await transitions(page)).toBe(1);
-
-    // And the destination really rendered, rather than being left under a
-    // snapshot by a transition whose promise never resolved.
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  async function expectContinuity(page: Page) {
+    expect(await page.evaluate(() => ({ document: (window as any).__document === document, shell: (window as any).__shell === document.querySelector('[data-app-shell]'), rail: (window as any).__rail === document.querySelector('.rail'), snapshots: (window as any).__snapshots }))).toEqual({ document: true, shell: true, rail: true, snapshots: 0 });
+  }
+  test('Inbox, Today and Upcoming swap content without document reloads or page snapshots', async ({ page }) => {
+    await register(page); await rememberShell(page);
+    let documents = 0;
+    page.on('request', request => { if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents++; });
+    for (const [route, label] of [['inbox', 'תיבה נכנסת'], ['upcoming', 'בקרוב'], ['today', 'היום']]) {
+      await page.getByRole('link', { name: label, exact: true }).click();
+      await page.waitForURL(`**/app/${route}`);
+      await expect(page.getByRole('heading', { name: label, level: 1, exact: true })).toBeVisible();
+      await expectContinuity(page);
+    }
+    expect(documents).toBe(0);
   });
-
-  test('every transition name is used by exactly one element', async ({ page }) => {
-    await register(page);
-
-    // Two elements sharing a name makes the browser skip the whole
-    // transition — silently, and only on the pages where both are mounted.
-    const duplicates = await page.evaluate(() => {
-      const seen = new Map<string, number>();
-      for (const el of document.querySelectorAll<HTMLElement>('*')) {
-        const name = getComputedStyle(el).viewTransitionName;
-        if (!name || name === 'none') continue;
-        seen.set(name, (seen.get(name) ?? 0) + 1);
-      }
-      return [...seen.entries()].filter(([, n]) => n > 1);
-    });
-
-    expect(duplicates).toEqual([]);
+  test('slow navigation keeps the current content visible until the next view is ready', async ({ page }) => {
+    await register(page); await rememberShell(page);
+    let release!: () => void;
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    await page.route('**/app/inbox*', async route => { await gate; await route.continue(); });
+    try {
+      await page.getByRole('link', { name: 'תיבה נכנסת', exact: true }).click();
+      await expect(page.getByRole('heading', { name: 'היום', level: 1, exact: true })).toBeVisible();
+      await expectContinuity(page);
+      release(); await page.waitForURL('**/app/inbox');
+      await expect(page.getByRole('heading', { name: 'תיבה נכנסת', level: 1, exact: true })).toBeVisible();
+    } finally { release(); }
   });
-
-  test('the persistent chrome is named, so it holds still', async ({ page }) => {
-    await register(page);
-
-    // The rail and the content are what make it read as one surface: name the
-    // furniture and it stays put while only the view crossfades.
-    const named = await page.evaluate(() =>
-      [...document.querySelectorAll<HTMLElement>('*')]
-        .map((el) => getComputedStyle(el).viewTransitionName)
-        .filter((n) => n && n !== 'none'),
-    );
-
-    expect(named).toContain('rail');
-    expect(named).toContain('view');
-    expect(named).toContain('nav-current');
+  test('rescheduling an Inbox task updates its details and counters inside the existing shell', async ({ page }) => {
+    await register(page); await addTask(page, 'בדיקת תוכן מחר');
+    await page.getByRole('link', { name: /^תיבה נכנסת/ }).click();
+    await page.waitForURL('**/app/inbox'); await rememberShell(page);
+    await list(page).getByText('בדיקת תוכן', { exact: true }).click();
+    await page.getByRole('group', { name: 'מתוזמן ל', exact: true }).getByRole('button', { name: 'מחר', exact: true }).click();
+    await page.getByTestId('date-picker').getByRole('button', { name: 'היום', exact: true }).click();
+    await expect(page.getByTestId('toasts')).toContainText('השינויים נשמרו');
+    await expect(page.getByRole('group', { name: 'מתוזמן ל', exact: true })).toContainText('היום');
+    await expectContinuity(page);
   });
 });
 
