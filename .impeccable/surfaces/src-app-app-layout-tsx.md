@@ -132,3 +132,30 @@ current/overdue grouping can also render a Today H2. No app behavior was changed
 to satisfy that selector. Logs: today-spacing-regression.log,
 today-spacing-regression-selector.log, today-time-e2e.log and
 today-time-mobile-e2e.log in .local-artifacts/.
+
+Navigation extension (2026-10-08, user-pinned Todoist/Things philosophy): time lists
+lead, collections supply context and utilities follow. The 256px desktop rail (68px
+collapsed) anchors header/capture/search and account/settings; six daily lists stay
+sticky unless viewport height is 600px or less. Today uses a semantic star. Projects
+and saved filters start open, labels closed; device-local disclosures persist and
+route changes open the active collection. Owned and shared-with-me projects are
+grouped separately. The workspace breadcrumb resolves labels, saved filters, focus
+and shared projects from actual route data.
+
+The four mobile tabs retain the active route during full-width Browse and show
+accessible task-count descriptions with visible overlays capped at 99+. Browse
+omits the first three tab destinations, keeps header/search/capture/account anchored,
+makes the main canvas inert and hides floating Add. Its capture action is an
+accessible icon, superseding the earlier labeled-Add-row description. Settings
+hides tabs and Add. Navigation targets stay at least 44px for all coarse pointers,
+including tablet widths; short landscape layouts scroll the complete directory.
+
+Final evidence: .impeccable/review/navigation/ contains desktop.png,
+desktop-dark.png, mobile-tabs.png, mobile-default.png, mobile-390.png, mobile-320.png,
+mobile-576.png, mobile-dark.png, tablet-touch.png and mobile-landscape.png. All ten
+captures were inspected in this documentation pass. The finish review initially
+identified one medium finding, coarse-pointer navigation targets at tablet widths;
+the final ship verdict scores that fix resolved only. Reported validation: 23 focused
+browser cases, 388 unit tests, contrast for eight accents in both modes and detector
+findings []. This code-led extension creates no shipping raster. Documentation,
+captures and the scoped verdict do not establish deployment or live state.

@@ -93,6 +93,8 @@ test('long mobile menu scrolls only its destinations while search, add and accou
     if (width === 390) await page.screenshot({ path: '.local-artifacts/layout-refinement/menu-top-390.png', animations: 'disabled' });
     await expect(rail.getByRole('link', { name: /^תיבה נכנסת/ })).toBeHidden();
     await expect(rail.getByRole('link', { name: 'היום', exact: true })).toBeHidden();
+    const labels = rail.getByRole('button', { name: 'תוויות', exact: true });
+    if (await labels.getAttribute('aria-expanded') === 'false') await labels.click();
     await rail.locator('nav').evaluate(element => { element.scrollTop = element.scrollHeight; });
     await expect(rail.getByRole('link', { name: 'תווית 30', exact: true })).toBeInViewport();
     const after = { search: await search.boundingBox(), add: await add.boundingBox(), account: await rail.locator('.rail-account').boundingBox() };

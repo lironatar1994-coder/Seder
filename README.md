@@ -496,7 +496,8 @@ so:
 
 **Four navigation destinations.** Inbox, Today, Upcoming and Browse follow the familiar
 Todoist mobile structure. Browse opens projects, labels, calendar, focus, settings and sign-out.
-Counts remain in Browse rather than overlapping the bottom navigation icons.
+Small count badges accompany the quick tabs, with the full count exposed as an accessible
+description. The current destination stays marked while Browse is open.
 
 **Capture is a floating button**, because it is the one thing a phone does
 better than a desk — the task occurs to you while you are standing somewhere.
@@ -625,13 +626,26 @@ the light theme, which is the safe degradation.
 
 The rail is pale gray beside the white light-mode canvas; in dark mode both remain neutral.
 Changing an accent changes actions and current-state washes, while the work canvas and base
-navigation keep their own gray values. The current destination highlights its label, icon and
-count together. Hairlines and open spacing supply hierarchy without a dark navigation slab.
+navigation keep their own gray values. Daily-list icons keep their semantic colors; the current
+row has a quiet wash and stronger label. Counts stay subordinate. Hairlines and open spacing
+supply hierarchy without a dark navigation slab.
 
 The rail retains its own semantic family for text, separators, hover and selected state. Inside
 `.rail`, shared controls inherit those roles. Portalled menus escape that subtree and use the
 work-surface family. Contrast is checked in both brightness modes, including every accent on its
 selected navigation wash.
+
+### Time and context navigation
+
+The navigation follows [Todoist's quick-destination model](https://www.todoist.com/help/articles/customize-the-todoist-navigation-bar-L4qpkI0xj)
+and [Things' time and project perspectives](https://culturedcode.com/things/support/articles/4001304/).
+On desktop the six daily lists remain visible while long collections scroll. Projects come next,
+with owned and shared projects distinguished, then saved filters and labels. Disclosure choices
+persist on the device; entering a collection opens it. Calendar, focus and filter management sit
+below collections, while account and settings remain anchored. On short viewports the daily
+lists scroll with the directory so every destination can still be reached. Every coarse-pointer
+navigation control, including tablets, retains a 44px target. Breadcrumbs resolve the current
+project, label, saved filter and focus view.
 
 ### Motion with mass
 

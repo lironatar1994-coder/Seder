@@ -157,11 +157,12 @@ components:
     rounded: "{rounded.lg}"
     padding: "0.625rem 0.75rem"
   navigation-current:
-    backgroundColor: "{colors.rail-hover}"
+    backgroundColor: "{colors.rail-active}"
     textColor: "{colors.rail-ink}"
     typography: "{typography.label}"
     rounded: "{rounded.lg}"
-    padding: "0.5rem 0.75rem"
+    height: "2.5rem"
+    padding: "0.375rem 0.75rem"
   deadline-chip:
     backgroundColor: "{colors.flag-soft}"
     textColor: "{colors.flag}"
@@ -213,7 +214,7 @@ The frontmatter preserves the exact canonical source declarations from src/app/g
 ### Primary
 
 - **Action Red:** accent, accent-hover, accent-soft and on-accent carry capture, link text, focus, completion and selected controls. Red, indigo, violet, blue, teal, green, pink and graphite are available. Changing a hue preserves the neutral ground.
-- **Current Destination Wash:** rail-active shares the action wash. The current navigation icon, label and count use the selected accent, while the base rail remains gray.
+- **Current Destination Wash:** rail-active shares the action wash for the current daily list; current collection and utility rows use rail-hover. Rail labels stay neutral, with the current label semibold and counts in rail-muted. View icons keep their semantic colors: blue Inbox, amber Today star, blue Upcoming calendar, green Anytime layers, purple Someday moon and neutral Logbook. Project and label icons retain their swatches. Mobile current tabs use accent text and an accent-soft icon wash; Browse uses neutral ink and a neutral wash. The base rail remains gray.
 
 ### Secondary
 
@@ -255,7 +256,7 @@ The three variable faces are self-hosted in public/fonts with their licenses. Ap
 
 ## Layout
 
-The authenticated shell occupies the viewport. Only the main content column scrolls; desktop navigation stays at the Hebrew reading edge, on the right. At the desktop breakpoint (768px), the rail is 16rem wide and can collapse to 4.25rem while its contents retain their original width. The desktop workspace bar is a quiet 3rem contextual row, with breadcrumb, search and shortcut access.
+The authenticated shell occupies the viewport. Main content and the navigation directory scroll independently; desktop navigation stays at the Hebrew reading edge, on the right. At the desktop breakpoint (768px), the rail is 16rem wide and can collapse to 4.25rem while its contents retain their original width. The header, capture/search controls and account/settings footer stay anchored; the six daily lists remain sticky above the scrolling collections. At viewport heights of 600px or less, daily lists scroll with the directory so short landscape screens can reach every destination. The desktop workspace bar is a quiet 3rem contextual row, with breadcrumb, search and shortcut access; it resolves the actual label, saved filter, focus route and personal or shared project context.
 
 Ordinary work uses a centered reading column with a final maximum width of 52rem and desktop inline padding of 2rem. Calendar and board surfaces may opt into the wide container, capped at 82rem. Task groups use open space and hairline rows rather than a rounded group card. Group spacing is 1.25rem on desktop and 1rem on phones; row padding is 0.75rem on desktop and 0.5rem on phones. Phone rows retain at least 44px open-task touch targets, including untimed one-line tasks; type sizes stay unchanged.
 
@@ -263,7 +264,7 @@ Below 768px, the content has 1.25rem inline padding. The header places a short T
 
 Today separates unfinished tasks with elapsed scheduled hours into באיחור, including those scheduled on the current day. An hour becomes elapsed after its displayed minute in Asia/Jerusalem; day-only schedules and deadlines remain current through that day. Shared minute ticks keep grouping and metadata consistent, and phone focus/wake updates immediately. The Israeli day boundary refreshes the task collection. Group changes preserve drafts, selections and saved schedules; they never complete or reschedule a task.
 
-The fixed mobile bar has four destinations: Inbox, Today, Upcoming and Browse. It is 3.75rem tall plus the safe-area bottom inset. A separate 52px circular Add action clears that bar by 1rem and sits 1.25rem from the inline end. Browse uses a full-width navigation panel above the persistent bar, with the main canvas inert while open. The floating Add action is hidden during Browse because the panel offers its own labeled Add row.
+The fixed mobile bar has four destinations: Inbox, Today, Upcoming and Browse. It is 3.75rem tall plus the safe-area bottom inset. Nonzero task counts overlay the first three icons and have accessible descriptions; visible counts cap at 99+. The current task route remains marked while Browse is open. A separate 52px circular Add action clears that bar by 1rem and sits 1.25rem from the inline end. Browse uses a full-width navigation panel above the persistent bar, with the main canvas inert while open. Its header, search, accessible capture icon and account/settings footer stay fixed while the destination list scrolls. The floating Add action is hidden during Browse; settings hides both tabs and Add. All navigation controls retain 44px targets under coarse pointers, including tablet widths.
 
 Phone task detail occupies the screen and scrolls as one view. Its property rows align labels and values in two columns (5.5rem label column, 0.75rem gap), with notes, checklist and comments in reading order. Desktop detail is a centered dialog with a maximum width of 58rem and a 17rem property column. Boards scroll horizontally inside their content area; that deliberate local overflow must not become page overflow.
 
@@ -309,7 +310,13 @@ Shared fields use the work surface, strong line, normal body size and lg corners
 
 ### Navigation
 
-Pale neutral desktop rail, concise labels, 20px SVG icons and a neutral current-row wash. Selected text, icon and count use stronger neutral ink. Mobile Inbox / Today / Upcoming / תפריט uses quiet icons and labels with no overlaid task badges. The menu exposes the remaining destinations without duplicating those three tabs. Its compact header, search, capture and account stay fixed while only the destination list scrolls; focus stays inside the menu and tab bar until closed. Settings has seven sections in a desktop column and a scrolling phone tab strip, with the persistent mobile shell. The added הוספת משימה section follows מראה and precedes יומנים.
+Pale neutral desktop rail, concise labels and semantic 20px SVG icons with a 1.7px stroke. Daily lists lead in the order Inbox, Today, Upcoming, Anytime, Someday and Logbook; Today uses a star. The current daily list gets the action wash; collection and utility selection gets a neutral wash. Labels remain neutral, current labels are semibold, counts stay muted and icon colors keep their meaning. Nonzero open-task counts are visually subordinate and supplied through accessible descriptions.
+
+Projects and saved filters start open; labels start closed. Saved-filter and label collections appear when populated. Disclosure choices persist on the device, and visiting a project, label or saved filter opens its collection. The project directory separates owned projects from projects shared with the user; ownership and shared membership remain readable through grouping and the collaborator icon. Calendar, focus/planning and the filter builder follow below a separator. Account and settings stay anchored at the foot; collapsed desktop mode retains account-menu access while hiding the separate settings shortcut and collection action controls.
+
+Mobile Inbox / Today / Upcoming / תפריט retains the active route and adds count overlays with accessible descriptions. Browse exposes the remaining daily lists, collections and utilities without duplicating the first three tabs. Its header, search, capture icon and account stay fixed while the list scrolls. Focus stays inside the panel and tab bar; Escape and Close dismiss it and restore focus to Browse. Hidden Browse leaves the tab order and accessibility tree. Coarse pointers use a 44px floor for links, search, section toggles and project actions at every width. Short-height layouts release the sticky daily group to keep the complete directory reachable.
+
+Settings uses a seven-section directory, a sticky section header with All settings and Return to tasks, and a desktop side directory from 1024px. Smaller screens use one column and hide workspace tabs and Add. The הוספת משימה section follows מראה and precedes יומנים.
 
 ### Task Rows and Detail
 

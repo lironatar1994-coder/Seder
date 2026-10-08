@@ -135,6 +135,7 @@ test('mobile task and calendar day history work inside the workspace', async ({ 
 test('project list and board selection share history with task detail', async ({ page }) => {
   await register(page);
   await page.getByRole('link', { name: 'עבודה', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'עבודה', level: 1, exact: true })).toBeVisible();
   await add(page, 'משימת לוח');
   await page.getByRole('button', { name: 'לוח', exact: true }).click();
   await expect(page.getByTestId('project-board')).toBeVisible();

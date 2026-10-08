@@ -50,7 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar data={sidebar} user={user} onLogout={logoutAction} />
       {/* Only this column scrolls — the sidebar stays put. */}
       <main className="view-surface scroll-quiet min-w-0 flex-1 overflow-y-auto">
-        <WorkspaceBar projects={sidebar.projects} />
+        <WorkspaceBar data={sidebar} />
         {/* A single reading column. Hebrew runs shorter than English for the
             same content, so 44rem keeps the line length comfortable.
             A page that is a grid rather than prose — the calendar — opts out by
