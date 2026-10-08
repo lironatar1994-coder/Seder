@@ -6,6 +6,7 @@ const icons: Record<ViewSlug, LucideIcon> = { inbox: Inbox, today: Star, upcomin
 const colors: Record<ViewSlug, string> = { inbox: 'var(--notice)', today: 'var(--date-tomorrow)', upcoming: 'var(--date-week)', anytime: 'var(--date-today)', someday: 'var(--date-later)', logbook: 'var(--rail-muted)' };
 export const NAVIGATION_VIEWS = VIEWS.map(view => ({ ...view, href: `/app/${view.slug}`, icon: icons[view.slug], color: colors[view.slug] }));
 export const MOBILE_VIEWS = NAVIGATION_VIEWS.slice(0, 3).map(view => ({ ...view, tabLabel: view.slug === 'inbox' ? 'תיבה' : view.label }));
+export const COLLECTIONS_LABEL = 'רשימות';
 export function taskCountLabel(count: number) { return count === 1 ? 'משימה פתוחה אחת' : `${count} משימות פתוחות`; }
 export function workspaceLocation(pathname: string, filterId: string | null, data: Pick<SidebarData, 'projects' | 'labels' | 'savedFilters'>) {
   const view = NAVIGATION_VIEWS.find(item => pathname === item.href);

@@ -1,5 +1,11 @@
 # Todoist reference study — 2026-10-04
 
+## Mobile collections and button hierarchy — 2026-10-08
+
+Rechecked the current official [Todoist navigation guide](https://www.todoist.com/help/todoist/features/customize-the-sidebar-and-navigation-menu-in-todoist-S9JLTYqZV), [TickTick lists guide](https://help.ticktick.com/articles/7055782283059396608), and [Things Quick Find guide](https://culturedcode.com/things/support/articles/2803584/). Todoist groups views, filters/labels, favorites and projects, with a settings shortcut near the Browse heading. TickTick distinguishes smart task views from regular collections. Things combines searching with jumping to lists and projects. These are information-architecture references; Seder does not claim an identical layout or add unsupported competitor features.
+
+Use רשימות as Seder's content-based Hebrew name for this collection directory. A grid icon denotes the destination. Replace the ambiguous mobile capture icon beside search with a labeled fixed-footer action; give search the complete row and keep Settings next to the heading. Retain collection disclosure, task counts, selected-route orientation and the desktop rail. Fix the mobile hover-token alias cycle so the search and action surfaces actually render in both themes. Keep planning utilities separate from task views and place Filters with the views it describes.
+
 ## Layout refinement — 2026-10-08
 
 Rechecked Todoist's official [mobile navigation guide](https://www.todoist.com/help/todoist/features/customize-the-todoist-navigation-bar-L4qpkI0xj) and [date and time guide](https://www.todoist.com/help/todoist/features/schedule-a-date-and-time-for-your-todoist-tasks-q7VobO). The navigation guide removes destinations from Browse when they already have their own bottom tab. Seder follows that disclosure rule and names its Hebrew entry תפריט. Its fixed compact header groups capture and search; only destinations, projects and labels scroll.

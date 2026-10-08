@@ -120,7 +120,7 @@ test('mobile task and calendar day history work inside the workspace', async ({ 
   await page.goForward();
   await expect(page.getByLabel('שם המשימה')).toHaveValue('משימת טלפון');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'תפריט', exact: true }).click();
+  await page.getByRole('button', { name: 'רשימות', exact: true }).click();
   await page.getByRole('link', { name: 'לוח שנה', exact: true }).click();
   const days = page.locator('[data-strip-day]');
   await days.nth(5).click();

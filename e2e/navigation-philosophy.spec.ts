@@ -74,7 +74,7 @@ test('mobile Browse keeps orientation, counts, capture, collections and settings
   await page.screenshot({path:`${shots}/mobile-tabs.png`,animations:'disabled'});
   for (const width of [390,320,576]) {
     await page.setViewportSize({width,height:844});
-    const menu=tabs.getByRole('button',{name:'תפריט',exact:true});
+    const menu=tabs.getByRole('button',{name:'רשימות',exact:true});
     await menu.click();
     await expect(menu).toHaveAttribute('aria-expanded','true');
     await expect(tabs.getByRole('link',{name:'היום',exact:true})).toHaveAttribute('aria-current','page');
@@ -100,13 +100,13 @@ test('mobile Browse keeps orientation, counts, capture, collections and settings
     await expect(page.locator('main')).not.toHaveAttribute('inert','');
   }
   await page.setViewportSize({width:390,height:844});
-  await tabs.getByRole('button',{name:'תפריט',exact:true}).click();
+  await tabs.getByRole('button',{name:'רשימות',exact:true}).click();
   await page.locator('.rail').getByRole('link',{name:'לוח שנה',exact:true}).click();
-  await expect(tabs.getByRole('button',{name:'תפריט',exact:true})).toHaveAttribute('aria-current','page');
-  await expect(tabs.getByRole('button',{name:'תפריט',exact:true})).toHaveAttribute('aria-expanded','false');
+  await expect(tabs.getByRole('button',{name:'רשימות',exact:true})).toHaveAttribute('aria-current','page');
+  await expect(tabs.getByRole('button',{name:'רשימות',exact:true})).toHaveAttribute('aria-expanded','false');
   await page.goBack();
   await expect(tabs.getByRole('link',{name:'היום',exact:true})).toHaveAttribute('aria-current','page');
-  await tabs.getByRole('button',{name:'תפריט',exact:true}).click();
+  await tabs.getByRole('button',{name:'רשימות',exact:true}).click();
   await page.locator('.rail').getByRole('link',{name:'הגדרות',exact:true}).click();
   await expect(page.getByRole('heading',{name:'הגדרות',exact:true,level:1})).toBeVisible();
   await expect(tabs).toBeHidden();
@@ -120,9 +120,9 @@ test('mobile Browse keeps orientation, counts, capture, collections and settings
   await tablet.close();
   await page.getByRole('link',{name:'חזרה למשימות',exact:true}).click();
   await page.setViewportSize({width:740,height:390});
-  await tabs.getByRole('button',{name:'תפריט',exact:true}).click();
+  await tabs.getByRole('button',{name:'רשימות',exact:true}).click();
   await page.locator('.rail-nav').evaluate(node=>{node.scrollTop=node.scrollHeight;});
-  await expect(page.locator('.rail').getByRole('link',{name:'מסננים',exact:true})).toBeInViewport();
+  await expect(page.locator('.rail').getByRole('link',{name:'מיקוד ותכנון',exact:true})).toBeInViewport();
   await page.screenshot({path:`${shots}/mobile-landscape.png`,animations:'disabled'});
   await context.close();
 });

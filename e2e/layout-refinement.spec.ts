@@ -82,13 +82,15 @@ test('long mobile menu scrolls only its destinations while search, add and accou
   await page.goto(at('/app/inbox'));
   for (const width of [320, 390, 576]) {
     await page.setViewportSize({ width, height: 740 });
-    const menu = page.getByRole('button', { name: 'תפריט', exact: true });
-    await expect(menu).toContainText('תפריט');
+    const menu = page.getByRole('button', { name: 'רשימות', exact: true });
+    await expect(menu).toContainText('רשימות');
     await menu.click();
     const rail = page.locator('aside.rail');
     await expect.poll(async () => Math.abs((await rail.boundingBox())!.x)).toBeLessThan(0.01);
     const search = rail.locator('.rail-search');
     const add = rail.getByRole('button', { name: 'הוספת משימה', exact: true });
+    await expect(add).toContainText('הוספת משימה');
+    expect(await search.evaluate(element => getComputedStyle(element).backgroundColor)).not.toBe('rgba(0, 0, 0, 0)');
     const before = { search: await search.boundingBox(), add: await add.boundingBox(), account: await rail.locator('.rail-account').boundingBox() };
     if (width === 390) await page.screenshot({ path: '.local-artifacts/layout-refinement/menu-top-390.png', animations: 'disabled' });
     await expect(rail.getByRole('link', { name: /^תיבה נכנסת/ })).toBeHidden();

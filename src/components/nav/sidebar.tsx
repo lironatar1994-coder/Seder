@@ -15,7 +15,7 @@ import { useRail } from './use-rail';
 import { ThemeToggle } from './theme-toggle';
 import { NewProjectDialog } from './new-project-dialog';
 import { requestCompose } from '@/components/task/compose-bus';
-import { NAVIGATION_VIEWS, taskCountLabel } from './navigation-model';
+import { COLLECTIONS_LABEL, NAVIGATION_VIEWS, taskCountLabel } from './navigation-model';
 
 type SectionKey = 'projects' | 'filters' | 'labels';
 const STORAGE_KEY = 'seder-nav-sections';
@@ -59,6 +59,10 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
       return next;
     });
   }
+  function compose() {
+    setOpen(false);
+    if (!requestCompose()) router.push('/app/inbox?compose=1');
+  }
   useEffect(() => {
     const browse = () => setOpen(value => !value);
     const close = () => setOpen(false);
@@ -96,20 +100,21 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
     </li>)}</ul>;
   }
   return <>
-    {open && <button type="button" aria-label="סגירת התפריט" onClick={() => setOpen(false)} className="fixed inset-0 z-40 bg-scrim md:hidden" />}
+    {open && <button type="button" aria-label="סגירת הרשימות" onClick={() => setOpen(false)} className="fixed inset-0 z-40 bg-scrim md:hidden" />}
     <aside ref={drawerRef} data-open={open} aria-label="ניווט בסדר" className="rail drawer z-50 flex min-h-0 shrink-0 flex-col overflow-hidden border-e border-[var(--rail-line)] bg-[var(--rail)] text-[var(--rail-ink)] max-md:fixed max-md:inset-bs-0 max-md:inset-be-0 max-md:inset-s-0">
       <div className="rail-header flex shrink-0 items-center justify-between gap-1 px-4 pb-2 pt-3">
         <Link href="/app" className="rail-label hidden min-w-0 items-center gap-2 text-xl font-bold md:flex"><BrandMark size={24} priority />סדר</Link>
-        <h2 className="text-2xl font-bold md:hidden">תפריט</h2>
+        <h2 className="text-2xl font-bold md:hidden">{COLLECTIONS_LABEL}</h2>
         <div className="flex items-center gap-1">
           <span className="rail-only-open hidden md:contents"><ThemeToggle /></span>
+          <Link href="/app/settings" title="הגדרות" aria-label="הגדרות" onClick={() => setOpen(false)} className="grid size-11 place-items-center rounded-lg text-muted hover:bg-surface-2 md:hidden"><Settings className="size-5" aria-hidden /></Link>
           <IconButton label="סגירה" className="md:hidden" onClick={() => { setOpen(false); document.querySelector<HTMLButtonElement>('[data-browse-trigger]')?.focus(); }}><X className="size-5" aria-hidden /></IconButton>
           <IconButton label={collapsed ? 'פתיחת הסרגל' : 'צמצום הסרגל'} aria-expanded={!collapsed} onClick={toggle} className="hidden md:inline-flex">{collapsed ? <PanelRightOpen className="size-4" aria-hidden /> : <PanelRightClose className="size-4" aria-hidden />}</IconButton>
         </div>
       </div>
       <div className="rail-capture shrink-0 px-3 pb-3 pt-1">
-        <button type="button" aria-label="הוספת משימה" className="rail-add" onClick={() => { setOpen(false); if (!requestCompose()) router.push('/app/inbox?compose=1'); }}><Plus className="size-5 shrink-0" aria-hidden /><span className="rail-label">הוספת משימה</span></button>
-        <button type="button" aria-label="חיפוש" className="rail-search" onClick={() => { setOpen(false); window.dispatchEvent(new Event('seder:search')); }}><Search className="size-4 shrink-0" aria-hidden /><span className="rail-label flex-1 text-start">חיפוש</span><kbd className="rail-label num text-xs">Ctrl K</kbd></button>
+        <button type="button" aria-label="הוספת משימה" className="rail-add" onClick={compose}><Plus className="size-5 shrink-0" aria-hidden /><span className="rail-label">הוספת משימה</span></button>
+        <button type="button" aria-label="חיפוש" className="rail-search" onClick={() => { setOpen(false); window.dispatchEvent(new Event('seder:search')); }}><Search className="size-5 shrink-0" aria-hidden /><span className="rail-label flex-1 text-start"><span className="md:hidden">חיפוש משימות ורשימות</span><span className="hidden md:inline">חיפוש</span></span><kbd className="rail-label num text-xs">Ctrl K</kbd></button>
       </div>
       <nav aria-label="ניווט ראשי" className="rail-nav scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3" onClick={event => { if ((event.target as HTMLElement).closest('a')) setOpen(false); }}>
         <div className="rail-primary" data-testid="primary-navigation">
@@ -120,6 +125,7 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
               {data.counts[view.slug] > 0 && <Count value={data.counts[view.slug]} />}
             </NavLink>
           </li>)}</ul>
+          <NavLink href="/app/filters" label="מסננים" active={pathname === '/app/filters' && !searchParams.get('id')}><SlidersHorizontal className="size-5 shrink-0" aria-hidden /><span className="rail-label">מסננים</span></NavLink>
         </div>
         <NavSection name="פרויקטים" expanded={sections.projects} onToggle={() => toggleSection('projects')} count={data.projects.length} actions={<NewProjectDialog trigger={<IconButton label="פרויקט חדש" className="size-8"><Plus className="size-4" aria-hidden /></IconButton>} />}>
           <NavLink href="/app/projects" label="כל הפרויקטים" active={pathname === '/app/projects'}><FolderKanban className="size-5 shrink-0" aria-hidden /><span className="rail-label">כל הפרויקטים</span></NavLink>
@@ -136,10 +142,13 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
         <div className="rail-utilities mt-3 border-bs border-[var(--rail-line)] pt-3">
           <NavLink href="/app/calendar" label="לוח שנה" active={pathname.startsWith('/app/calendar')}><CalendarRange className="size-5 shrink-0" aria-hidden /><span className="rail-label">לוח שנה</span></NavLink>
           <NavLink href="/app/focus" label="מיקוד ותכנון" active={pathname === '/app/focus'}><Timer className="size-5 shrink-0" aria-hidden /><span className="rail-label">מיקוד ותכנון</span></NavLink>
-          <NavLink href="/app/filters" label="מסננים" active={pathname === '/app/filters' && !searchParams.get('id')}><SlidersHorizontal className="size-5 shrink-0" aria-hidden /><span className="rail-label">מסננים</span></NavLink>
         </div>
       </nav>
-      <div className="rail-account flex shrink-0 items-center gap-1 border-bs border-[var(--rail-line)] p-2">
+      <div className="rail-footer shrink-0 border-bs border-[var(--rail-line)]">
+      <div className="rail-mobile-capture">
+        <button type="button" aria-label="הוספת משימה" onClick={compose} className="rail-create"><Plus className="size-5 shrink-0" aria-hidden /><span>הוספת משימה</span></button>
+      </div>
+      <div className="rail-account flex min-w-0 items-center gap-1 p-2">
         <Menu><MenuTrigger aria-label={user.name} className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 text-start hover:bg-[var(--rail-hover)]">
           <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--rail-active)] text-sm font-bold">{user.name.trim().charAt(0) || '·'}</span>
           <span className="rail-label min-w-0 flex-1 truncate text-sm font-semibold">{user.name}</span>
@@ -150,6 +159,7 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
           <MenuItem tone="danger" onSelect={() => startTransition(() => void onLogout())}><LogOut className="size-4 icon-flip" aria-hidden />יציאה</MenuItem>
         </MenuContent></Menu>
         <Link href="/app/settings" title="הגדרות" aria-label="הגדרות" aria-current={pathname.startsWith('/app/settings') ? 'page' : undefined} onClick={() => setOpen(false)} className="rail-account-settings grid size-11 shrink-0 place-items-center rounded-lg text-[var(--rail-muted)] hover:bg-[var(--rail-hover)]"><Settings className="size-5" aria-hidden /></Link>
+      </div>
       </div>
     </aside>
   </>;

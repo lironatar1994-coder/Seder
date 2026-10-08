@@ -158,11 +158,11 @@ test('mobile task-first layout keeps capture, Browse and display options reachab
     expect(firstTask!.y).toBeLessThan(160);
     await expect(page.getByRole('button', { name: 'התחלת מיקוד' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'הוספת משימה', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'תפריט', exact: true }).click();
+    await page.getByRole('button', { name: 'רשימות', exact: true }).click();
     await expect(page.getByRole('link', { name: 'מיקוד ותכנון', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'הגדרות', exact: true })).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('button', { name: 'תפריט', exact: true })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'רשימות', exact: true })).toBeFocused();
     await page.getByRole('button', { name: 'תצוגת הרשימה', exact: true }).click();
     await page.getByLabel('חיפוש ברשימה').fill('מצגת');
     await page.getByRole('button', { name: 'הצגת המשימות', exact: true }).click();

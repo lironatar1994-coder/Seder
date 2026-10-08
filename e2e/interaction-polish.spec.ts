@@ -23,7 +23,7 @@ test('settings has a mobile directory, clear location, return to the original vi
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('navigation', { name: 'ניווט מהיר' }).getByRole('link', { name: 'תיבה', exact: true }).click();
   await page.waitForURL('**/app/inbox');
-  await page.getByRole('button', { name: 'תפריט', exact: true }).click();
+  await page.getByRole('button', { name: 'רשימות', exact: true }).click();
   await page.getByRole('link', { name: 'הגדרות', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'הגדרות', level: 1, exact: true })).toBeVisible();
   await expect(page.getByTestId('settings-overview').getByRole('link')).toHaveCount(7);
@@ -99,7 +99,7 @@ test('creation and edits get blue confirmations; completion plays once and the m
   await expect.poll(() => page.evaluate(() => (window as any).__soundCues)).toBe(1);
   expect(await page.evaluate(() => (window as any).__soundStarts)).toBeGreaterThan(0);
   await add(page, 'בדיקת השתקה היום');
-  await page.locator(`a[href="${BASE_PATH}/app/settings"]`).first().click();
+  await page.getByRole('link', { name: 'הגדרות', exact: true }).click();
   await page.getByTestId('settings-overview').getByRole('link', { name: 'מראה', exact: true }).click();
   const toggle = page.getByRole('switch', { name: 'צליל השלמה', exact: true });
   await expect(toggle).toHaveAttribute('aria-checked', 'true');

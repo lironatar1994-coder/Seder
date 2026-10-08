@@ -852,6 +852,9 @@
 .rail-add:hover { filter: brightness(.94); }
 .rail-search { display: flex; align-items: center; gap: .65rem; inline-size: 100%; min-block-size: 2.5rem; margin-block-start: .5rem; border-radius: .6rem; padding-inline: .75rem; color: var(--rail-muted); }
 .rail-search:hover { background: var(--rail-hover); color: var(--rail-ink); }
+.rail-mobile-capture { display: none; }
+.rail-create { display: flex; align-items: center; justify-content: center; gap: .5rem; inline-size: 100%; min-block-size: 2.75rem; padding-inline: .75rem; border-radius: .625rem; background: var(--rail-hover); color: var(--rail-ink); font-size: 1rem; font-weight: 600; white-space: nowrap; }
+.rail-create:hover { background: var(--line); }
 .rail-link > svg { inline-size: 1.25rem; block-size: 1.25rem; stroke-width: 1.75; }
 .today-workspace { display: grid; gap: 2.5rem; align-items: start; }
 .today-insights { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.5rem; padding-block-end: 3rem; }
@@ -939,9 +942,16 @@
   .view-heading > div { gap: .5rem; }
   .rail-header { padding-block-start: max(1rem,env(safe-area-inset-top)); }
   .drawer { inline-size: 100%; inset-block-end: var(--tab-bar); border-inline-end: 0; block-size: calc(100dvh - var(--tab-bar)); }
-  .rail-capture { display: flex; align-items: center; gap: .5rem; }
+  .rail-capture { display: flex; align-items: center; padding-inline: 1rem; padding-block: .25rem .75rem; }
+  .rail-capture .rail-add { display: none; }
   .rail-search { flex: 1; min-inline-size: 0; margin-block-start: 0; background: var(--rail-hover); border-radius: .4rem; }
   .rail-search kbd { display: none; }
+  .rail-search { font-size: 1rem; }
+  .rail-footer { display: flex; align-items: center; gap: .5rem; padding: .5rem 1rem; }
+  .rail-mobile-capture { display: block; flex: 1; min-inline-size: 0; }
+  .rail-account { flex: 0 1 auto; max-inline-size: 42%; padding: 0; }
+  .rail-account > button { padding-inline: .25rem; gap: .5rem; }
+  .rail-account-settings { display: none; }
   .rail-add { inline-size: 2.75rem; justify-content: center; padding-inline: 0; color: var(--rail-ink); background: var(--rail-hover); }
   .rail-add .rail-label { display: none; }
   .rail-nav { touch-action: pan-y; }
@@ -966,7 +976,7 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
 
 /* Navigation: time first, collections second. Daily destinations remain visible
    while a long project/label directory scrolls beneath them. */
-.rail-nav { scroll-padding-block-start: 16.5rem; }
+.rail-nav { scroll-padding-block-start: calc(7 * 2.5rem + 1rem + 1px); }
 .rail-primary { position: sticky; inset-block-start: 0; z-index: 2; padding-block: .25rem .75rem; border-block-end: 1px solid var(--rail-line); background: var(--rail); }
 .rail-primary .rail-link[aria-current='page'] { background: var(--rail-active); }
 .rail-link > svg { stroke-width: 1.7; }
@@ -977,8 +987,8 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
   :root[data-rail='collapsed'] .rail-section-actions, :root[data-rail='collapsed'] .rail-account-settings { display: none; }
 }
 @media (max-width:767px) {
-  .drawer { background: var(--paper); --rail: var(--paper); --rail-hover: var(--surface-2); }
-  .rail-nav { scroll-padding-block-start: 10rem; }
+  .drawer { background: var(--paper); --rail: var(--paper); }
+  .rail-nav { scroll-padding-block-start: calc(4 * 2.75rem + 1rem + 1px); }
   .rail-header { min-block-size: 3.75rem; }
   .rail-primary .rail-link, .rail-section-toggle { min-block-size: 2.75rem; }
   .rail-link, .rail-section-toggle { font-size: 1rem; }
@@ -989,7 +999,7 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
   .rail-section-actions button { min-block-size: 2.75rem; min-inline-size: 2.75rem; }
 }
 @media (min-width:768px) and (pointer:coarse) {
-  .rail-nav { scroll-padding-block-start: 18.5rem; }
+  .rail-nav { scroll-padding-block-start: calc(7 * 2.75rem + 1rem + 1px); }
 }
 @media (max-height:600px) {
   .rail-primary { position: static; }

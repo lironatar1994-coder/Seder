@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, Plus } from 'lucide-react';
+import { LayoutGrid, Plus } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { SidebarData } from '@/server/tasks/queries';
 import { requestCompose } from '@/components/task/compose-bus';
 
-import { MOBILE_VIEWS, taskCountLabel } from './navigation-model';
+import { COLLECTIONS_LABEL, MOBILE_VIEWS, taskCountLabel } from './navigation-model';
 
 const TABS = MOBILE_VIEWS;
 
@@ -37,7 +37,7 @@ export function TabBar({ counts }: { counts: SidebarData['counts'] }) {
             <span className={cn('text-xs leading-none', active && 'font-semibold')}>{label}</span>
           </Link></li>;
         })}
-        <li className="flex-1"><button type="button" data-browse-trigger aria-label="תפריט" aria-current={otherView ? 'page' : undefined} aria-expanded={browsing} onClick={() => window.dispatchEvent(new Event('seder:browse'))} className={cn('mobile-tab', browsing || otherView ? 'text-ink' : 'text-muted')}><span className={cn("grid h-8 min-w-11 place-items-center rounded-lg", (browsing || otherView) && "bg-surface-2")}><Menu className="size-[1.375rem]" strokeWidth={browsing || otherView ? 2 : 1.6} aria-hidden /></span><span className={cn('text-xs leading-none', (browsing || otherView) && 'font-semibold')}>תפריט</span></button></li>
+        <li className="flex-1"><button type="button" data-browse-trigger aria-label={COLLECTIONS_LABEL} aria-current={otherView ? 'page' : undefined} aria-expanded={browsing} onClick={() => window.dispatchEvent(new Event('seder:browse'))} className={cn('mobile-tab', browsing || otherView ? 'text-ink' : 'text-muted')}><span className={cn("grid h-8 min-w-11 place-items-center rounded-lg", (browsing || otherView) && "bg-surface-2")}><LayoutGrid className="size-[1.375rem]" strokeWidth={browsing || otherView ? 2 : 1.6} aria-hidden /></span><span className={cn('text-xs leading-none', (browsing || otherView) && 'font-semibold')}>{COLLECTIONS_LABEL}</span></button></li>
       </ul>
     </nav>
   </>;
