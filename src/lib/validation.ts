@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RESCHEDULE_PRESETS } from './reschedule';
 import { PRIORITIES, SWATCHES, WHEN_BUCKETS, VIEW_SLUGS, type ViewSlug } from './constants';
 
 /* Error messages are the user-facing copy. They say what went wrong and what
@@ -65,6 +66,7 @@ export const createTaskSchema = z.object({
   whenBucket: z.enum(WHEN_BUCKETS).default('ANYTIME'),
   scheduledFor: dayStringSchema,
   scheduledTime: timeStringSchema,
+  reschedulePreset: z.enum(RESCHEDULE_PRESETS).nullable().optional(),
   durationMinutes: z.number().int().min(1).max(1440).optional(),
   deadline: dayStringSchema,
   labelIds: z.array(z.string().cuid()).max(20).default([]),

@@ -11,7 +11,7 @@ import { DatePickerPanel, type WhenValue } from '@/components/calendar/date-pick
 import { relativeDayLabel, today } from '@/lib/dates';
 import { dateTone, schedulePresentation } from '@/lib/date-presentation';
 import { useTaskNow } from './task-clock';
-import { quickAddSchedule, reconcileQuickAddSelection, withoutQuickAddTokens, type QuickAddSelection } from '@/lib/quick-add-selection';
+import { quickAddSchedule, quickAddReschedulePreset, reconcileQuickAddSelection, withoutQuickAddTokens, type QuickAddSelection } from '@/lib/quick-add-selection';
 import { ComposerProperties } from './composer-properties';
 import { useComposerPreferences } from './composer-preferences';
 import { COMPOSER_FIELD_DETAILS } from './composer-fields';
@@ -225,7 +225,7 @@ export function Composer({
 
   const ready = Boolean(parsed?.title) && !pending;
 
-  const datePicker = <DatePickerPanel value={schedule.date} bucket={schedule.bucket} time={schedule.time} onPick={chooseSchedule}
+  const datePicker = <DatePickerPanel value={schedule.date} bucket={schedule.bucket} time={schedule.time} preset={quickAddReschedulePreset(parsed, selection)} onPick={chooseSchedule}
     onClear={() => chooseSchedule({ bucket: 'ANYTIME', date: null, time: null })} />;
   function pickProject(id: string | null) { choose(['project'], { projectId: id }); setProjectOpen(false); setMoreOpen(false); setProjectSearch(''); }
   const projectPicker = <>

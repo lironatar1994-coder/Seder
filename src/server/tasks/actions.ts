@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/server/db';
 import { requireUser } from '@/server/auth/session';
 import { nextOccurrence, parseRecurrence } from '@/lib/recurrence';
-import { relativeDayLabel, today, toDayStart } from '@/lib/dates';
+import { relativeDayLabel, today, toDayStart, isOverdue, isScheduleOverdue } from '@/lib/dates';
+import { rescheduleDate, type ReschedulePreset } from '@/lib/reschedule';
 import { keyAfterLast, keyBetween } from '@/lib/ordering';
 import { titleSchema, updateTaskSchema, fieldErrors } from '@/lib/validation';
 import { captureTask, type ActionResult, type QuickAddContext, type QuickAddResult } from '@/server/tasks/capture';
@@ -312,6 +313,7 @@ export async function updateTaskAction(input: unknown): Promise<ActionResult> {
       ...(moved ? { assigneeId: null, sectionId: rest.sectionId ?? null, ...(destination === null ? { userId: user.id } : {}) } : {}),
       ...(reminderChanged ? { remindedAt: null } : {}),
       ...(scheduledFor !== undefined ? { scheduledFor: parseDay(scheduledFor) } : {}),
+      ...(scheduledFor !== undefined ? { reschedulePreset: scheduledFor ? rest.reschedulePreset ?? 'today' : null } : {}),
       ...(deadline !== undefined ? { deadline: parseDay(deadline) } : {}),
       ...(labelIds
         ? {
@@ -334,18 +336,21 @@ export async function updateTaskAction(input: unknown): Promise<ActionResult> {
 /** Schedule, or clear the schedule, from the row menu and the date popover. */
 export async function scheduleTaskAction(
   id: string,
-  when: { bucket: WhenBucket; date?: string | null; time?: string | null },
+  when: { bucket: WhenBucket; date?: string | null; time?: string | null; preset?: ReschedulePreset | null },
 ): Promise<ActionResult> {
   const user = await requireUser();
   if (!(await canUseTask(user.id, id))) return { ok: false, error: 'המשימה לא נמצאה' };
 
   const scheduled = when.bucket === 'SCHEDULED';
+  const existing = await db.task.findUnique({ where: { id }, select: { scheduledFor: true, reschedulePreset: true } });
+  const sameDay = existing?.scheduledFor && isoDay(existing.scheduledFor) === when.date;
   await db.task.update({
     where: { id },
     data: {
       whenBucket: when.bucket,
       scheduledFor: scheduled ? parseDay(when.date) : null,
       scheduledTime: scheduled ? when.time ?? null : null,
+      reschedulePreset: scheduled ? when.preset ?? (sameDay ? existing.reschedulePreset : 'today') : null,
       // The task has moved, so anything already sent about it was about the
       // old date. Left set, the reminder for the new one never fires.
       remindedAt: null,
@@ -501,6 +506,16 @@ export async function addSubtaskAction(parentId: string, title: string): Promise
  * Hebrew has no case, and SQLite's LIKE is already case-insensitive for ASCII.
  * Open tasks come first; a finished one is usually not what you are hunting for.
  */
+/** Reload a history destination against current task access and data. */
+export async function getNavigationTaskAction(id: string): Promise<TaskDTO | null> {
+  const user = await requireUser();
+  const task = await db.task.findFirst({
+    where: { id, ...(await visibleTasks(user.id)) },
+    select: taskSelect(user.id),
+  });
+  return task ? toDTO(task) : null;
+}
+
 export async function searchTasksAction(query: string): Promise<TaskDTO[]> {
   const user = await requireUser();
   const term = query.trim();
@@ -612,7 +627,7 @@ export async function bulkUndoCompleteAction(
 
 export async function bulkScheduleAction(
   ids: string[],
-  when: { bucket: WhenBucket; date?: string | null },
+  when: { bucket: WhenBucket; date?: string | null; preset?: ReschedulePreset | null },
 ): Promise<BulkResult> {
   const user = await requireUser();
   const owned = await ownedIds(user.id, ids);
@@ -627,11 +642,31 @@ export async function bulkScheduleAction(
       // Rescheduling a batch drops the times: they were set per task and there
       // is no single time that is right for all of them.
       scheduledTime: null,
+      reschedulePreset: scheduled ? when.preset ?? 'today' : null,
+      remindedAt: null,
     },
   });
 
   refresh();
   return { ok: true, count: result.count };
+}
+
+/** Each overdue task keeps the relative choice that originally scheduled it. */
+export async function rescheduleOverdueAction(ids: string[]): Promise<BulkResult> {
+  const user = await requireUser();
+  const now = new Date();
+  const base = today(now);
+  const tasks = await db.task.findMany({
+    where: { id: { in: ids }, status: 'TODO', parentId: null, ...(await visibleTasks(user.id)) },
+    select: { id: true, scheduledFor: true, scheduledTime: true, deadline: true, reschedulePreset: true },
+  });
+  const overdue = tasks.filter(task => isScheduleOverdue(task.scheduledFor, task.scheduledTime, now) || isOverdue(task.deadline, base));
+  const results = await db.$transaction(overdue.map(task => db.task.updateMany({
+    where: { id: task.id, status: 'TODO' },
+    data: { whenBucket: 'SCHEDULED', scheduledFor: rescheduleDate(task.reschedulePreset, now), scheduledTime: null, remindedAt: null },
+  })));
+  refresh();
+  return { ok: true, count: results.reduce((sum, result) => sum + result.count, 0) };
 }
 
 export async function bulkPriorityAction(ids: string[], priority: Priority): Promise<BulkResult> {

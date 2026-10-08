@@ -14,6 +14,7 @@ import { useIsPhone } from '@/components/ui/use-is-phone';
 import { EntryRow } from './entry-row';
 import { GoogleEventRow } from './google-events';
 import type { GoogleEventDTO } from '@/lib/calendar-event-types';
+import { useNavigationParam } from '@/components/nav/navigation-state';
 
 /**
  * The calendar, on a phone.
@@ -61,6 +62,7 @@ export function Agenda({
   onOpenTask,
 }: AgendaProps) {
   const isPhone = useIsPhone();
+  const [navigationDay, setNavigationDay] = useNavigationParam('agendaDay');
 
   /* Today comes from the server-built grid, never from `new Date()`. The grid
      was built at request time; reading the clock again during render would
@@ -125,11 +127,20 @@ export function Agenda({
 
   const pickDay = useCallback(
     (iso: string) => {
-      setFocusIso(iso);
-      scrollToDay(iso);
+      setNavigationDay(iso);
     },
-    [scrollToDay],
+    [setNavigationDay],
   );
+
+  useEffect(() => {
+    if (!isPhone) return;
+    const iso = navigationDay ?? initialDay ?? startIso;
+    if (!iso || !days.some((day) => day.iso === iso)) return;
+    setFocusIso(iso);
+    const week = weeks.findIndex((items) => items.some((day) => day.iso === iso));
+    if (week >= 0) setRow(week);
+    scrollToDay(iso);
+  }, [navigationDay, initialDay, startIso, days, weeks, isPhone, scrollToDay]);
 
   /* The tab bar's "חדשה" asks whoever is mounted to open a composer. Without
      this it falls back to /app/today, which quietly moves the task off the day

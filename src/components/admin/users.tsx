@@ -81,6 +81,11 @@ export function AdminUsers({ initial }: { initial: AdminUsersData }) {
   useEffect(() => {
     // A dashboard refresh may finish during an edit; it must not erase it.
     if (dirty.current) return;
+    // A server-action response can carry the dashboard for the URL that
+    // preceded a cleared search or pagination. Do not restore that old query
+    // after the action has already published its newer URL and results.
+    const params = new URL(window.location.href).searchParams;
+    if (initial.search !== (params.get('q') ?? '') || initial.page !== Number(params.get('page') ?? 1)) return;
     setData(initial);
     draft.current = initial.search;
     setInput(initial.search);

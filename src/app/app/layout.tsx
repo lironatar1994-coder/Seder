@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/nav/sidebar';
 import { TabBar } from '@/components/nav/tab-bar';
 import { CommandPalette } from '@/components/nav/command-palette';
 import { ViewTransitions } from '@/components/nav/view-transitions';
+import { NavigationScroll } from '@/components/nav/navigation-scroll';
 import { ReminderDefaultsProvider } from '@/components/task/reminder-defaults';
 import { ComposerPreferencesProvider } from '@/components/task/composer-preferences';
 import { TaskClockProvider } from '@/components/task/task-clock';
@@ -66,6 +67,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div aria-hidden className="h-[var(--tab-bar)]" />
       </main>
       <ViewTransitions />
+      <NavigationScroll />
       <TabBar counts={sidebar.counts} />
       <CommandPalette projects={sidebar.projects} labels={sidebar.labels} />
       <WhatsappIntroduction userId={user.id} eligible={shouldIntroduceWhatsapp(whatsappUser)} available={whatsappState.status === 'READY' && !whatsappState.stale} />

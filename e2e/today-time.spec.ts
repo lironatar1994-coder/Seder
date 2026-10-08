@@ -1,16 +1,125 @@
 import { test, expect, type Page } from '@playwright/test';
 import { BASE_PATH } from '../playwright.config';
 import { addDays, formatFullDate, today, wallTimeInstant } from '../src/lib/dates';
+import { PrismaClient } from '@prisma/client';
+import { rescheduleDate } from '../src/lib/reschedule';
+
+test('overdue header reschedules the group to today and clears elapsed times without changing deadlines', async ({ page }) => {
+  await page.clock.install({ time: wallTimeInstant(today(), '12:00')! });
+  await register(page);
+  await add(page, `משימה מאתמול ${formatFullDate(addDays(today(), -1))} עד מחר`);
+  await add(page, 'משימה מהבוקר היום בשעה 09:00');
+  await add(page, 'משימה להמשך היום בשעה 18:00');
+  const late = page.locator('[data-task-group="overdue"]');
+  const button = late.getByRole('button', { name: 'תזמון מחדש של המשימות שבאיחור' });
+  await expect(button).toBeVisible();
+  await page.screenshot({ path: '.local-artifacts/overdue-reschedule-desktop.png' });
+  await button.click();
+  await expect(page.getByTestId('toasts')).toContainText('2 משימות תוזמנו מחדש');
+  await expect(late).toHaveCount(0);
+  await expect(page.getByTestId('task-list').locator('.task-row')).toHaveCount(3);
+  await expect(page.getByTestId('task-list')).toContainText('18:00');
+  await expect(page.getByTestId('task-list')).not.toContainText('09:00');
+  await expect(page.getByTestId('task-list')).toContainText('עד מחר');
+  await page.reload();
+  await expect(late).toHaveCount(0);
+  await expect(page.getByTestId('task-list')).toContainText('עד מחר');
+});
+
+test('subtle mobile reschedule control remains reachable and only changes the displayed overdue tasks', async ({ browser }) => {
+  const context = await browser.newContext({ baseURL: 'http://localhost:3100', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'he-IL', timezoneId: 'Asia/Jerusalem' });
+  const page = await context.newPage();
+  await page.clock.install({ time: wallTimeInstant(today(), '12:00')! });
+  await register(page);
+  const yesterday = formatFullDate(addDays(today(), -1));
+  await add(page, `משימה דחופה ${yesterday} !1`, true);
+  await add(page, `משימה רגילה ${yesterday} !3`, true);
+  await page.getByRole('button', { name: 'תצוגת הרשימה', exact: true }).click();
+  await page.getByLabel('סינון לפי עדיפות').selectOption('1');
+  await page.getByRole('button', { name: 'הצגת המשימות', exact: true }).click();
+  const late = page.locator('[data-task-group="overdue"]');
+  const button = late.getByRole('button', { name: 'תזמון מחדש של המשימות שבאיחור' });
+  await expect(button).toBeVisible();
+  expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await page.screenshot({ path: '.local-artifacts/overdue-reschedule-mobile.png' });
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: '.local-artifacts/overdue-reschedule-mobile-dark.png' });
+  await button.click();
+  await expect(page.getByTestId('toasts')).toContainText('המשימה תוזמנה מחדש');
+  await page.getByRole('button', { name: 'איפוס תצוגה', exact: true }).click();
+  await expect(late).toContainText('משימה רגילה');
+  await expect(late).not.toContainText('משימה דחופה');
+  await expect(page.locator('[data-task-group="today"]')).toContainText('משימה דחופה');
+  await page.reload();
+  await expect(late).toContainText('משימה רגילה');
+  await expect(late).not.toContainText('משימה דחופה');
+  await context.close();
+});
 
 async function register(page: Page) {
+  const email = `today-time-${Date.now()}-${Math.random().toString(16).slice(2)}@seder.test`;
   await page.goto(`${BASE_PATH}/register`);
   await page.getByLabel('שם', { exact: true }).fill('בדיקת היום — נתוני דוגמה');
-  await page.getByLabel('אימייל', { exact: true }).fill(`today-time-${Date.now()}-${Math.random().toString(16).slice(2)}@seder.test`);
+  await page.getByLabel('אימייל', { exact: true }).fill(email);
   await page.getByLabel('סיסמה', { exact: true }).fill('today-time-test-123');
   await page.getByRole('button', { name: 'יצירת חשבון', exact: true }).click();
   await page.waitForURL('**/app/today');
   await page.getByTestId('whatsapp-introduction').getByRole('button', { name: 'לא עכשיו', exact: true }).click();
+  return email;
 }
+
+test('one reschedule click gives each overdue task its own original relative destination', async ({ page }) => {
+  const email = await register(page);
+  await add(page, 'בדיקת א היום');
+  await page.getByRole('button', { name: /^משימה חדשה/ }).click();
+  const composer = page.getByTestId('task-composer');
+  await composer.getByLabel('משימה חדשה', { exact: true }).fill('בדיקת ב');
+  await composer.getByRole('button', { name: /^בחירת תאריך,/ }).click();
+  await page.getByTestId('date-picker').getByRole('button', { name: /^מחר/ }).click();
+  await composer.getByRole('button', { name: /^בחירת תאריך,/ }).click();
+  await page.getByTestId('date-picker').getByRole('button', { name: 'הוספת שעה', exact: true }).click();
+  await page.getByLabel('שעה', { exact: true }).fill('14:30');
+  await page.getByRole('button', { name: 'שמור', exact: true }).click();
+  await composer.getByRole('button', { name: 'הוספה', exact: true }).click();
+  await expect(composer.getByLabel('משימה חדשה', { exact: true })).toHaveValue('');
+  await composer.getByRole('button', { name: 'ביטול', exact: true }).click();
+  await add(page, 'בדיקת ג שבוע הבא');
+  // Selecting a preset in a task's existing date picker is remembered too.
+  await add(page, 'בדיקת ד היום');
+  await page.getByTestId('task-list').getByText('בדיקת ד', { exact: true }).click();
+  await page.getByRole('group', { name: 'מתוזמן ל', exact: true }).getByRole('button', { name: 'היום', exact: true }).click();
+  await page.getByTestId('date-picker').getByRole('button', { name: /^מחר/ }).click();
+  await page.getByRole('button', { name: 'סגירה', exact: true }).click();
+  const db = new PrismaClient();
+  try {
+    const tasks = await db.task.findMany({ where: { user: { email }, parentId: null } });
+    expect(tasks.map(task => task.reschedulePreset).sort()).toEqual(['next-week', 'today', 'tomorrow', 'tomorrow']);
+    // Simulate the passage of the originally selected days, keeping their
+    // stored choices intact. The action itself uses the current server clock.
+    await db.task.updateMany({ where: { user: { email } }, data: { scheduledFor: addDays(today(), -2), scheduledTime: '09:00', remindedAt: new Date() } });
+    await page.reload();
+    const late = page.locator('[data-task-group="overdue"]');
+    await expect(late.locator('.task-row')).toHaveCount(4);
+    await late.getByRole('button', { name: 'תזמון מחדש של המשימות שבאיחור' }).click();
+    await expect(page.getByTestId('toasts')).toContainText('4 משימות תוזמנו מחדש');
+    const stored = await db.task.findMany({ where: { user: { email } } });
+    for (const task of stored) {
+      expect(task.scheduledFor?.toISOString()).toBe(rescheduleDate(task.reschedulePreset).toISOString());
+      expect(task.scheduledTime).toBeNull();
+      expect(task.remindedAt).toBeNull();
+    }
+    await page.reload();
+    await expect(page.getByTestId('task-list')).toContainText('בדיקת א');
+    await expect(page.getByTestId('task-list')).not.toContainText('בדיקת ב');
+    await expect(late).toHaveCount(0);
+    await page.getByRole('link', { name: /^בקרוב/ }).click();
+    await expect(page.getByTestId('task-list')).toContainText('בדיקת ב');
+    await expect(page.getByTestId('task-list')).toContainText('בדיקת ג');
+    await expect(page.getByTestId('task-list')).toContainText('בדיקת ד');
+  } finally { await db.$disconnect(); }
+});
 
 async function add(page: Page, text: string, phone = false) {
   await (phone ? page.locator('.mobile-add') : page.getByRole('button', { name: /^משימה חדשה/ })).click();

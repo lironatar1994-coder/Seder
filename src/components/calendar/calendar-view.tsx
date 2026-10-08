@@ -33,6 +33,7 @@ import { Agenda } from './agenda';
 import { ChipPreview } from './entry-chip';
 import type { GoogleEventDTO } from '@/lib/calendar-event-types';
 import { GoogleSyncBar } from './google-events';
+import { updateNavigation, useNavigationParam, useNavigationTask } from '@/components/nav/navigation-state';
 
 type Mode = 'month' | 'week';
 
@@ -58,13 +59,13 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
   const [, startTransition] = useTransition();
 
   /* Two different ideas of "the selected day", deliberately not one.
-     `panelDay` opens the desktop drawer, and is set only by the grids — which
+     `panelDay` opens the desktop drawer, and is set by the grids — which
      are `display:none` on a phone, so it can never be raised there. The agenda
      keeps its own focus. Seeding this from `?d=` instead would pop the drawer
      over the agenda every time the strip navigated across a month boundary,
      because the panel is portaled to the body and no wrapper can hide it. */
-  const [panelDay, setPanelDay] = useState<string | null>(null);
-  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
+  const [panelDay, setPanelDay] = useNavigationParam('dayPanel');
+  const [openTaskId, setOpenTaskId] = useNavigationParam('task');
   const [dragging, setDragging] = useState<CalendarEntry | null>(null);
   /** entry key → the day it was just dropped on, until the server catches up. */
   const [moved, setMoved] = useState<Record<string, string>>({});
@@ -87,8 +88,8 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
   }, [calendar, moved]);
 
   const allEntries = useMemo(() => Object.values(entriesByDay).flat(), [entriesByDay]);
-  const openTask: TaskDTO | null =
-    allEntries.find((e) => e.taskId === openTaskId)?.task ?? null;
+  const openTask: TaskDTO | null = useNavigationTask(openTaskId,
+    allEntries.find((e) => e.taskId === openTaskId)?.task ?? null, calendar);
 
   /* Day-ordered task ids for the editor's j/k stepping. Deduped: a task with
      both a schedule and a deadline yields two entries, and stepping over the
@@ -327,8 +328,7 @@ export function CalendarView({ mode, grid, calendar, projects, labels, selectedD
           labels={labels}
           onClose={() => setPanelDay(null)}
           onOpenTask={(taskId) => {
-            setPanelDay(null);
-            setOpenTaskId(taskId);
+            updateNavigation({ dayPanel: null, task: taskId });
           }}
         />
       )}

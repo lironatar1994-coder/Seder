@@ -251,6 +251,7 @@ export function TaskDetail({
                     bucket: when.bucket,
                     date: when.date,
                     time: when.time,
+                    preset: when.preset,
                   }),
                 );
               }}

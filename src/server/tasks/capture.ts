@@ -18,7 +18,7 @@ import { titleSchema, fieldErrors } from '@/lib/validation';
 import { accessibleProjectIds, canUseProject } from '@/server/access';
 import { today } from '@/lib/dates';
 import type { WhenBucket } from '@/lib/constants';
-import { quickAddSchedule, quickAddSelectionSchema, type QuickAddSelection } from '@/lib/quick-add-selection';
+import { quickAddSchedule, quickAddReschedulePreset, quickAddSelectionSchema, type QuickAddSelection } from '@/lib/quick-add-selection';
 
 export interface ActionResult {
   ok: boolean;
@@ -211,6 +211,7 @@ export async function captureTask(
       whenBucket,
       scheduledFor,
       scheduledTime: schedule.time,
+      reschedulePreset: whenBucket === 'SCHEDULED' ? quickAddReschedulePreset(parsed, selection) : null,
       deadline: parseDay(deadline),
       recurrence,
       projectId,

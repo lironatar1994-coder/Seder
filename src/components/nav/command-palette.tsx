@@ -19,10 +19,11 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { cn } from '@/lib/cn';
 import { VIEWS, swatchVar, type ViewSlug } from '@/lib/constants';
 import { relativeDayLabel, today } from '@/lib/dates';
-import { deleteTaskAction, searchTasksAction } from '@/server/tasks/actions';
+import { deleteTaskAction, getNavigationTaskAction, searchTasksAction } from '@/server/tasks/actions';
 import type { TaskDTO } from '@/server/tasks/queries';
 import { TaskDetail } from '@/components/task/task-detail';
 import { useToast } from '@/components/ui/toast';
+import { useNavigationParam } from './navigation-state';
 
 const VIEW_ICONS: Record<ViewSlug, typeof Inbox> = {
   inbox: Inbox,
@@ -56,9 +57,23 @@ export function CommandPalette({
   const [results, setResults] = useState<TaskDTO[]>([]);
   const [searching, setSearching] = useState(false);
   const [openTask, setOpenTask] = useState<TaskDTO | null>(null);
+  const [searchTaskId, setSearchTaskId] = useNavigationParam('searchTask');
   const [, startTransition] = useTransition();
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!searchTaskId) { setOpenTask(null); return; }
+    getNavigationTaskAction(searchTaskId).then((task) => {
+      if (cancelled) return;
+      setOpenTask(task);
+      if (!task) toast({ message: 'המשימה אינה זמינה יותר', tone: 'error' });
+    }).catch(() => {
+      if (!cancelled) toast({ message: 'המשימה לא נטענה. אפשר לנסות שוב.', tone: 'error' });
+    });
+    return () => { cancelled = true; };
+  }, [searchTaskId, toast, projects, labels]);
 
   useEffect(() => {
     const search = () => setOpen(true);
@@ -208,6 +223,7 @@ export function CommandPalette({
                         onSelect={() => {
                           setOpen(false);
                           setOpenTask(task);
+                          setSearchTaskId(task.id);
                         }}
                       >
                         <span
@@ -294,13 +310,14 @@ export function CommandPalette({
           whichever list happens to be on screen — the task may well not be in
           that list at all. */}
       <TaskDetail
-        task={openTask}
-        openId={openTask?.id ?? null}
+        task={openTask?.id === searchTaskId ? openTask : null}
+        openId={searchTaskId}
         projects={projects}
         labels={labels}
-        onClose={() => setOpenTask(null)}
+        onClose={() => setSearchTaskId(null)}
         onDelete={(task) => {
           setOpenTask(null);
+          setSearchTaskId(null);
           startTransition(async () => {
             const result = await deleteTaskAction(task.id);
             if (result.ok) toast({ message: `נמחק: ${task.title}` });

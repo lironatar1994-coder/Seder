@@ -1486,6 +1486,9 @@ test.describe('calendar', () => {
     await expect(panel.getByRole('button', { name: 'ללא', exact: true })).toHaveCount(0);
     // Setting a deadline must not disturb the schedule.
     await expect(panel.getByRole('button', { name: 'מחר', exact: true })).toBeVisible();
+    await page.reload();
+    await expect(panel.getByRole('group', { name: 'מועד הגשה', exact: true }).getByRole('button', { name: 'ללא', exact: true })).toHaveCount(0);
+    await expect(panel.getByRole('group', { name: 'מתוזמן ל', exact: true }).getByRole('button', { name: 'מחר', exact: true })).toBeVisible();
   });
 });
 

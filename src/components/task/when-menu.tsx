@@ -5,10 +5,12 @@ import { MenuItem } from '@/components/ui/overlays';
 import { addDays, today, weekdayName } from '@/lib/dates';
 import { dateTone } from '@/lib/date-presentation';
 import { useTaskNow } from './task-clock';
+import type { ReschedulePreset } from '@/lib/reschedule';
 
 export interface WhenSelection {
   bucket: string;
   date?: string | null;
+  preset?: ReschedulePreset | null;
 }
 
 function iso(d: Date) {
@@ -36,16 +38,16 @@ export function WhenMenuItems({
 
   return (
     <>
-      <MenuItem data-date-tone="today" onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(base) })}>
+      <MenuItem data-date-tone="today" onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(base), preset: 'today' })}>
         <Sun className="size-4" aria-hidden />
         <span className="flex-1">היום</span>
       </MenuItem>
-      <MenuItem data-date-tone="tomorrow" onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(tomorrow) })}>
+      <MenuItem data-date-tone="tomorrow" onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(tomorrow), preset: 'tomorrow' })}>
         <CalendarDays className="size-4" aria-hidden />
         <span className="flex-1">מחר</span>
         <span className="text-xs text-muted">{weekdayName(tomorrow)}</span>
       </MenuItem>
-      <MenuItem data-date-tone={dateTone(nextWeek, now)} onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(nextWeek) })}>
+      <MenuItem data-date-tone={dateTone(nextWeek, now)} onSelect={() => onSelect({ bucket: 'SCHEDULED', date: iso(nextWeek), preset: 'next-week' })}>
         <CalendarDays className="size-4" aria-hidden />
         <span className="flex-1">שבוע הבא</span>
         <span className="text-xs text-muted">{weekdayName(nextWeek)}</span>

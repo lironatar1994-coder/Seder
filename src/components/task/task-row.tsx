@@ -37,7 +37,7 @@ import {
   SubtaskChip,
   WhenChip,
 } from './task-chips';
-import { WhenMenuItems } from './when-menu';
+import { WhenMenuItems, type WhenSelection } from './when-menu';
 
 export interface TaskRowProps {
   task: TaskDTO;
@@ -61,7 +61,7 @@ export interface TaskRowProps {
   onOpen: (task: TaskDTO) => void;
   onDelete: (task: TaskDTO) => void;
   onPriority: (task: TaskDTO, priority: Priority) => void;
-  onSchedule: (task: TaskDTO, when: { bucket: string; date?: string | null }) => void;
+  onSchedule: (task: TaskDTO, when: WhenSelection) => void;
   /** Filing is the most common action on an Inbox row, so it lives one click
    *  deep in the row menu rather than behind opening the task. */
   onMove: (task: TaskDTO, projectId: string | null) => void;

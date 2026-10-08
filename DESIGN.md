@@ -333,6 +333,8 @@ This surface shows customer identity, aggregate counts, activity and connections
 
 Each customer identity includes a compact, underlined `איפוס סיסמה` button with a generous target (44px), labeled for the stored recipient email. Pending and resend cooldown disable repeat requests; wrapping feedback distinguishes sent, error and truthful local preview states. A current administrator check precedes customer lookup, and only the recipient completes the existing one-hour, single-use recovery; password and sessions change upon completion. Recovery URLs are excluded from visitor analytics. The addition's local ship evidence is recorded in `.impeccable/review/admin-reset-review.md`; deployment and live email delivery require separate evidence.
 
+The overdue group has a compact `תזמון מחדש` ghost button with a hairline neutral border and a small CalendarClock icon. One click schedules each displayed overdue task according to its last original relative choice: today, tomorrow, or the coming Sunday for next week. Existing tasks without a saved choice and custom calendar dates default to today. The button preserves filters, deadlines, and each task's saved choice, clears elapsed individual times, and resets reminder delivery state. Coarse-pointer targets retain the 44px floor.
+
 ## Do's and Don'ts
 
 ### Do:

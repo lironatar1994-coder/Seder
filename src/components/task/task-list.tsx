@@ -26,6 +26,7 @@ import { Button, IconButton } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { TaskRow } from './task-row';
 import { TaskDetail } from './task-detail';
+import { OverdueReschedule } from './overdue-reschedule';
 import { Composer } from './composer';
 import type { Collaborator } from '@/server/access';
 import {
@@ -52,6 +53,7 @@ import { registerComposer } from './compose-bus';
 import type { WhenSelection } from './when-menu';
 import { todayTaskGroups } from '@/lib/today-tasks';
 import { useTaskNow } from './task-clock';
+import { updateNavigation, useNavigationParam, useNavigationTask } from '@/components/nav/navigation-state';
 
 /** How long the completion animation runs before the row is actually removed
  *  and the write is sent. Matches .strike-line + .row-collapse in globals.css. */
@@ -103,11 +105,27 @@ export function TaskList({
   /** Where a shift-range measures from — the last row touched, not the cursor. */
   const [anchorId, setAnchorId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
+  const [openTaskId, setOpenTaskId] = useNavigationParam('task');
   const [composerOpen, setComposerOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('all');
-  const [sort, setSort] = useState('manual');
+  const [searchParam] = useNavigationParam('listSearch');
+  const search = searchParam ?? '';
+  const [priorityParam, setPriorityParam] = useNavigationParam('listPriority');
+  const priorityFilter = priorityParam && /^[1-4]$/.test(priorityParam) ? priorityParam : 'all';
+  const [sortParam, setSortParam] = useNavigationParam('listSort');
+  const sort = sortParam && ['priority', 'date', 'title'].includes(sortParam) ? sortParam : 'manual';
+  const setPriorityFilter = (value: string) => setPriorityParam(value === 'all' ? null : value);
+  const setSort = (value: string) => setSortParam(value === 'manual' ? null : value);
+  // One search session is one history step, rather than one per letter.
+  const searchSession = useRef(false);
+  const setSearch = (value: string) => {
+    updateNavigation({ listSearch: value || null }, searchSession.current && value !== '');
+    searchSession.current = value !== '';
+  };
+  useEffect(() => {
+    const reset = () => { searchSession.current = false; };
+    window.addEventListener('popstate', reset);
+    return () => window.removeEventListener('popstate', reset);
+  }, []);
   const [controlsHost, setControlsHost] = useState<Element | null>(null);
   const [displayOpen, setDisplayOpen] = useState(false);
   const displaySummary = [
@@ -176,8 +194,7 @@ export function TaskList({
 
   const flat = useMemo(() => visibleGroups.flatMap((g) => g.tasks), [visibleGroups]);
   const isEmpty = flat.length === 0;
-  const openTask = groups.flatMap((group) => group.tasks).find((t) => t.id === openTaskId) ?? null;
-  useEffect(() => { const params = new URLSearchParams(window.location.search); const id = params.get('task'); if (id && groups.some((group) => group.tasks.some((task) => task.id === id))) { setOpenTaskId(id); params.delete('task'); window.history.replaceState(null, '', window.location.pathname + (params.size ? `?${params}` : '')); } }, [groups]);
+  const openTask = useNavigationTask(openTaskId, groups.flatMap((group) => group.tasks).find((t) => t.id === openTaskId) ?? null, groups);
 
   /* Stepping through the list from inside the editor. The list is the only
      thing that knows the order, so it hands the editor a step function rather
@@ -189,7 +206,7 @@ export function TaskList({
       const next = flat[openIndex + direction];
       if (next) setOpenTaskId(next.id);
     },
-    [flat, openIndex],
+    [flat, openIndex, setOpenTaskId],
   );
 
   // Drop ids that the server has since removed, so the sets cannot grow
@@ -364,11 +381,11 @@ export function TaskList({
   const handleDelete = useCallback(
     (task: TaskDTO) => {
       setRemoved((prev) => new Set(prev).add(task.id));
-      setOpenTaskId((current) => (current === task.id ? null : current));
+      if (openTaskId === task.id) setOpenTaskId(null);
       run(() => deleteTaskAction(task.id));
       toast({ message: `נמחק: ${task.title}` });
     },
-    [run, toast],
+    [run, toast, openTaskId, setOpenTaskId],
   );
 
   const handlePriority = useCallback(
@@ -397,8 +414,8 @@ export function TaskList({
   );
 
   const handleSchedule = useCallback(
-    (task: TaskDTO, when: { bucket: string; date?: string | null }) =>
-      run(() => scheduleTaskAction(task.id, { bucket: when.bucket as never, date: when.date })),
+    (task: TaskDTO, when: WhenSelection) =>
+      run(() => scheduleTaskAction(task.id, { bucket: when.bucket as never, date: when.date, preset: when.preset })),
     [run],
   );
 
@@ -494,7 +511,7 @@ export function TaskList({
   const handleBulkSchedule = useCallback(
     (when: WhenSelection) =>
       runBulk(
-        (ids) => bulkScheduleAction(ids, { bucket: when.bucket as never, date: when.date }),
+        (ids) => bulkScheduleAction(ids, { bucket: when.bucket as never, date: when.date, preset: when.preset }),
         (count) => `${count} משימות תוזמנו מחדש`,
       ),
     [runBulk],
@@ -669,13 +686,13 @@ export function TaskList({
         <PopoverTrigger asChild><IconButton label="תצוגת הרשימה" className={priorityFilter !== 'all' || search || sort !== 'manual' ? 'text-accent' : undefined}><SlidersHorizontal className="size-[1.125rem]" aria-hidden /></IconButton></PopoverTrigger>
         <PopoverContent align="end" className="list-display-panel w-[min(20rem,calc(100vw-2rem))]">
           <div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">תצוגת הרשימה</h2><PopoverClose asChild><IconButton label="סגירת אפשרויות התצוגה"><X className="size-4" aria-hidden /></IconButton></PopoverClose></div>
-          <label className="task-search"><Search className="size-4 shrink-0" aria-hidden /><input dir="auto" value={search} onChange={(event) => setSearch(event.target.value)} aria-label="חיפוש ברשימה" placeholder="חיפוש ברשימה" />{search && <IconButton label="ניקוי חיפוש" onClick={() => setSearch('')}><X className="size-3.5" aria-hidden /></IconButton>}</label>
+          <label className="task-search"><Search className="size-4 shrink-0" aria-hidden /><input dir="auto" value={search} onFocus={() => { searchSession.current = false; }} onBlur={() => { searchSession.current = false; }} onChange={(event) => setSearch(event.target.value)} aria-label="חיפוש ברשימה" placeholder="חיפוש ברשימה" />{search && <IconButton label="ניקוי חיפוש" onClick={() => setSearch('')}><X className="size-3.5" aria-hidden /></IconButton>}</label>
           <label className="list-display-field">סינון לפי עדיפות<select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value)}><option value="all">כל העדיפויות</option><option value="1">דחוף</option><option value="2">חשוב</option><option value="3">רגיל</option><option value="4">ללא עדיפות</option></select></label>
           <label className="list-display-field">מיון משימות<select value={sort} onChange={(event) => setSort(event.target.value)}><option value="manual">סדר ידני</option><option value="priority">לפי עדיפות</option><option value="date">לפי תאריך</option><option value="title">לפי שם</option></select></label>
           <PopoverClose asChild><Button size="sm" className="mt-4 w-full">הצגת המשימות</Button></PopoverClose>
         </PopoverContent>
       </Popover>, controlsHost)}
-      {displaySummary && <div className="mb-3 flex items-start justify-between gap-2 text-sm text-muted"><button type="button" className="min-w-0 flex-1 break-words py-2 text-start" onClick={() => setDisplayOpen(true)}>{displaySummary}</button><Button variant="ghost" size="sm" className="shrink-0" onClick={() => { setSearch(''); setPriorityFilter('all'); setSort('manual'); }}>איפוס תצוגה</Button></div>}
+      {displaySummary && <div className="mb-3 flex items-start justify-between gap-2 text-sm text-muted"><button type="button" className="min-w-0 flex-1 break-words py-2 text-start" onClick={() => setDisplayOpen(true)}>{displaySummary}</button><Button variant="ghost" size="sm" className="shrink-0" onClick={() => { searchSession.current = false; updateNavigation({ listSearch: null, listPriority: null, listSort: null }); }}>איפוס תצוגה</Button></div>}
       {showComposer &&
         (composerOpen ? (
           <ComposerSlot phone={isPhone} onClose={() => setComposerOpen(false)}>
@@ -736,6 +753,7 @@ export function TaskList({
                       subtitle={group.subtitle}
                       isDay={dayHeadings}
                       count={group.tasks.length}
+                      action={group.key === 'overdue' && group.tasks.length > 0 ? <OverdueReschedule tasks={group.tasks} /> : undefined}
                     />
                   )}
                   {group.tasks.length === 0 ? (
@@ -876,11 +894,13 @@ function GroupHeading({
   subtitle,
   isDay,
   count,
+  action,
 }: {
   title: string;
   subtitle?: string | null;
   isDay: boolean;
   count: number;
+  action?: React.ReactNode;
 }) {
   let primary = title;
   let secondary: string | null = subtitle ?? null;
@@ -901,7 +921,8 @@ function GroupHeading({
     <div className="mb-1 flex items-baseline gap-2.5 border-be border-line px-2 pb-1.5">
       <h2 className="text-base font-semibold text-ink">{primary}</h2>
       {secondary && <span className="num text-xs text-muted">{secondary}</span>}
-      <span className="num ms-auto text-xs text-muted">{count}</span>
+      <span className={cn('num text-xs text-muted', !action && 'ms-auto')}>{count}</span>
+      {action && <div className="ms-auto shrink-0">{action}</div>}
     </div>
   );
 }

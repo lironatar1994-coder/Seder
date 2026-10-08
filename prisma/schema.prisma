@@ -221,6 +221,8 @@ model Task {
   scheduledFor  DateTime?
   /// "HH:mm", 24-hour. Israeli UIs do not use AM/PM.
   scheduledTime String?
+  /// Original relative scheduling choice, reused when an overdue task is rescheduled.
+  reschedulePreset String?
   durationMinutes Int @default(30)
   /// Things' real differentiator: "do it whenever, but it is due Thursday".
   deadline      DateTime?

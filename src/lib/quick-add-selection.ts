@@ -4,6 +4,7 @@ import { dayStringSchema, labelSchema, prioritySchema, timeStringSchema } from '
 import { today } from './dates';
 import { firstOccurrenceOnOrAfter, parseRecurrence, serializeRecurrence } from './recurrence';
 import type { ParsedQuickAdd, TokenKind } from './quick-add-parser';
+import { RESCHEDULE_PRESETS, type ReschedulePreset } from './reschedule';
 
 const calendarDay = dayStringSchema.refine(value => {
   if (!value) return true;
@@ -18,6 +19,7 @@ export const quickAddSelectionSchema = z.object({
     bucket: z.enum(WHEN_BUCKETS),
     date: calendarDay,
     time: timeStringSchema,
+    preset: z.enum(RESCHEDULE_PRESETS).nullable().optional(),
   }).refine(value => value.bucket !== 'SCHEDULED' || Boolean(value.date), 'צריך לבחור תאריך').optional(),
   projectId: z.string().cuid().nullable().optional(),
   deadline: calendarDay,
@@ -67,6 +69,12 @@ export function quickAddSchedule(
   if (rule) return { bucket: 'SCHEDULED' as const, date: firstOccurrenceOnOrAfter(rule, base).toISOString().slice(0, 10), time: null };
   if (defaults.defaultDate || defaults.view === 'today') return { bucket: 'SCHEDULED' as const, date: base.toISOString().slice(0, 10), time: null };
   return { bucket: defaults.view === 'someday' ? 'SOMEDAY' as const : 'ANYTIME' as const, date: null, time: null };
+}
+
+export function quickAddReschedulePreset(parsed: ParsedQuickAdd, selection: QuickAddSelection = {}): ReschedulePreset | null {
+  const token = parsed.tokens.find(token => token.kind === 'date');
+  if (token) return token.display === 'מחר' ? 'tomorrow' : token.display === 'שבוע הבא' ? 'next-week' : 'today';
+  return selection.schedule?.preset ?? 'today';
 }
 
 /** Changing a picker replaces all matching sentence tokens, including duplicates.

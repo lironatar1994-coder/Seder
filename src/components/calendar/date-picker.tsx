@@ -10,11 +10,13 @@ import { hebrewDayMonth } from '@/lib/hebrew-date';
 import { dateTone } from '@/lib/date-presentation';
 import { useTaskNow } from '@/components/task/task-clock';
 import type { WhenBucket } from '@/lib/constants';
+import type { ReschedulePreset } from '@/lib/reschedule';
 
 export interface WhenValue {
   bucket: WhenBucket;
   date?: string | null;
   time?: string | null;
+  preset?: ReschedulePreset | null;
 }
 
 function iso(d: Date) {
@@ -32,6 +34,7 @@ export function DatePickerPanel({
   value,
   bucket,
   time,
+  preset,
   variant = 'schedule',
   onPick,
   onClear,
@@ -39,6 +42,7 @@ export function DatePickerPanel({
   value: string | null;
   bucket?: WhenBucket;
   time?: string | null;
+  preset?: ReschedulePreset | null;
   variant?: 'schedule' | 'deadline';
   onPick: (value: WhenValue) => void;
   onClear: () => void;
@@ -76,8 +80,8 @@ export function DatePickerPanel({
         <ChevronRight className="size-4" aria-hidden />תאריך
       </button>
       <TimePickerPanel time={time}
-        onSave={nextTime => onPick({ bucket: 'SCHEDULED', date: selected, time: nextTime })}
-        onRemove={() => onPick({ bucket: 'SCHEDULED', date: selected, time: null })} />
+        onSave={nextTime => onPick({ bucket: 'SCHEDULED', date: selected, time: nextTime, preset })}
+        onRemove={() => onPick({ bucket: 'SCHEDULED', date: selected, time: null, preset })} />
     </div>
   );
 
@@ -94,7 +98,7 @@ export function DatePickerPanel({
             <li key={option.key}>
               <button
                 type="button"
-                onClick={() => onPick({ ...option.value, time })}
+                onClick={() => onPick({ ...option.value, time, preset: option.key === 'today' ? 'today' : option.key === 'tomorrow' ? 'tomorrow' : option.key === 'next' ? 'next-week' : null })}
                 aria-pressed={active}
                 data-date-tone={option.value.bucket === 'SCHEDULED' ? dateTone(parseISODay(option.value.date), now) : 'none'}
                 className={cn(
@@ -148,7 +152,7 @@ export function DatePickerPanel({
             <button
               key={day.iso}
               type="button"
-              onClick={() => onPick({ bucket: 'SCHEDULED', date: day.iso, time })}
+              onClick={() => onPick({ bucket: 'SCHEDULED', date: day.iso, time, preset: 'today' })}
               aria-current={active ? 'date' : undefined}
               aria-label={`${weekdayName(parseISODay(day.iso))}, ${formatShortDate(parseISODay(day.iso))}`}
               aria-pressed={active}

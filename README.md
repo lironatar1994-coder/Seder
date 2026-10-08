@@ -397,6 +397,26 @@ navigate you somewhere and leave you to find it. The same palette still jumps to
 or label. Matching happens on the server, so a hit inside a note works even though that text is
 nowhere in the visible row.
 
+The `תזמון מחדש` button beside `באיחור` acts immediately on the displayed tasks.
+Each task reuses its saved scheduling choice: `היום` becomes today, `מחר` becomes
+tomorrow, and `שבוע הבא` becomes the coming Sunday (the following Sunday when today
+is Sunday). Typed quick-add dates and picker choices both retain this choice;
+editing only the time preserves it. Older tasks without a saved choice and custom
+dates default to today. Deadlines stay unchanged, elapsed times are cleared, and
+reminders are reset. The additive `reschedule_preset` migration must run before
+starting the updated app.
+
+## Navigation history
+
+Browser Back and Forward follow views, task details (including task-to-task steps and
+search results), project list/board changes, list search, priority filters, sorting,
+and calendar day selections.
+Closing a task is a history step, so Back reopens it. Typing a list search creates one
+step per editing session rather than one per character. URLs retain these selections
+on reload. The workspace remembers its own scroll position when returning to a view.
+Task destinations load current data with the same access checks as other task queries;
+navigation does not reverse saved edits or recreate deleted tasks.
+
 ## Keyboard
 
 | Key | Action |

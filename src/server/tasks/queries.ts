@@ -30,6 +30,7 @@ export function taskSelect(viewerId: string) {
     whenBucket: true,
     scheduledFor: true,
     scheduledTime: true,
+    reschedulePreset: true,
     durationMinutes: true,
     deadline: true,
     completedAt: true,
@@ -59,6 +60,7 @@ export interface TaskDTO {
   whenBucket: WhenBucket;
   scheduledFor: Date | null;
   scheduledTime: string | null;
+  reschedulePreset?: string | null;
   durationMinutes?: number;
   deadline: Date | null;
   completedAt: Date | null;

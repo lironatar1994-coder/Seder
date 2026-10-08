@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogFooter } from '@/components/ui/overlays';
 import { useToast } from '@/components/ui/toast';
 import { Composer, type ComposerProject } from './composer';
 import { TaskDetail } from './task-detail';
+import { useNavigationParam, useNavigationTask } from '@/components/nav/navigation-state';
 
 interface Props { groups: TaskGroup[]; projectId: string; projects: { id: string; name: string; color: string }[]; labels: { id: string; name: string; color: string }[]; collaborators: Collaborator[] }
 export function ProjectBoard({ groups, projectId, projects, labels, collaborators }: Props) {
@@ -34,12 +35,12 @@ export function ProjectBoard({ groups, projectId, projects, labels, collaborator
       }
     }
   }, [groups, projectId]);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useNavigationParam('task');
   const [newSection, setNewSection] = useState('');
   const [pending, startTransition] = useTransition();
   const { toast } = useToast();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const task = groups.flatMap((group) => group.tasks).find((item) => item.id === openId) ?? null;
+  const task = useNavigationTask(openId, groups.flatMap((group) => group.tasks).find((item) => item.id === openId) ?? null, groups);
   function move(taskId: string, sectionId: string | null) { startTransition(async () => { try { const result = await moveTaskToSectionAction(taskId, projectId, sectionId); if (!result.ok) toast({ message: result.error ?? 'המשימה לא הועברה', tone: 'error' }); } catch { toast({ message: 'ההעברה נכשלה. אפשר לנסות שוב.', tone: 'error' }); } }); }
   function onDragEnd({ active, over }: DragEndEvent) { if (over?.id && over.id !== active.data.current?.section) move(String(active.id), over.id === 'loose' ? null : String(over.id)); }
   return <><DndContext id="seder-board" sensors={sensors} onDragEnd={onDragEnd}><div ref={board} className="project-board" data-testid="project-board" aria-label="לוח הפרויקט" aria-busy={pending}>
