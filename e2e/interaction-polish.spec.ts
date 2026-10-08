@@ -42,14 +42,14 @@ test('settings has a mobile directory, clear location, return to the original vi
   await page.screenshot({ path: '.local-artifacts/settings-section-mobile-dark.png' });
   for (const width of [768, 1024]) {
     await page.setViewportSize({ width, height: 900 });
-    await expect.poll(async () => (await page.locator('.rail').boundingBox())?.width).toBe(256);
+    await expect.poll(async () => (await page.locator('.rail').boundingBox())?.width).toBe(width >= 1024 ? 280 : 256);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: `.local-artifacts/settings-section-${width}.png` });
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.evaluate(() => { document.documentElement.dataset.theme = 'light'; });
   await expect(page.getByRole('navigation', { name: 'מקטעי הגדרות' }).getByRole('link', { name: 'מראה', exact: true })).toHaveAttribute('aria-current', 'page');
-  await expect.poll(async () => (await page.locator('.rail').boundingBox())?.width).toBe(256);
+  await expect.poll(async () => (await page.locator('.rail').boundingBox())?.width).toBe(280);
   await page.locator('.rail-nav').evaluate(node => { node.scrollTop = 0; });
   await page.screenshot({ path: '.local-artifacts/settings-section-desktop.png' });
   await page.goBack(); await expect(page.getByTestId('settings-overview')).toBeVisible();

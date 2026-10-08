@@ -1032,3 +1032,139 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
   .rail-primary { position: static; }
   .rail-nav { scroll-padding-block-start: 0; }
 }
+
+/* Desktop reading roles scale together, independently of browser zoom and the
+   phone layout. Variables live on the app's body so Radix portals inherit them. */
+.desktop-size-setting { display: none; }
+@media (min-width: 1024px) {
+  body:has([data-app-shell]) {
+    --desktop-task-size: 1.1875rem;
+    --desktop-task-line: 1.75rem;
+    --desktop-nav-size: 1.0625rem;
+    --desktop-nav-row: 2.875rem;
+    --desktop-page-size: 2.25rem;
+    --desktop-page-line: 2.75rem;
+    --desktop-section-size: 1.25rem;
+    --desktop-control-size: 1rem;
+    --desktop-prose-size: 1rem;
+    --desktop-meta-size: .875rem;
+    --desktop-icon-size: 1.375rem;
+    --desktop-meta-icon: 1rem;
+    --desktop-check-size: 1.375rem;
+    --desktop-row-pad: .5rem;
+    --desktop-rail-width: 17.5rem;
+    --desktop-column: 60rem;
+    --desktop-gutter: 2.5rem;
+    --desktop-text-inset: calc(var(--desktop-check-size) + .75rem + 1px);
+  }
+  :root[data-desktop-size='compact'] body:has([data-app-shell]) {
+    --desktop-task-size: 1.0625rem;
+    --desktop-task-line: 1.625rem;
+    --desktop-nav-size: .9375rem;
+    --desktop-page-size: 2rem;
+    --desktop-page-line: 2.5rem;
+    --desktop-section-size: 1.125rem;
+    --desktop-control-size: .9375rem;
+    --desktop-prose-size: .9375rem;
+    --desktop-icon-size: 1.25rem;
+    --desktop-check-size: 1.25rem;
+    --desktop-row-pad: .4375rem;
+    --desktop-rail-width: 16.5rem;
+  }
+  :root[data-desktop-size='large'] body:has([data-app-shell]) {
+    --desktop-task-size: 1.3125rem;
+    --desktop-task-line: 1.875rem;
+    --desktop-nav-size: 1.125rem;
+    --desktop-page-size: 2.5rem;
+    --desktop-page-line: 3rem;
+    --desktop-section-size: 1.375rem;
+    --desktop-control-size: 1.125rem;
+    --desktop-prose-size: 1.125rem;
+    --desktop-meta-size: .9375rem;
+    --desktop-icon-size: 1.5rem;
+    --desktop-meta-icon: 1.125rem;
+    --desktop-check-size: 1.5rem;
+    --desktop-row-pad: .625rem;
+    --desktop-rail-width: 18.5rem;
+  }
+  .desktop-size-setting { display: block; }
+  .view-surface:has(.task-select-control) { --desktop-text-inset: calc(var(--desktop-check-size) + 2.5rem + 1px); }
+  .task-select-control { margin-block-start: calc((var(--desktop-task-line) - 1rem) / 2); }
+  .view-surface:has(.task-select-control) .task-add-trigger { padding-inline-start: 1.8125rem; }
+  .rail-nav { scroll-padding-block-start: calc(6 * var(--desktop-nav-row) + 1.625rem + 1px); }
+  :root[data-rail='collapsed'] .rail-header { padding-inline: .875rem; }
+  :root[data-rail='collapsed'] .rail-link { padding-inline-start: calc((4.25rem - 1rem - var(--desktop-icon-size)) / 2); }
+  :root[data-rail='collapsed'] .rail-section-toggle { padding-inline-start: calc((4.25rem - 1rem - .875rem) / 2); }
+  .rail { inline-size: var(--desktop-rail-width); }
+  .rail > * { inline-size: var(--desktop-rail-width); }
+  :root[data-rail='collapsed'] .rail { inline-size: 4.25rem; }
+  .rail-link, .rail-add, .rail-search, .rail-account .rail-label { font-size: var(--desktop-nav-size); line-height: 1.5; }
+  .rail-link { min-block-size: var(--desktop-nav-row); }
+  .rail-section-toggle { font-size: var(--desktop-meta-size); }
+  .rail [data-count], .rail kbd { font-size: var(--desktop-meta-size); }
+  .rail-link > svg, .rail-add > svg, .rail-search > svg, .rail-account-settings > svg {
+    inline-size: var(--desktop-icon-size); block-size: var(--desktop-icon-size);
+  }
+  :root[data-rail='collapsed'] .rail-add, :root[data-rail='collapsed'] .rail-search { padding-inline: calc((3.25rem - var(--desktop-icon-size)) / 2); }
+  .workspace-content, .workspace-content:not(:has([data-wide])), .workspace-content:has([data-project-mode='list']) {
+    max-inline-size: var(--desktop-column);
+    margin-inline: 0 auto;
+    padding-inline: var(--desktop-gutter);
+  }
+  .view-surface:has([data-wide]):not(:has([data-project-mode='list'])) { --desktop-column: 82rem; }
+  .workspace-bar {
+    max-inline-size: var(--desktop-column);
+    margin-inline: 0 auto;
+    min-block-size: 3.75rem;
+    padding-inline: var(--desktop-gutter);
+  }
+  .view-surface:has([data-testid='task-list']) .workspace-bar { padding-inline-start: calc(var(--desktop-gutter) + var(--desktop-text-inset)); }
+  .workspace-bar > span { font-size: var(--desktop-meta-size); }
+  .view-heading { padding-block: 1.25rem 1.5rem; }
+  .view-heading > div { align-items: flex-start; }
+  .view-heading h1 { font-size: var(--desktop-page-size); line-height: var(--desktop-page-line); font-weight: 700; overflow-wrap: anywhere; }
+  .view-heading > p { font-size: var(--desktop-meta-size); line-height: 1.5rem; }
+  .workspace-content:has([data-testid='task-list']) .view-heading h1,
+  .workspace-content:has([data-testid='task-list']) .view-heading > p { margin-inline-start: var(--desktop-text-inset); }
+  .project-task-list { inline-size: 100%; }
+  .task-title, .board-task-title { font-size: var(--desktop-task-size); line-height: var(--desktop-task-line); overflow-wrap: anywhere; }
+  .task-row { padding-block: var(--desktop-row-pad); min-block-size: calc(var(--desktop-task-line) + var(--desktop-row-pad) * 2 + 2px); }
+  .task-complete-control {
+    inline-size: var(--desktop-check-size); block-size: var(--desktop-check-size);
+    margin-block-start: calc((var(--desktop-task-line) - var(--desktop-check-size)) / 2);
+  }
+  .task-complete-control > svg { inline-size: calc(var(--desktop-check-size) * .6); block-size: calc(var(--desktop-check-size) * .6); }
+  .task-row > button[aria-label^='גרירת'] { inset-block-start: var(--desktop-row-pad); }
+  .task-content > .line-clamp-1 { font-size: var(--desktop-prose-size); line-height: 1.5rem; }
+  .task-metadata, .task-metadata > * { font-size: var(--desktop-meta-size); line-height: 1.25rem; }
+  .task-metadata svg { inline-size: var(--desktop-meta-icon); block-size: var(--desktop-meta-icon); }
+  [data-task-id] + [data-task-id]::before { inset-inline-start: var(--desktop-text-inset); }
+  .task-add-trigger { gap: .75rem; padding-inline-start: 1px; font-size: var(--desktop-task-size); line-height: var(--desktop-task-line); }
+  .task-add-trigger > svg { inline-size: var(--desktop-check-size); block-size: var(--desktop-check-size); }
+  .task-add-trigger > span { font-size: inherit; }
+  body:has([data-app-shell]) .task-row .ui-icon-button { inline-size: 2rem; block-size: 2rem; margin-block-start: -.125rem; }
+  .task-add-trigger kbd { font-size: var(--desktop-meta-size); }
+  .task-group-heading { padding-inline: var(--desktop-text-inset) 0; padding-block-end: .625rem; align-items: center; }
+  .task-group-heading h2 { font-size: var(--desktop-section-size); line-height: 1.75rem; }
+  .task-group-heading > span { font-size: var(--desktop-meta-size); }
+  body:has([data-app-shell]) .ui-button { font-size: var(--desktop-control-size); }
+  body:has([data-app-shell]) .ui-button > svg,
+  body:has([data-app-shell]) .ui-icon-button > svg { inline-size: var(--desktop-icon-size); block-size: var(--desktop-icon-size); }
+  body:has([data-app-shell]) .ui-icon-button { inline-size: 2.5rem; block-size: 2.5rem; }
+  body:has([data-app-shell]) [role='menuitem'] { font-size: var(--desktop-control-size); }
+  body:has([data-app-shell]) [role='menu'] { max-inline-size: calc(100vw - 2rem); }
+  .view-switch button, .directory-link { font-size: var(--desktop-control-size); }
+  .view-switch svg { inline-size: var(--desktop-icon-size); block-size: var(--desktop-icon-size); }
+  .board-column { flex-basis: 21rem; inline-size: 21rem; }
+  .board-card > p { font-size: var(--desktop-prose-size); }
+  .task-detail-title { font-size: var(--desktop-section-size); line-height: var(--desktop-task-line); }
+  .task-detail-check { inline-size: var(--desktop-check-size); block-size: var(--desktop-check-size); margin-block-start: calc((var(--desktop-task-line) - var(--desktop-check-size)) / 2); }
+  .task-detail-notes { margin-inline-start: calc(var(--desktop-check-size) + .75rem); font-size: var(--desktop-prose-size); }
+  .task-detail .text-sm { font-size: var(--desktop-prose-size); }
+  .task-detail .text-xs { font-size: var(--desktop-meta-size); }
+  .task-detail select { font-size: var(--desktop-control-size); }
+  [data-settings-shell] .text-sm { font-size: var(--desktop-control-size); }
+  [data-settings-shell] .text-xs { font-size: var(--desktop-meta-size); }
+}
+
+@media (min-width: 1024px) and (max-height: 600px) { .rail-nav { scroll-padding-block-start: 0; } }

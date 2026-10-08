@@ -348,7 +348,7 @@ function SelectBox({
       aria-label={`בחירת ${task.title}`}
       onClick={(event) => onSelect(task, event.shiftKey ? 'range' : 'toggle')}
       className={cn(
-        'relative mt-1 inline-flex size-4 shrink-0 items-center justify-center rounded-sm border',
+        'task-select-control relative mt-1 inline-flex size-4 shrink-0 items-center justify-center rounded-sm border',
         'transition-colors duration-150',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         "before:absolute before:content-[''] [@media(pointer:coarse)]:before:-inset-3.5",
@@ -412,7 +412,7 @@ function Checkbox({
       title={PRIORITY_LABELS[task.priority]}
       onClick={() => onToggle(task, !done)}
       className={cn(
-        'relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px]',
+        'task-complete-control relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px]',
         'transition-colors duration-120',
         // A 20px box is right for the row's density and wrong for a thumb. The
         // target extends past it on touch only; completing the wrong task is

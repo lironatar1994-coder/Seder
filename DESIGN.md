@@ -98,6 +98,46 @@ typography:
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: "normal"
+  desktop-headline:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "2.25rem"
+    fontWeight: 700
+    lineHeight: "2.75rem"
+    letterSpacing: "normal"
+  desktop-task-title:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1.1875rem"
+    fontWeight: 400
+    lineHeight: "1.75rem"
+    letterSpacing: "normal"
+  desktop-navigation:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1.0625rem"
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: "normal"
+  desktop-section:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1.25rem"
+    fontWeight: 700
+    lineHeight: "1.75rem"
+    letterSpacing: "normal"
+  desktop-prose:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    letterSpacing: "normal"
+  desktop-control:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "1rem"
+    fontWeight: 600
+    letterSpacing: "normal"
+  desktop-metadata:
+    fontFamily: "Assistant, Segoe UI, Heebo, Arial, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: "1.25rem"
+    letterSpacing: "normal"
   numerals:
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
     fontFeature: "tnum"
@@ -180,6 +220,21 @@ components:
     textColor: "{colors.on-accent}"
     rounded: "{rounded.full}"
     size: "1.25rem"
+  navigation-current-desktop:
+    backgroundColor: "{colors.rail-active}"
+    textColor: "{colors.rail-ink}"
+    typography: "{typography.desktop-navigation}"
+    rounded: "{rounded.lg}"
+    height: "2.875rem"
+    padding: "0.375rem 0.75rem"
+  task-row-desktop:
+    textColor: "{colors.ink}"
+    typography: "{typography.desktop-task-title}"
+    padding: "0.5rem 0"
+  task-completion-desktop:
+    textColor: "{colors.on-accent}"
+    rounded: "{rounded.full}"
+    size: "1.375rem"
   mobile-add:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.on-accent}"
@@ -195,14 +250,14 @@ components:
 
 A clear Hebrew task canvas follows the operating grammar the user pinned from Todoist: white work, pale gray navigation, short sans headings, flat rows and round completion controls. The app is quiet at rest. Tasks carry the reading weight; navigation and attributes explain place and state without becoming the main content.
 
-This records the implemented replacement of 2026-10-04. The user rejected the lavender ground, dark indigo rail, large serif date, progress rail, crowded permanent filters and supporting cards on Today. The app uses Assistant throughout its working hierarchy, including its current live rail wordmark. Frank Ruhl Libre remains the public editorial face; the existing blue identity image remains an identity asset rather than the action accent.
+This records the implemented replacement of 2026-10-04 and the accepted authenticated desktop refinement of 2026-10-09. The user rejected the lavender ground, dark indigo rail, large serif date, progress rail, crowded permanent filters and supporting cards on Today. The app uses Assistant throughout its working hierarchy, including its current live rail wordmark. Frank Ruhl Libre remains the public editorial face; the existing blue identity image remains an identity asset rather than the action accent.
 
-The authority is the user-pinned, code-led Todoist canon in design/todoist-research.md, not assigned candidate 5. Its recorded seed is 95c8c208, also emitted by src/app/layout.tsx. The signed-out public landing retains its independent editorial composition and is outside this replacement finish review. Shared global tokens apply there, but app composition rules do not turn its headings into the authenticated hierarchy. Its product screenshots were refreshed on 2026-10-04 from the current interface with synthetic tasks; capture provenance is in src/components/landing/shots/provenance.json. The SEO pass checks its public metadata and desktop/mobile overflow separately.
+The authority is the user-pinned, code-led Todoist canon in design/todoist-research.md and the coordinated sizing philosophy from Things. The earlier canon records seed 95c8c208; the current root layout names the implementation contract desktop-scale-20261009. The signed-out public landing retains its independent editorial composition and is outside this replacement finish review. Shared global tokens apply there, but app composition rules do not turn its headings into the authenticated hierarchy. Its product screenshots were refreshed on 2026-10-04 from the current interface with synthetic tasks; capture provenance is in src/components/landing/shots/provenance.json. The SEO pass checks its public metadata and desktop/mobile overflow separately.
 
 **Key Characteristics:**
 
-- A neutral task canvas, flat rows and brief metadata.
-- Hebrew sans hierarchy, normal letter spacing and isolated tabular numerals.
+- A neutral task canvas anchored beside the RTL rail, flat rows and brief metadata.
+- Coordinated desktop reading roles, Hebrew sans hierarchy, normal letter spacing and isolated tabular numerals.
 - Controls on demand, with active conditions explained in the working view.
 - Four mobile destinations and a separate capture action.
 - Completion is the main feedback moment; reduced motion is immediate.
@@ -252,13 +307,23 @@ The three variable faces are self-hosted in public/fonts with their licenses. Ap
 - **App Wordmark / Editorial Display:** the current rail text follows the app sans override; Frank remains the independent public display role and the existing blue logo image remains unchanged.
 - **Numerals:** times, numeric dates, counts and timer values use Inter; their width and order remain stable inside RTL content.
 
+The `desktop-*` frontmatter roles are the comfortable default for the authenticated app at 1024 CSS pixels and above. Page headings use 36/44px, task and board titles 19/28px, navigation 17px, section headings 20px, prose and controls 16px, and metadata 14px. Detail titles use the section size with the task line height; board titles retain weight 600. The original roles continue below 1024px and on independently scoped surfaces. These roles do not change the root font size or apply CSS zoom.
+
+Appearance offers immediate device-local קומפקטי / נוח / גדול choices. Compact coordinates 17/26px task type, 15px navigation, 32/40px page type, 18px sections, 15px prose/controls, 14px metadata and 20px main icons/list controls with a 264px rail. Large coordinates 21/30px task type, 18px navigation, 40/48px page type, 22px sections, 18px prose/controls, 15px metadata and 24px main icons/list controls with a 296px rail. Comfortable uses the normative desktop roles, 22px icons/list controls and a 280px rail. Row padding is 7/8/10px per side for compact/comfortable/large; navigation rows remain 46px. The validated preference is read before paint, persists in local storage and synchronizes between open tabs; absent or invalid values resolve to comfortable. The selector is hidden below 1024px.
+
+**The Coordinated Reading Rule.** Scale desktop text, icons, row spacing and rail together through semantic roles on the authenticated app body. Portalled app menus and detail inherit those roles; public and admin surfaces keep their existing hierarchy.
+
 **The Hebrew Reading Rule.** Use Assistant for app headings and controls, normal Hebrew letter spacing, and isolated LTR islands for times, dates, shortcuts and counts. User-entered free text resolves with dir="auto".
 
 ## Layout
 
-The authenticated shell occupies the viewport. Main content and the navigation directory scroll independently; desktop navigation stays at the Hebrew reading edge, on the right. At the desktop breakpoint (768px), the rail is 16rem wide and can collapse to 4.25rem while its contents retain their original width. The header, capture/search controls and account/settings footer stay anchored; the six daily lists remain sticky above the scrolling collections. At viewport heights of 600px or less, daily lists scroll with the directory so short landscape screens can reach every destination. The desktop workspace bar is a quiet 3rem contextual row, with breadcrumb, search and shortcut access; it resolves the actual label, saved filter, focus route and personal or shared project context.
+The authenticated shell occupies the viewport. Main content and the navigation directory scroll independently; the right rail anchors the Hebrew reading edge. At 1024px and above, ordinary task work uses a maximum 960px canvas with 40px inline gutters, anchored directly beside the rail. The remaining space on ultra-wide screens stays beyond the canvas. Boards, calendar and settings may opt into the 82rem wide contract; switching a project back to list restores the ordinary column for both its header and content. The contextual workspace bar shares the same column and gutters and is at least 60px high.
 
-Ordinary work uses a centered reading column with a final maximum width of 52rem and desktop inline padding of 2rem. Calendar and board surfaces may opt into the wide container, capped at 82rem. Task groups use open space and hairline rows rather than a rounded group card. Group spacing is 1.25rem on desktop and 1rem on phones; row padding is 0.75rem on desktop and 0.5rem on phones. Phone rows retain at least 44px open-task touch targets, including untimed one-line tasks; type sizes stay unchanged.
+Heading, subtitle, contextual bar, composer, group headings, separators and task titles share a text axis derived from the completion control, its 12px gap and the row's 1px border. Conditional bulk selection adds one 28px slot consistently to this axis. Completion and the separate 16px selection square center on the first title line in every desktop size. Collapsed navigation exposes a 68px strip; reopen, capture/search, daily, collection and utility glyphs share its 34px center, while semantic accessible names remain available.
+
+The rail header, capture/search and account/settings footer stay anchored. The six daily lists remain sticky over the scrolling collections; the desktop scroll reserve derives from six 46px rows plus 27px of group framing (303px). At heights of 600px or less, the daily group becomes static and reserve becomes zero so the complete directory remains reachable. The navigation directory retains a shrinking flex scroll area.
+
+At 768–1023px the existing tablet shell remains: 256px rail, 68px collapse, centered ordinary column capped at 52rem and 32px inline padding, with the existing 48px workspace bar. Below 768px the established mobile shell applies. Desktop sizing roles do not affect either range. Task groups remain open space with hairline rows: 20px desktop/tablet group spacing and 16px phone spacing; tablet rows retain 12px per-side padding and phone rows 8px. Phone open-task targets retain the 44px touch floor without changing their 17/24px task reading role.
 
 Below 768px, the content has 1.25rem inline padding. The header places a short Today title and compact Hebrew/Gregorian date over the task collection, with search, actions and Display on the same heading row. Weekly outlook, deadlines and focus live at /app/focus. They do not occupy Today. Display opens only when requested; a compact summary names every active search, priority and sort condition with a reset action.
 
@@ -288,7 +353,7 @@ Completion combines a tick, a reading-direction strike (220ms) and row collapse 
 
 Small softened corners belong to controls and overlays; task-list rows remain flat. Shared buttons and fields use the lg radius. Menus and popovers use lg/xl roles; desktop detail uses its observed 1rem radius and becomes square-edged full-screen detail on phones. Board cards, board columns and the focus container retain their separate source shapes, documented in the frontmatter.
 
-Task-list and calendar completion controls are circles (20px, 1.5px stroke) with a 12px tick. List rings communicate priority through fixed p1–p4 values and accessible priority descriptions. The detail completion circle uses a neutral outline; board circles retain their 2px stroke. Batch selection is a smaller square (16px) and subtasks retain their own smaller control. Do not generalize the signature circle to every checkbox role.
+Below 1024px, task-list and calendar completion controls are circles (20px, 1.5px stroke) with a 12px tick. Desktop list/detail circles use the coordinated 20/22/24px control role; calendar and board circles retain their existing 20px geometry. List rings communicate priority through fixed p1–p4 values and accessible priority descriptions. The detail completion circle uses a neutral outline; board circles retain their 2px stroke. Batch selection is a smaller square (16px) and subtasks retain their own smaller control. Do not generalize the signature circle to every checkbox role.
 
 ## Components
 
@@ -298,7 +363,7 @@ Plain Hebrew actions, clear hierarchy and gentle corners. Primary uses action/fo
 
 ### Chips
 
-Brief metadata rather than decorative badges. Scheduled dates use fixed semantic colors across all action accents: green for today, amber for tomorrow, blue for two through six days ahead, and purple from seven days ahead. The picker, composer, detail and task rows share that meaning. A past day turns only the date red and leaves the hour gray; an elapsed hour today turns only the hour and clock red and leaves the date gray. Completed tasks are neutral. Date/hour metadata share one text size; metadata icons share 14px geometry. An upcoming deadline retains its amber wash and flag; an overdue deadline switches to urgency red and says that its date has passed. The picker offers a clearly named ללא תאריך action, clearing the hour with the scheduled date. Project dots and label chips retain their named color. A recurrence icon has a readable accessible explanation. Priority 4 has no extra badge.
+Brief metadata rather than decorative badges. Scheduled dates use fixed semantic colors across all action accents: green for today, amber for tomorrow, blue for two through six days ahead, and purple from seven days ahead. The picker, composer, detail and task rows share that meaning. A past day turns only the date red and leaves the hour gray; an elapsed hour today turns only the hour and clock red and leaves the date gray. Completed tasks are neutral. Date/hour metadata share one text size; metadata icons retain 14px geometry below 1024px and use 16px in comfortable desktop mode (18px in large). An upcoming deadline retains its amber wash and flag; an overdue deadline switches to urgency red and says that its date has passed. The picker offers a clearly named ללא תאריך action, clearing the hour with the scheduled date. Project dots and label chips retain their named color. A recurrence icon has a readable accessible explanation. Priority 4 has no extra badge.
 
 ### Cards / Containers
 
@@ -310,7 +375,7 @@ Shared fields use the work surface, strong line, normal body size and lg corners
 
 ### Navigation
 
-Pale neutral desktop rail, concise labels and semantic 20px SVG icons with a 1.7px stroke. Daily lists lead in the order Inbox, Today, Upcoming, Anytime, Someday and Logbook; Today uses a star. The current daily list gets the action wash; collection and utility selection gets a neutral wash. Labels remain neutral, current labels are semibold, counts stay muted and icon colors keep their meaning. Nonzero open-task counts are visually subordinate and supplied through accessible descriptions.
+Pale neutral rail, concise labels and semantic Lucide SVG icons with a 1.7px stroke. Comfortable desktop icons use 22px; the existing tablet/mobile geometry remains 20px. Daily lists lead in the order Inbox, Today, Upcoming, Anytime, Someday and Logbook; Today uses a star. The current daily list gets the action wash; collection and utility selection gets a neutral wash. Labels remain neutral, current labels are semibold, counts stay muted and icon colors keep their meaning. Nonzero open-task counts are visually subordinate and supplied through accessible descriptions.
 
 Projects and saved filters start open; labels start closed. Saved-filter and label collections appear when populated. Disclosure choices persist on the device, and visiting a project, label or saved filter opens its collection. The project directory separates owned projects from projects shared with the user; ownership and shared membership remain readable through grouping and the collaborator icon. The Filters & Labels directory sits between daily lists and projects. Calendar and focus/planning follow below a separator. Account and settings stay anchored at the foot; collapsed desktop mode retains account-menu access while hiding the separate settings shortcut and collection action controls.
 
@@ -321,6 +386,8 @@ Settings uses a seven-section directory, a sticky section header with All settin
 ### Task Rows and Detail
 
 The title is the main click target. Hover/focus adds a quiet neutral layer; completion remains a distinct circular action. A thin separator starts after the completion control. Supporting notes, project, time and recurrence remain subordinate; an empty metadata line disappears. Desktop row actions appear on hover/focus, while phone actions are reached through task detail instead of repeating an ellipsis on every row. Detail has its own visible action menu and written property labels. Its schedule row exposes the time directly beside the date. A small time editor keeps edits local until Save and offers removal without clearing the date. The date picker exposes time on demand, rather than a permanently visible input. Reminder and recurrence state is conveyed by the selected value without explanatory paragraphs. Calendar scheduled rows share the title and circular completion grammar; deadline entries retain their separate, non-completing meaning.
+
+The detail title editor is an auto-growing textarea with direction-aware text and newline sanitation. Enter outside composition commits through blur; blur saves. Its fit recalculates for fonts, resize and desktop-size changes, keeping long mixed Hebrew/English and unbroken text visible. Property, settings and board text use their owned app roles rather than changing shared public typography.
 
 ### Hebrew Capture
 
@@ -368,7 +435,7 @@ and expanded criteria form, where it would overlap filter/label creation.
 ### Do:
 
 - **Do** use semantic CSS tokens and preserve their canonical light-dark() / OKLCH values.
-- **Do** keep task titles readable at 16px and keep supporting metadata subordinate.
+- **Do** preserve the 17/24px mobile/tablet task role and the coordinated desktop reading roles, keeping metadata subordinate.
 - **Do** make every active search, priority and sort condition visible after Display closes, with a reset action.
 - **Do** preserve separate schedule and deadline semantics in every view.
 - **Do** keep touch targets generous without enlarging the task glyphs or creating horizontal page overflow.
@@ -382,7 +449,7 @@ and expanded criteria form, where it would overlap filter/label creation.
 - **Don't** repeat Today as metadata on every Today task; show its scheduled time when present.
 - **Don't** use a swatch or red alone to communicate priority, lateness, an error or destructive intent.
 - **Don't** replace real task, collaboration or service state with fabricated customer content or delivery proof.
-- **Don't** treat the scoped fix verdict, local captures or documentation as proof of production deployment or the unreviewed landing.
+- **Don't** treat local review, captures or documentation as proof of production deployment or review of public/admin surfaces.
 
 ### Content continuity and settings orientation
 

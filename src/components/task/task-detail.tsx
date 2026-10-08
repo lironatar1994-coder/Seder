@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Bell, Check, ChevronDown, ChevronUp, Clock, Flag, Plus, Repeat, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -86,6 +86,23 @@ export function TaskDetail({
 }: DetailProps) {
   const now = useTaskNow();
   const [title, setTitle] = useState('');
+  const titleField = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    function fit() {
+      const field = titleField.current;
+      if (!field) return;
+      field.style.height = 'auto';
+      const style = getComputedStyle(field);
+      const borders = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+      field.style.height = `${field.scrollHeight + borders}px`;
+    }
+    fit();
+    const observer = new ResizeObserver(fit);
+    if (titleField.current) observer.observe(titleField.current);
+    window.addEventListener('seder:desktop-size', fit);
+    document.fonts.ready.then(fit);
+    return () => { observer.disconnect(); window.removeEventListener('seder:desktop-size', fit); };
+  }, [title, openId]);
   const [notes, setNotes] = useState('');
   const [newSubtask, setNewSubtask] = useState('');
   /* Both pickers are controlled so they can close themselves once a date is
@@ -591,7 +608,7 @@ export function TaskDetail({
           className={cn(
             // Centred with inset-0 + m-auto rather than a translate, so it
             // behaves identically in both directions.
-            'fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100dvh-3rem)] flex-col',
+            'task-detail fixed inset-0 z-50 m-auto flex h-fit max-h-[calc(100dvh-3rem)] flex-col',
             'w-[min(58rem,calc(100vw-2rem))] overflow-hidden rounded-2xl',
             'border border-line bg-surface shadow-pop',
             'data-[state=open]:animate-pop-in',
@@ -666,7 +683,7 @@ export function TaskDetail({
                   aria-checked={task.status !== 'TODO'}
                   onClick={() => run(() => toggleTaskAction(task.id, task.status === 'TODO'), task.status === 'TODO' ? 'המשימה הושלמה' : 'המשימה נפתחה מחדש', task.status === 'TODO')}
                   className={cn(
-                    'mt-1.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px] transition-colors',
+                    'task-detail-check mt-1.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px] transition-colors',
                     task.status !== 'TODO'
                       ? 'border-accent bg-accent'
                       : 'border-line-strong hover:border-accent',
@@ -685,15 +702,18 @@ export function TaskDetail({
                   </span>
                 </button>
 
-                <Input
+                <Textarea
+                  ref={titleField}
+                  rows={1}
+                  dir="auto"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => setTitle(e.target.value.replace(/[\r\n]+/g, ' '))}
                   onBlur={saveTitle}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') e.currentTarget.blur();
+                    if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); e.currentTarget.blur(); }
                   }}
                   aria-label="שם המשימה"
-                  className="border-transparent bg-transparent px-0 py-0 text-xl font-bold leading-snug"
+                  className="task-detail-title min-h-0 min-w-0 flex-1 resize-none overflow-hidden border-transparent bg-transparent px-0 py-0 text-xl font-bold leading-snug"
                 />
               </div>
 
@@ -709,7 +729,7 @@ export function TaskDetail({
                 rows={1}
                 placeholder="הערות"
                 aria-label="הערות"
-                className="ms-8 mt-1 min-h-16 flex-1 resize-none border-transparent bg-transparent px-0 text-sm [field-sizing:content]"
+                className="task-detail-notes ms-8 mt-1 min-h-16 flex-1 resize-none border-transparent bg-transparent px-0 text-sm [field-sizing:content]"
               />
             </div>
 

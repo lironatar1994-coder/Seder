@@ -47,7 +47,7 @@ export const viewport: Viewport = {
    The collapsed sidebar rides along for the same reason: setting it in an
    effect would open the rail, paint, and slam it shut on every load. */
 const themeBootstrap = `
-(function(){try{var d=document.documentElement;var t=localStorage.getItem('seder-theme');if(t==='dark'||t==='light'||t==='system'){d.dataset.theme=t}var a=localStorage.getItem('seder-accent');if(a&&/^[a-z]+$/.test(a)){d.dataset.accent=a}if(localStorage.getItem('seder-rail')==='collapsed'){d.dataset.rail='collapsed'}}catch(e){}})();
+(function(){try{var d=document.documentElement;var t=localStorage.getItem('seder-theme');if(t==='dark'||t==='light'||t==='system'){d.dataset.theme=t}var a=localStorage.getItem('seder-accent');if(a&&/^[a-z]+$/.test(a)){d.dataset.accent=a}var s=localStorage.getItem('seder-desktop-size');if(s==='compact'||s==='comfortable'||s==='large'){d.dataset.desktopSize=s}if(localStorage.getItem('seder-rail')==='collapsed'){d.dataset.rail='collapsed'}}catch(e){}})();
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body>
-        <div hidden data-design-contract dangerouslySetInnerHTML={{ __html: '<!-- THESIS: Hebrew tasks first; daily views anchor navigation and collections supply context. OWN-WORLD: user-pinned Todoist and Things conventions, neutral surfaces, Assistant, semantic icons, quiet selected rows, round task controls. STORY: capture, plan, finish; projects organize work and Browse reveals the remaining destinations. FIRST VIEWPORT: compact task canvas; desktop sticky daily lists above collapsible projects, saved filters and labels, with anchored account/settings; mobile Inbox, Today, Upcoming and Browse retain route identity and counts, with separate Add. FORM: code-led established Seder world, precisely pinned navigation extension, navigation-20261008. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->' }} />
+        <div hidden data-design-contract dangerouslySetInnerHTML={{ __html: '<!-- THESIS: Hebrew tasks first; daily views anchor navigation and collections supply context. OWN-WORLD: user-pinned Todoist and Things conventions, neutral surfaces, Assistant, semantic icons, quiet selected rows, round task controls. STORY: capture, plan, finish; projects organize work and Browse reveals the remaining destinations. FIRST VIEWPORT: readable desktop task canvas anchored beside the RTL sidebar; coordinated desktop size roles and shared title/task alignment; desktop sticky daily lists above collapsible projects, saved filters and labels, with anchored account/settings; mobile Inbox, Today, Upcoming and Browse retain route identity and counts, with separate Add. FORM: code-led established Seder world, precisely pinned navigation extension, desktop-scale-20261009. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance -->' }} />
         <VisitorSignal />
         {/* Radix portals mount at document.body and would otherwise assume LTR,
             opening every menu and popover on the wrong side. */}

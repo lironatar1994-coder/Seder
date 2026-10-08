@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-04T10:35:35.413Z",
+  "generatedAt": "2026-10-08T22:12:41.919004Z",
   "title": "Design System: סדר",
   "extensions": {
     "colorMeta": {
@@ -536,7 +536,7 @@
     "typographyMeta": {
       "headline": {
         "displayName": "headline",
-        "purpose": "Implemented authenticated interface role."
+        "purpose": "Existing tablet/shared route heading; authenticated >=1024 uses desktop-headline."
       },
       "headline-mobile": {
         "displayName": "headline-mobile",
@@ -556,7 +556,7 @@
       },
       "task-title": {
         "displayName": "task-title",
-        "purpose": "Implemented authenticated interface role."
+        "purpose": "Existing 17/24px mobile/tablet task role; authenticated >=1024 uses desktop-task-title."
       },
       "control": {
         "displayName": "control",
@@ -581,6 +581,34 @@
       "numerals": {
         "displayName": "numerals",
         "purpose": "Tabular, direction-isolated numeric islands."
+      },
+      "desktop-headline": {
+        "displayName": "desktop-headline",
+        "purpose": "Comfortable authenticated page heading at >=1024 CSS px."
+      },
+      "desktop-task-title": {
+        "displayName": "desktop-task-title",
+        "purpose": "Comfortable task/list and board title at >=1024 CSS px; board weight remains 600."
+      },
+      "desktop-navigation": {
+        "displayName": "desktop-navigation",
+        "purpose": "Comfortable desktop rail label; current destination is semibold."
+      },
+      "desktop-section": {
+        "displayName": "desktop-section",
+        "purpose": "Comfortable task-group heading and detail-title size."
+      },
+      "desktop-prose": {
+        "displayName": "desktop-prose",
+        "purpose": "Comfortable desktop supporting prose and owned detail/board text."
+      },
+      "desktop-control": {
+        "displayName": "desktop-control",
+        "purpose": "Comfortable desktop buttons, menus and owned settings controls."
+      },
+      "desktop-metadata": {
+        "displayName": "desktop-metadata",
+        "purpose": "Subordinate comfortable desktop date, count and task metadata."
       }
     },
     "accentAxes": [
@@ -728,8 +756,12 @@
     ],
     "breakpoints": [
       {
-        "name": "app-desktop",
+        "name": "app-rail",
         "value": "768px"
+      },
+      {
+        "name": "desktop-reading-roles",
+        "value": "1024px"
       },
       {
         "name": "wide-planning",
@@ -748,7 +780,13 @@
         "updatedAt": "2026-10-08",
         "brief": ".impeccable/surfaces/src-app-app-layout-tsx.md",
         "direction": ".impeccable/review/navigation-direction.md",
-        "sources": ["src/components/nav/sidebar.tsx", "src/components/nav/tab-bar.tsx", "src/components/nav/workspace-bar.tsx", "src/components/nav/navigation-model.ts", "src/app/globals.css"],
+        "sources": [
+          "src/components/nav/sidebar.tsx",
+          "src/components/nav/tab-bar.tsx",
+          "src/components/nav/workspace-bar.tsx",
+          "src/components/nav/navigation-model.ts",
+          "src/app/globals.css"
+        ],
         "world": "Inherited neutral RTL surfaces, Assistant, eight action accents and semantic Lucide icons; user-pinned Todoist/Things navigation philosophy.",
         "desktop": "256px rail, 68px collapsed. Header, capture/search and account/settings remain anchored. Six sticky daily lists precede collections and calendar/focus/filter utilities; daily lists scroll normally at heights of 600px or less.",
         "collections": "Projects and populated saved filters start open; populated labels start closed. Device-local disclosure preferences persist, and visiting a collection route opens it. Owned and shared-with-me projects are grouped separately. Collapsed rail hides collection action controls and the separate settings shortcut; the account menu retains settings access.",
@@ -763,7 +801,11 @@
         "route": "/admin",
         "mode": "Operate",
         "brief": ".impeccable/surfaces/src-app-admin-page-tsx.md",
-        "sources": ["src/app/admin/page.tsx", "src/app/admin/admin.module.css", "src/components/admin/controls.tsx"],
+        "sources": [
+          "src/app/admin/page.tsx",
+          "src/app/admin/admin.module.css",
+          "src/components/admin/controls.tsx"
+        ],
         "world": "Existing neutral RTL surfaces, Assistant labels, Inter tabular figures and flat hairline rows.",
         "structure": "Compact header; four metrics; 14-day paired bars and service states; searchable 25-row customer pages; closed password disclosure.",
         "headerAccessibility": "Accessible control labels persist at mobile widths. Logout retains aria-label and title of יציאה when visible text is hidden; the browser scenario logs out after resizing to 320px.",
@@ -804,6 +846,27 @@
       "scopedFixVerdict": ".local-artifacts/todoist-finish-verdict.md",
       "reviewScope": "Authenticated replacement and two scored fixes; production deployment and public landing are not certified by this documentation.",
       "shippingRasters": "No new raster in this code-led replacement. Existing blue identity and WhatsApp illustration/provenance are preserved."
+    },
+    "desktopSizing": {
+      "scope": "Authenticated app body with data-app-shell, >=1024 CSS px; app portals inherit. Public/admin and <=1023 roles remain independent.",
+      "default": "comfortable",
+      "storageKey": "seder-desktop-size",
+      "bootstrap": "Validated before paint; immediate same-tab event and storage synchronization across tabs.",
+      "choices": [
+        "compact",
+        "comfortable",
+        "large"
+      ],
+      "roleSource": "src/app/globals.css desktop block; default typography primitives live in DESIGN.md.",
+      "layout": {
+        "taskCanvas": "max 60rem, 2.5rem inline gutters, anchored beside RTL rail",
+        "wideCanvas": "82rem for opt-in board/calendar/settings; project list returns to ordinary column",
+        "collapsedRail": "4.25rem; shared glyph center 2.125rem",
+        "selection": "Conditional 1.75rem slot shared by title, heading and composer; separate 1rem square centers on first title line",
+        "navigationReserve": "6 * 2.875rem + 1.625rem + 1px = 303px; static daily group and zero reserve at height <=600px"
+      },
+      "tabletFallback": "768-1023 CSS px: 16rem rail and centered 52rem ordinary column with 2rem gutters.",
+      "scaling": "Semantic text/icon/layout roles, no root font-size change or CSS zoom."
     }
   },
   "components": [
@@ -813,7 +876,7 @@
       "refersTo": "button-primary",
       "description": "Shared primary action at the normal 44px control size.",
       "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-button-primary\">הצגת המשימות</button>",
-      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:none;background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));color:var(--on-accent, light-dark(oklch(100% 0 0), oklch(14% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);box-shadow:0 1px 2px var(--shadow-tint-1,light-dark(oklch(20% 0.02 268 / 0.06), oklch(0% 0 0 / 0.4)));}.ds-button-primary:hover{background:var(--accent-hover, light-dark(oklch(44% var(--accent-c) var(--accent-h)), oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h))));}.ds-button-primary:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-primary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none}}"
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:none;background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));color:var(--on-accent, light-dark(oklch(100% 0 0), oklch(14% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:var(--desktop-control-size,1rem);font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);box-shadow:0 1px 2px var(--shadow-tint-1,light-dark(oklch(20% 0.02 268 / 0.06), oklch(0% 0 0 / 0.4)));}.ds-button-primary:hover{background:var(--accent-hover, light-dark(oklch(44% var(--accent-c) var(--accent-h)), oklch(76% calc(var(--accent-c-dark) * 0.92) var(--accent-h))));}.ds-button-primary:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-primary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-primary{transition:none}}"
     },
     {
       "name": "Button / secondary",
@@ -821,7 +884,7 @@
       "refersTo": "button-secondary",
       "description": "Shared secondary action at the normal 44px control size.",
       "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-button-secondary\">ביטול</button>",
-      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:1px solid var(--line-strong, light-dark(oklch(76% 0 0), oklch(43% 0 0)));background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-secondary:hover{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)));}.ds-button-secondary:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-secondary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none}}"
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:1px solid var(--line-strong, light-dark(oklch(76% 0 0), oklch(43% 0 0)));background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:var(--desktop-control-size,1rem);font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-secondary:hover{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)));}.ds-button-secondary:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-secondary:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-secondary{transition:none}}"
     },
     {
       "name": "Button / ghost",
@@ -829,7 +892,7 @@
       "refersTo": "button-ghost",
       "description": "Shared ghost action at the normal 44px control size.",
       "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-button-ghost\">איפוס תצוגה</button>",
-      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:none;background:transparent;color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-ghost:hover{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));}.ds-button-ghost:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-ghost:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none}}"
+      "css": ".ds-button-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:none;background:transparent;color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:var(--desktop-control-size,1rem);font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-ghost:hover{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));}.ds-button-ghost:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-ghost:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-ghost{transition:none}}"
     },
     {
       "name": "Button / danger",
@@ -837,7 +900,7 @@
       "refersTo": "button-danger",
       "description": "Shared danger action at the normal 44px control size.",
       "html": "<button dir=\"rtl\" type=\"button\" class=\"ds-button-danger\">מחיקת משימה</button>",
-      "css": ".ds-button-danger{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:1px solid color-mix(in oklab,var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))) 30%,transparent);background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-danger:hover{background:color-mix(in oklab,var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))) 8%,transparent);}.ds-button-danger:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-danger:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition:none}}"
+      "css": ".ds-button-danger{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;height:2.75rem;padding:0 1rem;border-radius:.625rem;border:1px solid color-mix(in oklab,var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))) 30%,transparent);background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:var(--desktop-control-size,1rem);font-weight:600;cursor:pointer;transition:background 120ms cubic-bezier(.22,1,.36,1),color 120ms cubic-bezier(.22,1,.36,1);}.ds-button-danger:hover{background:color-mix(in oklab,var(--p1, light-dark(oklch(46.5% 0.17 27), oklch(72% 0.13 20))) 8%,transparent);}.ds-button-danger:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-button-danger:disabled{pointer-events:none;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-button-danger{transition:none}}"
     },
     {
       "name": "Input",
@@ -851,9 +914,9 @@
       "name": "Current navigation row",
       "kind": "nav",
       "refersTo": "navigation-current",
-      "description": "Daily navigation uses semantic 20px icons: Today is an amber star. Current daily rows use rail-active, neutral semibold labels and muted counts; collection/utility rows use rail-hover. All coarse pointers, including tablets, retain 44px targets. Counts have accessible descriptions.",
+      "description": "Semantic neutral navigation; tablet/mobile roles remain, with coordinated readable desktop labels, counts and icons.",
       "html": "<nav dir=\"rtl\" class=\"ds-nav\" aria-label=\"ניווט ראשי\"><a href=\"#today\" class=\"ds-nav-row\" aria-label=\"היום\" aria-describedby=\"ds-today-count\" aria-current=\"page\"><svg class=\"ds-nav-today\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m12 3 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.92 1.06-6.2L3 9.53l6.22-.9L12 3Z\"/></svg><span class=\"ds-nav-label\">היום</span><bdi class=\"ds-nav-count\" aria-hidden=\"true\">5</bdi><span class=\"ds-nav-sr\" id=\"ds-today-count\">5 משימות פתוחות</span></a><a href=\"#upcoming\" class=\"ds-nav-row\" aria-label=\"בקרוב\" aria-describedby=\"ds-upcoming-count\"><svg class=\"ds-nav-upcoming\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M16 3v4M8 3v4M3 11h18\"/></svg><span class=\"ds-nav-label\">בקרוב</span><bdi class=\"ds-nav-count\" aria-hidden=\"true\">2</bdi><span class=\"ds-nav-sr\" id=\"ds-upcoming-count\">2 משימות פתוחות</span></a></nav>",
-      "css": ".ds-nav{background:var(--rail,light-dark(oklch(98% 0 0),oklch(20% 0 0)));padding:.5rem;max-width:16rem;font-family:var(--font-sans,Assistant,Segoe UI,Heebo,Arial,sans-serif);letter-spacing:normal;word-spacing:.05em}.ds-nav-row{box-sizing:border-box;display:flex;align-items:center;min-height:2.5rem;gap:.75rem;padding:.375rem .75rem;border-radius:.625rem;color:var(--rail-ink,light-dark(oklch(27% 0 0),oklch(93% 0 0)));text-decoration:none;font-size:.875rem;line-height:1.25rem;transition:background 120ms ease-out,color 120ms ease-out}.ds-nav-row>svg{width:1.25rem;height:1.25rem;flex-shrink:0;stroke-width:1.7}.ds-nav-today{color:var(--date-tomorrow,light-dark(oklch(47% .105 60),oklch(78% .12 65)))}.ds-nav-upcoming{color:var(--date-week,light-dark(oklch(46% .135 250),oklch(76% .12 245)))}.ds-nav-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-nav-count{font-family:var(--font-num,Inter,ui-sans-serif,system-ui,sans-serif);font-variant-numeric:tabular-nums;font-size:.75rem;font-weight:400;color:var(--rail-muted,light-dark(oklch(48% 0 0),oklch(68% 0 0)))}.ds-nav-row:hover{background:var(--rail-hover,light-dark(oklch(95% 0 0),oklch(24% 0 0)))}.ds-nav-row[aria-current=page]{background:var(--rail-active,light-dark(oklch(95% calc(var(--accent-c)*.12) var(--accent-h)),oklch(25% calc(var(--accent-c-dark)*.25) var(--accent-h))));font-weight:600}.ds-nav-row:focus-visible{outline:2px solid var(--accent,light-dark(oklch(50% .17 28),oklch(72% .13 28)));outline-offset:2px}.ds-nav-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(pointer:coarse){.ds-nav-row{min-height:2.75rem}}@media(max-width:767px){.ds-nav-row{min-height:2.75rem;font-size:1rem;line-height:1.5rem}}@media(prefers-reduced-motion:reduce){.ds-nav-row{transition:none}}"
+      "css": ".ds-nav{background:var(--rail,light-dark(oklch(98% 0 0),oklch(20% 0 0)));padding:.5rem;max-width:16rem;font-family:var(--font-sans,Assistant,Segoe UI,Heebo,Arial,sans-serif);letter-spacing:normal;word-spacing:.05em}.ds-nav-row{box-sizing:border-box;display:flex;align-items:center;min-height:2.5rem;gap:.75rem;padding:.375rem .75rem;border-radius:.625rem;color:var(--rail-ink,light-dark(oklch(27% 0 0),oklch(93% 0 0)));text-decoration:none;font-size:.875rem;line-height:1.25rem;transition:background 120ms ease-out,color 120ms ease-out}.ds-nav-row>svg{width:1.25rem;height:1.25rem;flex-shrink:0;stroke-width:1.7}.ds-nav-today{color:var(--date-tomorrow,light-dark(oklch(47% .105 60),oklch(78% .12 65)))}.ds-nav-upcoming{color:var(--date-week,light-dark(oklch(46% .135 250),oklch(76% .12 245)))}.ds-nav-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ds-nav-count{font-family:var(--font-num,Inter,ui-sans-serif,system-ui,sans-serif);font-variant-numeric:tabular-nums;font-size:.75rem;font-weight:400;color:var(--rail-muted,light-dark(oklch(48% 0 0),oklch(68% 0 0)))}.ds-nav-row:hover{background:var(--rail-hover,light-dark(oklch(95% 0 0),oklch(24% 0 0)))}.ds-nav-row[aria-current=page]{background:var(--rail-active,light-dark(oklch(95% calc(var(--accent-c)*.12) var(--accent-h)),oklch(25% calc(var(--accent-c-dark)*.25) var(--accent-h))));font-weight:600}.ds-nav-row:focus-visible{outline:2px solid var(--accent,light-dark(oklch(50% .17 28),oklch(72% .13 28)));outline-offset:2px}.ds-nav-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(pointer:coarse){.ds-nav-row{min-height:2.75rem}}@media(max-width:767px){.ds-nav-row{min-height:2.75rem;font-size:1rem;line-height:1.5rem}}@media(prefers-reduced-motion:reduce){.ds-nav-row{transition:none}}@media(min-width:1024px){.ds-nav{max-width:var(--desktop-rail-width,17.5rem)}.ds-nav-row{font-size:var(--desktop-nav-size,1.0625rem);line-height:1.5;min-height:var(--desktop-nav-row,2.875rem)}.ds-nav-row>svg{width:var(--desktop-icon-size,1.375rem);height:var(--desktop-icon-size,1.375rem)}.ds-nav-count{font-size:var(--desktop-meta-size,.875rem)}}"
     },
     {
       "name": "Deadline chip",
@@ -867,17 +930,17 @@
       "name": "Board card",
       "kind": "card",
       "refersTo": "board-card",
-      "description": "The existing project-board work container; its title, completion and explicit move control remain functional roles.",
+      "description": "Work-surface card inside the wide project board; coordinated desktop title/prose, existing 20px board completion circle.",
       "html": "<article dir=\"rtl\" class=\"ds-board-card\"><div class=\"ds-board-head\"><button type=\"button\" role=\"checkbox\" aria-checked=\"false\" aria-label=\"סימון כהושלם: להכין את המצגת\" class=\"ds-board-circle\"></button><button type=\"button\" class=\"ds-board-title\" dir=\"auto\">להכין את המצגת</button></div><p class=\"ds-board-note\">לעבור על הסיכום לפני הפגישה.</p><label class=\"ds-board-move\">העברה לקטע<select aria-label=\"העברת המשימה לקטע\"><option>בביצוע</option><option>מוכן</option></select></label></article>",
-      "css": ".ds-board-card{position:relative;padding:1rem;border-radius:.7rem;background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));box-shadow:0 2px 5px var(--shadow-tint-1,light-dark(oklch(20% 0.02 268 / 0.06), oklch(0% 0 0 / 0.4)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;}.ds-board-head{display:flex;align-items:start;gap:.5rem}.ds-board-circle{margin-top:.25rem;width:1.25rem;height:1.25rem;flex-shrink:0;border-radius:9999px;border:2px solid var(--p4, light-dark(oklch(59% 0 0), oklch(65% 0 0)));background:transparent;cursor:pointer}.ds-board-circle:hover{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-board-circle[aria-checked=true]{background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-board-title{min-width:0;flex:1;border:0;padding:0;background:transparent;color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;line-height:1.375;text-align:start;cursor:pointer}.ds-board-note{margin-block:.5rem 0;margin-inline-start:1.75rem;color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)));font-size:.875rem}.ds-board-move{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.75rem;padding-top:.5rem;border-top:1px solid var(--line, light-dark(oklch(93% 0 0), oklch(30% 0 0)));font-size:.8125rem;color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)))}.ds-board-move select{min-height:2.25rem;max-width:60%;padding-inline:.5rem;border:0;border-radius:.375rem;background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:.8125rem}.ds-board-circle:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-board-title:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-board-move select:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px}"
+      "css": ".ds-board-card{position:relative;padding:1rem;border-radius:.7rem;background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));box-shadow:0 2px 5px var(--shadow-tint-1,light-dark(oklch(20% 0.02 268 / 0.06), oklch(0% 0 0 / 0.4)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;}.ds-board-head{display:flex;align-items:start;gap:.5rem}.ds-board-circle{margin-top:.25rem;width:1.25rem;height:1.25rem;flex-shrink:0;border-radius:9999px;border:2px solid var(--p4, light-dark(oklch(59% 0 0), oklch(65% 0 0)));background:transparent;cursor:pointer}.ds-board-circle:hover{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-board-circle[aria-checked=true]{background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-board-title{min-width:0;flex:1;border:0;padding:0;background:transparent;color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:1rem;font-weight:600;line-height:1.375;text-align:start;cursor:pointer}.ds-board-note{margin-block:.5rem 0;margin-inline-start:1.75rem;color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)));font-size:.875rem}.ds-board-move{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.75rem;padding-top:.5rem;border-top:1px solid var(--line, light-dark(oklch(93% 0 0), oklch(30% 0 0)));font-size:.8125rem;color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)))}.ds-board-move select{min-height:2.25rem;max-width:60%;padding-inline:.5rem;border:0;border-radius:.375rem;background:var(--surface, light-dark(oklch(100% 0 0), oklch(20% 0 0)));color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)));font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;font-size:.8125rem}.ds-board-circle:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-board-title:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-board-move select:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px}@media(min-width:1024px){.ds-board-title{font-size:var(--desktop-task-size,1.1875rem);line-height:var(--desktop-task-line,1.75rem);overflow-wrap:anywhere}.ds-board-note{font-size:var(--desktop-prose-size,1rem)}.ds-board-move,.ds-board-move select{font-size:var(--desktop-meta-size,.875rem)}}"
     },
     {
       "name": "Task row and completion circle",
       "kind": "custom",
       "refersTo": "task-row",
-      "description": "Flat title-led list row with a 20px round completion control, sparse time metadata and neutral hover.",
+      "description": "Flat task row with direction-aware title and distinct circular completion, aligned to the first title line at coordinated desktop sizes.",
       "html": "<div dir=\"rtl\" class=\"ds-task-row\"><button type=\"button\" role=\"checkbox\" aria-checked=\"false\" aria-description=\"עדיפות: ללא עדיפות\" aria-label=\"סימון כהושלם: להתקשר למשרד\" class=\"ds-task-circle\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 12 2 2 4-4\"/></svg></button><button type=\"button\" class=\"ds-task-open\" aria-label=\"פתיחת להתקשר למשרד\"><span dir=\"auto\" class=\"ds-task-title\">להתקשר למשרד</span><span dir=\"ltr\" class=\"ds-task-time\">10:00</span></button></div>",
-      "css": ".ds-task-row{position:relative;display:flex;align-items:start;gap:.75rem;border:1px solid transparent;padding:.75rem 0;min-height:3.5rem;font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;transition:background 120ms ease-out}.ds-task-row:before{content:'';position:absolute;inset-block-start:0;inset-inline:2rem 0;height:1px;background:var(--line, light-dark(oklch(93% 0 0), oklch(30% 0 0)))}.ds-task-row:hover,.ds-task-row:focus-within{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)))}.ds-task-circle{position:relative;margin-top:.125rem;display:grid;place-items:center;width:1.25rem;height:1.25rem;flex-shrink:0;border:1.5px solid var(--p4, light-dark(oklch(59% 0 0), oklch(65% 0 0)));border-radius:9999px;background:transparent;color:var(--on-accent, light-dark(oklch(100% 0 0), oklch(14% 0 0)));cursor:pointer;transition:border-color 120ms ease-out,background 120ms ease-out}.ds-task-circle svg{opacity:0;stroke-width:3.5}.ds-task-circle:hover{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-task-circle[aria-checked=true]{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-task-circle[aria-checked=true] svg{opacity:1}.ds-task-circle[aria-checked=true]+.ds-task-open .ds-task-title{color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)));text-decoration:line-through}.ds-task-open{position:relative;min-width:0;flex:1;padding:0;border:0;background:transparent;text-align:start;cursor:pointer;font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;}.ds-task-title{display:block;overflow-wrap:break-word;font-size:1rem;line-height:1.375;color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)))}.ds-task-time{display:block;margin-top:.25rem;font-family:var(--font-num,Inter, ui-sans-serif, system-ui, sans-serif);font-variant-numeric:tabular-nums;unicode-bidi:isolate;font-size:.8125rem;color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)))}.ds-task-circle:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-task-open:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}@media(pointer:coarse){.ds-task-circle:before{content:'';position:absolute;inset:-.75rem}.ds-task-open:before{content:'';position:absolute;inset-inline:0;inset-block:-.5rem}}@media(max-width:767px){.ds-task-row{padding-block:.5rem;min-height:2.75rem}}@media(pointer:coarse){.ds-task-open{min-height:2.75rem}}@media(prefers-reduced-motion:reduce){.ds-task-row,.ds-task-circle{transition:none}}"
+      "css": ".ds-task-row{position:relative;display:flex;align-items:start;gap:.75rem;border:1px solid transparent;padding:.75rem 0;min-height:3.5rem;font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;transition:background 120ms ease-out}.ds-task-row:before{content:'';position:absolute;inset-block-start:0;inset-inline:2rem 0;height:1px;background:var(--line, light-dark(oklch(93% 0 0), oklch(30% 0 0)))}.ds-task-row:hover,.ds-task-row:focus-within{background:var(--surface-2, light-dark(oklch(97% 0 0), oklch(24% 0 0)))}.ds-task-circle{position:relative;margin-top:.125rem;display:grid;place-items:center;width:1.25rem;height:1.25rem;flex-shrink:0;border:1.5px solid var(--p4, light-dark(oklch(59% 0 0), oklch(65% 0 0)));border-radius:9999px;background:transparent;color:var(--on-accent, light-dark(oklch(100% 0 0), oklch(14% 0 0)));cursor:pointer;transition:border-color 120ms ease-out,background 120ms ease-out}.ds-task-circle svg{opacity:0;stroke-width:3.5}.ds-task-circle:hover{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-task-circle[aria-checked=true]{border-color:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));background:var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))))}.ds-task-circle[aria-checked=true] svg{opacity:1}.ds-task-circle[aria-checked=true]+.ds-task-open .ds-task-title{color:var(--muted, light-dark(oklch(49% 0 0), oklch(68% 0 0)));text-decoration:line-through}.ds-task-open{position:relative;min-width:0;flex:1;padding:0;border:0;background:transparent;text-align:start;cursor:pointer;font-family:var(--font-sans,Assistant, Segoe UI, Heebo, Arial, sans-serif);letter-spacing:normal;word-spacing:.05em;}.ds-task-title{display:block;overflow-wrap:break-word;font-size:1.0625rem;line-height:1.5rem;color:var(--ink, light-dark(oklch(23% 0 0), oklch(93% 0 0)))}.ds-task-time{display:block;margin-top:.25rem;font-family:var(--font-num,Inter, ui-sans-serif, system-ui, sans-serif);font-variant-numeric:tabular-nums;unicode-bidi:isolate;font-size:.8125rem;color:var(--ink-2, light-dark(oklch(38% 0 0), oklch(80% 0 0)))}.ds-task-circle:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}.ds-task-open:focus-visible{outline:2px solid var(--accent, light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h))));outline-offset:2px;border-radius:.25rem;}@media(pointer:coarse){.ds-task-circle:before{content:'';position:absolute;inset:-.75rem}.ds-task-open:before{content:'';position:absolute;inset-inline:0;inset-block:-.5rem}}@media(max-width:767px){.ds-task-row{padding-block:.5rem;min-height:2.75rem}}@media(pointer:coarse){.ds-task-open{min-height:2.75rem}}@media(prefers-reduced-motion:reduce){.ds-task-row,.ds-task-circle{transition:none}}@media(min-width:1024px){.ds-task-row{padding-block:var(--desktop-row-pad,.5rem);min-height:calc(var(--desktop-task-line,1.75rem) + var(--desktop-row-pad,.5rem)*2 + 2px)}.ds-task-title{font-size:var(--desktop-task-size,1.1875rem);line-height:var(--desktop-task-line,1.75rem);overflow-wrap:anywhere}.ds-task-circle{width:var(--desktop-check-size,1.375rem);height:var(--desktop-check-size,1.375rem);margin-top:calc((var(--desktop-task-line,1.75rem) - var(--desktop-check-size,1.375rem))/2)}.ds-task-time{font-size:var(--desktop-meta-size,.875rem)}.ds-task-row:before{inset-inline-start:calc(var(--desktop-check-size,1.375rem) + .75rem + 1px)}}"
     },
     {
       "name": "Separate mobile Add",
@@ -899,15 +962,15 @@
       "kind": "custom",
       "description": "Flat capture-settings rows retain visibility checkboxes and labeled 44px order arrows. A wrapping preview and text/icon toggle precede the rows; Save applies changes and restores defaults only after saving. Preferences belong to the authenticated account.",
       "html": "<div dir=\"rtl\" class=\"ds-capture-setting\"><label class=\"ds-capture-setting-label\"><input type=\"checkbox\" checked aria-label=\"הצגת תאריך\"/><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 2v4M16 2v4M3 10h18\"/><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/></svg><span>תאריך</span></label><div class=\"ds-capture-setting-order\"><button type=\"button\" disabled aria-label=\"הקדמת תאריך\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m5 12 7-7 7 7M12 19V5\"/></svg></button><button type=\"button\" aria-label=\"הזזת תאריך לאחר הבא\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m19 12-7 7-7-7M12 5v14\"/></svg></button></div></div>",
-      "css": ".ds-capture-setting{display:flex;align-items:center;gap:.5rem;min-height:3.5rem;border-block-end:1px solid var(--line,light-dark(oklch(93% 0 0),oklch(30% 0 0)));font-family:var(--font-sans,Assistant,Segoe UI,Heebo,Arial,sans-serif);font-size:.875rem;letter-spacing:normal;color:var(--ink,light-dark(oklch(23% 0 0),oklch(93% 0 0)))}.ds-capture-setting-label{display:flex;align-items:center;gap:.75rem;min-height:2.75rem;min-width:0;flex:1;cursor:pointer}.ds-capture-setting-label input{width:1.25rem;height:1.25rem;flex-shrink:0;accent-color:var(--accent,light-dark(oklch(50% .17 28),oklch(72% .13 28)))}.ds-capture-setting svg{width:1rem;height:1rem;flex-shrink:0}.ds-capture-setting-label svg{color:var(--muted,light-dark(oklch(49% 0 0),oklch(68% 0 0)))}.ds-capture-setting-order{display:flex;flex-shrink:0}.ds-capture-setting-order button{display:grid;place-items:center;width:2.75rem;height:2.75rem;border:0;border-radius:.375rem;background:transparent;color:var(--ink-2,light-dark(oklch(38% 0 0),oklch(80% 0 0)));cursor:pointer}.ds-capture-setting-order button:hover{background:var(--surface-2,light-dark(oklch(97% 0 0),oklch(24% 0 0)))}.ds-capture-setting-order button:disabled{opacity:.3;cursor:default}.ds-capture-setting-order button:focus-visible,.ds-capture-setting-label input:focus-visible{outline:2px solid var(--accent,light-dark(oklch(50% .17 28),oklch(72% .13 28)));outline-offset:2px}"
+      "css": ".ds-capture-setting{display:flex;align-items:center;gap:.5rem;min-height:3.5rem;border-block-end:1px solid var(--line,light-dark(oklch(93% 0 0),oklch(30% 0 0)));font-family:var(--font-sans,Assistant,Segoe UI,Heebo,Arial,sans-serif);font-size:.875rem;letter-spacing:normal;color:var(--ink,light-dark(oklch(23% 0 0),oklch(93% 0 0)))}.ds-capture-setting-label{display:flex;align-items:center;gap:.75rem;min-height:2.75rem;min-width:0;flex:1;cursor:pointer}.ds-capture-setting-label input{width:1.25rem;height:1.25rem;flex-shrink:0;accent-color:var(--accent,light-dark(oklch(50% .17 28),oklch(72% .13 28)))}.ds-capture-setting svg{width:1rem;height:1rem;flex-shrink:0}.ds-capture-setting-label svg{color:var(--muted,light-dark(oklch(49% 0 0),oklch(68% 0 0)))}.ds-capture-setting-order{display:flex;flex-shrink:0}.ds-capture-setting-order button{display:grid;place-items:center;width:2.75rem;height:2.75rem;border:0;border-radius:.375rem;background:transparent;color:var(--ink-2,light-dark(oklch(38% 0 0),oklch(80% 0 0)));cursor:pointer}.ds-capture-setting-order button:hover{background:var(--surface-2,light-dark(oklch(97% 0 0),oklch(24% 0 0)))}.ds-capture-setting-order button:disabled{opacity:.3;cursor:default}.ds-capture-setting-order button:focus-visible,.ds-capture-setting-label input:focus-visible{outline:2px solid var(--accent,light-dark(oklch(50% .17 28),oklch(72% .13 28)));outline-offset:2px}@media(min-width:1024px){.ds-capture-setting{font-size:var(--desktop-control-size,1rem)}}"
     }
   ],
   "narrative": {
     "northStar": "A clear place for Hebrew work",
-    "overview": "A clear Hebrew task canvas follows the operating grammar the user pinned from Todoist: white work, pale gray navigation, short sans headings, flat rows and round completion controls. The app is quiet at rest. Tasks carry the reading weight; navigation and attributes explain place and state without becoming the main content.\n\nThis records the implemented replacement of 2026-10-04. The user rejected the lavender ground, dark indigo rail, large serif date, progress rail, crowded permanent filters and supporting cards on Today. The app uses Assistant throughout its working hierarchy, including its current live rail wordmark. Frank Ruhl Libre remains the public editorial face; the existing blue identity image remains an identity asset rather than the action accent.\n\nThe authority is the user-pinned, code-led Todoist canon in design/todoist-research.md, not assigned candidate 5. Its recorded seed is 95c8c208, also emitted by src/app/layout.tsx. The signed-out public landing retains its independent editorial composition and is outside this replacement finish review. Shared global tokens apply there, but app composition rules do not turn its headings into the authenticated hierarchy.",
+    "overview": "A clear Hebrew task canvas follows the operating grammar the user pinned from Todoist: white work, pale gray navigation, short sans headings, flat rows and round completion controls. The app is quiet at rest. Tasks carry the reading weight; navigation and attributes explain place and state without becoming the main content.\n\nThis records the implemented replacement of 2026-10-04 and the accepted authenticated desktop refinement of 2026-10-09. The user rejected the lavender ground, dark indigo rail, large serif date, progress rail, crowded permanent filters and supporting cards on Today. The app uses Assistant throughout its working hierarchy, including its current live rail wordmark. Frank Ruhl Libre remains the public editorial face; the existing blue identity image remains an identity asset rather than the action accent.\n\nThe authority is the user-pinned, code-led Todoist canon in design/todoist-research.md and the coordinated sizing philosophy from Things. The earlier canon records seed 95c8c208; the current root layout names the implementation contract desktop-scale-20261009. The signed-out public landing retains its independent editorial composition and is outside this replacement finish review. Shared global tokens apply there, but app composition rules do not turn its headings into the authenticated hierarchy. Its product screenshots were refreshed on 2026-10-04 from the current interface with synthetic tasks; capture provenance is in src/components/landing/shots/provenance.json. The SEO pass checks its public metadata and desktop/mobile overflow separately.",
     "keyCharacteristics": [
-      "A neutral task canvas, flat rows and brief metadata.",
-      "Hebrew sans hierarchy, normal letter spacing and isolated tabular numerals.",
+      "A neutral task canvas anchored beside the RTL rail, flat rows and brief metadata.",
+      "Coordinated desktop reading roles, Hebrew sans hierarchy, normal letter spacing and isolated tabular numerals.",
       "Controls on demand, with active conditions explained in the working view.",
       "Four mobile destinations and a separate capture action.",
       "Completion is the main feedback moment; reduced motion is immediate."
@@ -924,6 +987,11 @@
         "section": "colors"
       },
       {
+        "name": "Coordinated Reading",
+        "body": "Scale desktop text, icons, row spacing and rail together through semantic roles on the authenticated app body. Portalled app menus and detail inherit those roles; public and admin surfaces keep their existing hierarchy.",
+        "section": "typography"
+      },
+      {
         "name": "Hebrew Reading",
         "body": "Use Assistant for app headings and controls, normal Hebrew letter spacing, and isolated LTR islands for times, dates, shortcuts and counts. User-entered free text resolves with dir=\"auto\".",
         "section": "typography"
@@ -936,7 +1004,7 @@
     ],
     "dos": [
       "Do use semantic CSS tokens and preserve their canonical light-dark() / OKLCH values.",
-      "Do keep task titles readable at 16px and keep supporting metadata subordinate.",
+      "Do preserve the 17/24px mobile/tablet task role and the coordinated desktop reading roles, keeping metadata subordinate.",
       "Do make every active search, priority and sort condition visible after Display closes, with a reset action.",
       "Do preserve separate schedule and deadline semantics in every view.",
       "Do keep touch targets generous without enlarging the task glyphs or creating horizontal page overflow.",
@@ -949,7 +1017,7 @@
       "Don't repeat Today as metadata on every Today task; show its scheduled time when present.",
       "Don't use a swatch or red alone to communicate priority, lateness, an error or destructive intent.",
       "Don't replace real task, collaboration or service state with fabricated customer content or delivery proof.",
-      "Don't treat the scoped fix verdict, local captures or documentation as proof of production deployment or the unreviewed landing."
+      "Don't treat local review, captures or documentation as proof of production deployment or review of public/admin surfaces."
     ]
   }
 }

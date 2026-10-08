@@ -715,7 +715,7 @@ export function TaskList({
             //
             // Hidden on the phone: the tab bar owns capture there, and a second
             // add button would spend the fold repeating it.
-            className="mb-3 hidden items-center gap-2 rounded-md px-0 py-2 text-start text-muted transition-colors hover:text-accent md:inline-flex"
+            className="task-add-trigger mb-3 hidden items-center gap-2 rounded-md px-0 py-2 text-start text-muted transition-colors hover:text-accent md:inline-flex"
           >
             <Plus className="size-5 shrink-0" aria-hidden />
             <span className="text-base">משימה חדשה</span>
@@ -913,7 +913,7 @@ function GroupHeading({
   }
 
   return (
-    <div className="mb-1 flex items-baseline gap-2.5 border-be border-line px-2 pb-1.5">
+    <div className="task-group-heading mb-1 flex items-baseline gap-2.5 border-be border-line px-2 pb-1.5">
       <h2 className="text-base font-semibold text-ink">{primary}</h2>
       {secondary && <span className="num text-xs text-muted">{secondary}</span>}
       <span className={cn('num text-xs text-muted', !action && 'ms-auto')}>{count}</span>

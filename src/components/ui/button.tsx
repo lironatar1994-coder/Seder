@@ -34,7 +34,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
       ref={ref}
       type={type}
       className={cn(
-        'inline-flex select-none items-center justify-center rounded-lg font-semibold',
+        'ui-button inline-flex select-none items-center justify-center rounded-lg font-semibold',
         'transition-colors duration-120 ease-[var(--ease-out-soft)]',
         'disabled:pointer-events-none disabled:opacity-50',
         VARIANTS[variant],
@@ -60,7 +60,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         aria-label={label}
         title={label}
         className={cn(
-          'relative inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted',
+          'ui-icon-button relative inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted',
           'transition-colors duration-120 hover:bg-surface-2 hover:text-ink',
           'disabled:pointer-events-none disabled:opacity-40',
           // 32px is a comfortable pointer target and a poor thumb one. Rather

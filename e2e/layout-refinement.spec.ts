@@ -50,7 +50,7 @@ test('dates and hours have separate urgency, consistent picker colors and a work
       const title = row.querySelector<HTMLElement>('.task-title')!;
       const checkbox = row.querySelector<HTMLElement>('[role="checkbox"]')!;
       const a = title.getBoundingClientRect(), b = checkbox.getBoundingClientRect();
-      return { titleRight: a.right, centerDifference: Math.abs(a.top + 12 - (b.top + b.height / 2)), font: parseFloat(getComputedStyle(title).fontSize) };
+      return { titleRight: a.right, centerDifference: Math.abs(a.top + parseFloat(getComputedStyle(title).lineHeight) / 2 - (b.top + b.height / 2)), font: parseFloat(getComputedStyle(title).fontSize) };
     }));
     expect(Math.max(...geometry.map(item => item.titleRight)) - Math.min(...geometry.map(item => item.titleRight))).toBeLessThan(1);
     expect(geometry.every(item => item.centerDifference <= 1 && item.font >= 17)).toBe(true);

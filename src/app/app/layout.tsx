@@ -7,6 +7,7 @@ import { TabBar } from '@/components/nav/tab-bar';
 import { CommandPalette } from '@/components/nav/command-palette';
 import { WorkspaceReturnProvider } from '@/components/nav/workspace-return';
 import { NavigationScroll } from '@/components/nav/navigation-scroll';
+import { DesktopSizeGate } from '@/components/nav/desktop-size';
 import { CompletionSoundGate } from '@/components/task/completion-sound-gate';
 import { ReminderDefaultsProvider } from '@/components/task/reminder-defaults';
 import { ComposerPreferencesProvider } from '@/components/task/composer-preferences';
@@ -51,10 +52,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {/* Only this column scrolls — the sidebar stays put. */}
       <main className="view-surface scroll-quiet min-w-0 flex-1 overflow-y-auto">
         <WorkspaceBar data={sidebar} />
-        {/* A single reading column. Hebrew runs shorter than English for the
-            same content, so 44rem keeps the line length comfortable.
-            A page that is a grid rather than prose — the calendar — opts out by
-            marking its root `data-wide`. */}
+        {/* Daily lists share a reading column beside the RTL rail. Boards,
+            calendars and settings opt into the wider workspace. */}
         <div className="workspace-content mx-auto w-full max-w-[50rem] px-4 has-[[data-wide]]:max-w-[82rem] md:px-8">
           <TaskClockProvider initialMinute={Math.floor(Date.now() / 60_000) * 60_000}>
             <ComposerPreferencesProvider value={readComposerPreferences(whatsappUser.composerPreferences)}>
@@ -68,7 +67,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div aria-hidden className="h-[var(--tab-bar)]" />
       </main>
       <NavigationScroll />
-      <CompletionSoundGate />
+      <CompletionSoundGate /><DesktopSizeGate />
       <TabBar counts={sidebar.counts} />
       <CommandPalette projects={sidebar.projects} labels={sidebar.labels} />
       <WhatsappIntroduction userId={user.id} eligible={shouldIntroduceWhatsapp(whatsappUser)} available={whatsappState.status === 'READY' && !whatsappState.stale} />

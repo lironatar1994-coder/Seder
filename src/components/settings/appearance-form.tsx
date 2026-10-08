@@ -16,6 +16,7 @@ import {
 import { updateDefaultViewAction } from '@/server/settings/actions';
 import { useToast } from '@/components/ui/toast';
 import { SettingRow, SettingsSection, SavedNote } from './shell';
+import { DESKTOP_SIZES, applyDesktopSize, readDesktopSize, type DesktopSize } from '@/components/nav/desktop-size';
 import { CompletionSoundSetting } from './completion-sound-setting';
 
 /** The default leads, then the other fixed choice, then the one that defers to
@@ -29,6 +30,7 @@ const MODES: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
 export function AppearanceForm({ defaultView }: { defaultView: string }) {
   const [mode, setMode] = useState<ThemeMode | null>(null);
   const [accent, setAccent] = useState<Accent | null>(null);
+  const [desktopSize, setDesktopSize] = useState<DesktopSize>('comfortable');
   const [view, setView] = useState(defaultView);
   const [savedView, setSavedView] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -37,7 +39,11 @@ export function AppearanceForm({ defaultView }: { defaultView: string }) {
   // Read after mount: the server cannot know what the inline bootstrap picked.
   useEffect(() => {
     setMode(readMode());
+    const syncSize = () => setDesktopSize(readDesktopSize());
+    syncSize();
+    window.addEventListener('seder:desktop-size', syncSize);
     setAccent(readAccent());
+    return () => window.removeEventListener('seder:desktop-size', syncSize);
   }, []);
 
   function chooseMode(next: ThemeMode) {
@@ -67,6 +73,19 @@ export function AppearanceForm({ defaultView }: { defaultView: string }) {
   return (
     <SettingsSection title="מראה" hideTitle>
       <CompletionSoundSetting />
+      <div className="desktop-size-setting">
+        <SettingRow label="גודל במחשב" description="טקסט, סמלים וריווח." align="start">
+          <div role="radiogroup" aria-label="גודל במחשב" className="flex rounded-lg border border-line-strong p-0.5">
+            {DESKTOP_SIZES.map(option => (
+              <button key={option.value} type="button" role="radio" aria-checked={desktopSize === option.value}
+                onClick={() => { applyDesktopSize(option.value); setDesktopSize(option.value); }}
+                className={cn('min-h-11 flex-1 rounded-md px-3 py-1.5 text-sm', desktopSize === option.value ? 'bg-accent-soft font-semibold text-accent' : 'text-muted hover:bg-surface-2 hover:text-ink')}>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </SettingRow>
+      </div>
       <SettingRow
         label="בהירות"
         description="בהיר, כהה או לפי הגדרת המכשיר."
