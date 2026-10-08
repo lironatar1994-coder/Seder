@@ -703,7 +703,8 @@ continuity on a delayed navigation.
 
 Task creation and edits show blue confirmations independently of the appearance accent.
 Errors retain the entered task and show a written error. Successful completion plays a short
-ascending chime once per action or batch, with undo retained. The Appearance sound switch
+ascending chime once per action or batch, with undo retained. Completion and Undo survive
+leaving the view during the row animation. The Appearance sound switch
 persists on the device. Audio is unlocked by user gestures and falls back silently if unavailable.
 
 ### Counts that move, rows that lift

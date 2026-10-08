@@ -122,3 +122,27 @@ test('a failed creation shows an error and keeps the entered task without playin
   await expect(page.getByLabel('משימה חדשה', { exact: true })).toHaveValue('משימה שלא נשמרה');
   await expect(page.getByTestId('toasts').locator('[data-toast-tone="success"]')).toHaveCount(0);
 });
+
+
+test('completion and its undo survive leaving the view during the row animation', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as any).__soundCues = 0;
+    window.addEventListener('seder:completion-sound', () => (window as any).__soundCues++);
+  });
+  await register(page);
+  await add(page, 'פעולה שנשמרת היום');
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  await page.getByRole('checkbox', { name: 'סימון כהושלם: פעולה שנשמרת', exact: true }).click();
+  await page.locator(`.rail a[href="${BASE_PATH}/app/inbox"]`).click();
+  await expect(page.getByRole('heading', { name: 'תיבה נכנסת', exact: true, level: 1 })).toBeVisible();
+  await page.clock.runFor(450);
+  await expect(page.getByTestId('toasts')).toContainText('הושלם: פעולה שנשמרת');
+  await expect(page.getByTestId('task-list').getByText('פעולה שנשמרת', { exact: true })).toBeHidden();
+  await expect.poll(() => page.evaluate(() => (window as any).__soundCues)).toBe(1);
+  await page.getByTestId('toasts').getByRole('button', { name: 'ביטול', exact: true }).click();
+  await expect(page.getByTestId('task-list').getByText('פעולה שנשמרת', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => (window as any).__soundCues)).toBe(1);
+  await page.reload();
+  await expect(page.getByTestId('task-list').getByText('פעולה שנשמרת', { exact: true })).toBeVisible();
+});

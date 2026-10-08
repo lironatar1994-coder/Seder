@@ -327,7 +327,9 @@ export function TaskList({
       // Play the strike, then remove the row and write — the animation is the
       // acknowledgement, so it must not be cut short by revalidation.
       setCompleting((prev) => new Set(prev).add(task.id));
-      const timer = setTimeout(() => {
+      // Completion is a user action, not a view-local effect: navigating away
+      // must not cancel the pending write or its global confirmation.
+      setTimeout(() => {
         setCompleting((prev) => {
           const next = new Set(prev);
           next.delete(task.id);
@@ -372,7 +374,6 @@ export function TaskList({
           } catch { restore(); toast({ message: 'המשימה לא הושלמה. אפשר לנסות שוב.', tone: 'error' }); }
         });
       }, COMPLETE_ANIMATION_MS);
-      timers.current.add(timer);
     },
     [run, toast],
   );
