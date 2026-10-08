@@ -47,9 +47,9 @@ export const VIEWS = [
   { slug: 'inbox', label: 'תיבה נכנסת', hint: 'משימות שעוד לא שויכו לפרויקט' },
   { slug: 'today', label: 'היום', hint: 'מה שקורה היום' },
   { slug: 'upcoming', label: 'בקרוב', hint: 'הימים הבאים' },
-  { slug: 'anytime', label: 'בכל עת', hint: 'מוכן לביצוע, בלי תאריך' },
-  { slug: 'someday', label: 'מתישהו', hint: 'רעיונות להמשך' },
-  { slug: 'logbook', label: 'יומן', hint: 'מה שכבר נסגר' },
+  { slug: 'anytime', label: 'בכל עת', hint: 'משימות בפרויקטים, בלי תאריך' },
+  { slug: 'someday', label: 'מתישהו', hint: 'רעיונות ומשימות להמשך' },
+  { slug: 'logbook', label: 'היסטוריה', hint: 'משימות שהושלמו או בוטלו' },
 ] as const;
 
 export type ViewSlug = (typeof VIEWS)[number]['slug'];

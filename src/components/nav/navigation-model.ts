@@ -15,6 +15,6 @@ export function workspaceLocation(pathname: string, filterId: string | null, dat
   if (project) return { label: project.name, parent: project.joined ? 'שותפו איתי' : 'פרויקטים' };
   const label = data.labels.find(item => pathname === `/app/label/${item.id}`);
   if (label) return { label: label.name, parent: 'תוויות' };
-  if (pathname === '/app/filters') return { label: data.savedFilters.find(item => item.id === filterId)?.name ?? 'מסננים', parent: 'המשימות שלי' };
+  if (pathname === '/app/filters') return { label: data.savedFilters.find(item => item.id === filterId)?.name ?? 'מסננים ותוויות', parent: 'המרחב שלי' };
   return { label: pathname.startsWith('/app/calendar') ? 'לוח שנה' : pathname === '/app/focus' ? 'מיקוד ותכנון' : pathname === '/app/projects' ? 'כל הפרויקטים' : 'הגדרות', parent: 'המרחב שלי' };
 }

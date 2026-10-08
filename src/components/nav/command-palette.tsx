@@ -13,6 +13,7 @@ import {
   Layers,
   Moon,
   Sun,
+  SlidersHorizontal,
   Tag,
 } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -136,6 +137,13 @@ export function CommandPalette({
         href: `/app/${view.slug}`,
         icon: VIEW_ICONS[view.slug],
       })),
+      {
+        key: 'filters',
+        label: 'מסננים ותוויות',
+        hint: 'רשימות לפי תנאים ונושאים',
+        href: '/app/filters',
+        icon: SlidersHorizontal,
+      },
       {
         key: 'calendar',
         label: 'לוח שנה',

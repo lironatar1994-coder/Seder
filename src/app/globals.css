@@ -874,12 +874,35 @@
 [data-testid='task-list'] section > ul { background: transparent; padding: 0; }
 [data-task-id] + [data-task-id]::before { content: ''; position: absolute; inset-block-start: 0; inset-inline: 2rem 0; block-size: 1px; background: var(--line); }
 [data-task-id] { min-block-size: 3.5rem; }
-.filter-chip { display: inline-flex; align-items: center; gap: .4rem; min-block-size: 2.5rem; padding-inline: 1rem; border-radius: .6rem; background: var(--surface); color: var(--ink-2); font-size: .875rem; }
-.filter-chip:hover { background: var(--surface-2); }
-.filter-chip-active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
-.filter-builder { display: grid; gap: 1rem; padding: 1.25rem; background: var(--surface); border-radius: .9rem; }
+.filter-builder { display: grid; gap: 1rem; padding-block: 1rem; border-block-end: 1px solid var(--line); }
+.filter-builder[hidden] { display: none; }
 .filter-field { display: flex; flex-direction: column; gap: .35rem; font-size: .8125rem; font-weight: 600; color: var(--ink-2); }
 .filter-field select { min-inline-size: 0; inline-size: 100%; min-block-size: 2.75rem; border: 1px solid var(--line-strong); border-radius: .5rem; padding-inline: .6rem; background: var(--surface); color: var(--ink); font-size: .875rem; font-weight: 400; }
+.filter-directory > section + section { margin-block-start: 2rem; }
+.directory-section-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; min-block-size: 2.75rem; }
+.directory-section-heading h2 { font-size: 1.125rem; font-weight: 700; }
+.directory-create { display: inline-flex; align-items: center; gap: .35rem; min-block-size: 2.75rem; padding-inline: .5rem; border-radius: .4rem; font-size: .875rem; font-weight: 600; color: var(--ink-2); }
+.directory-create:hover { color: var(--ink); background: var(--surface-2); }
+.directory-help, .directory-empty { color: var(--muted); font-size: .875rem; line-height: 1.5; }
+.directory-help { margin-block: .25rem .75rem; }
+.directory-empty { padding-block: .75rem; }
+.directory-link { display: flex; align-items: center; gap: .875rem; min-block-size: 3rem; padding: .875rem .25rem; border-block-end: 1px solid var(--line); font-size: 1rem; border-radius: .25rem; transition: background 120ms ease-out; }
+.directory-link:hover { background: var(--surface-2); }
+.directory-description { display: block; margin-block-start: .125rem; font-size: .875rem; line-height: 1.4; color: var(--muted); }
+.directory-inline-form { display: grid; flex-basis: 100%; gap: .75rem; padding-block: .75rem; }
+.filter-back { display: inline-flex; align-items: center; gap: .25rem; min-block-size: 2.75rem; color: var(--muted); font-size: .875rem; }
+.filter-back:hover { color: var(--ink); }
+.filter-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; margin-inline-start: -.75rem; }
+.filter-toolbar > :last-child { margin-inline-start: auto; }
+.filter-summary { display: flex; flex-wrap: wrap; gap: .4rem; margin-block-start: .75rem; }
+.filter-summary li { max-inline-size: 100%; overflow-wrap: anywhere; padding: .25rem .625rem; border-radius: .35rem; background: var(--surface); color: var(--ink-2); font-size: .875rem; }
+.filter-save-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem; margin-block-start: 1rem; }
+.filter-save-form label { flex-basis: 100%; }
+/* The directory creates filters/labels; the editor sets criteria. Keep task
+   capture out of their controls, and restore it on the resulting task list. */
+body:has(.filter-directory, .filter-builder:not([hidden])) .mobile-add { display: none; }
+.rail-view-hint { display: none; }
+.rail-organize { padding-block: .5rem; border-block-end: 1px solid var(--rail-line); }
 .project-workspace-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-block: .5rem 1.5rem; padding-block: .75rem; border-block: 1px solid var(--line); }
 .view-switch { display: flex; gap: .25rem; padding: .25rem; background: var(--surface-2); border-radius: .65rem; }
 .view-switch button { display: flex; align-items: center; gap: .5rem; min-block-size: 2.25rem; padding-inline: .9rem; border-radius: .45rem; color: var(--muted); font-size: .875rem; }
@@ -976,7 +999,7 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
 
 /* Navigation: time first, collections second. Daily destinations remain visible
    while a long project/label directory scrolls beneath them. */
-.rail-nav { scroll-padding-block-start: calc(7 * 2.5rem + 1rem + 1px); }
+.rail-nav { scroll-padding-block-start: calc(6 * 2.5rem + 1.625rem + 1px); }
 .rail-primary { position: sticky; inset-block-start: 0; z-index: 2; padding-block: .25rem .75rem; border-block-end: 1px solid var(--rail-line); background: var(--rail); }
 .rail-primary .rail-link[aria-current='page'] { background: var(--rail-active); }
 .rail-link > svg { stroke-width: 1.7; }
@@ -988,10 +1011,14 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
 }
 @media (max-width:767px) {
   .drawer { background: var(--paper); --rail: var(--paper); }
-  .rail-nav { scroll-padding-block-start: calc(4 * 2.75rem + 1rem + 1px); }
+  .rail-nav { scroll-padding-block-start: calc(3 * 3.75rem + 1.25rem + 1px); }
   .rail-header { min-block-size: 3.75rem; }
   .rail-primary .rail-link, .rail-section-toggle { min-block-size: 2.75rem; }
   .rail-link, .rail-section-toggle { font-size: 1rem; }
+  .rail-primary .rail-link { min-block-size: 3.75rem; }
+  .rail-view-hint { display: block; margin-block-start: .125rem; color: var(--rail-muted); font-size: .8125rem; font-weight: 400; line-height: 1.4; }
+  .filter-field { font-size: .875rem; }
+  .filter-field select { font-size: 1rem; }
   .rail-section-actions button { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
 }
 @media (pointer:coarse) {
@@ -999,7 +1026,7 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
   .rail-section-actions button { min-block-size: 2.75rem; min-inline-size: 2.75rem; }
 }
 @media (min-width:768px) and (pointer:coarse) {
-  .rail-nav { scroll-padding-block-start: calc(7 * 2.75rem + 1rem + 1px); }
+  .rail-nav { scroll-padding-block-start: calc(6 * 2.75rem + 1.625rem + 1px); }
 }
 @media (max-height:600px) {
   .rail-primary { position: static; }

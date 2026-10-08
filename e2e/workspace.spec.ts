@@ -84,8 +84,9 @@ test('project templates, board moves, section renaming, and comments persist', a
 test('saved filters persist and belong to their account', async ({ page, browser }) => {
   await register(page); await add(page, 'משימה דחופה היום !1'); await add(page, 'משימה רגילה היום !3');
   await page.goto(at('/app/filters'));
+  await page.getByRole('link', { name: 'מסנן חדש', exact: true }).click();
   await page.locator('select[name="priority"]').selectOption('1');
-  await page.getByRole('button', { name: 'שמירת המסנן הזה' }).click();
+  await page.getByRole('button', { name: 'שמירת מסנן', exact: true }).click();
   await page.getByLabel('שם המסנן').fill('הדחופים שלי');
   await page.getByRole('button', { name: 'שמירה', exact: true }).click();
   await page.waitForURL('**/filters?id=*'); const savedUrl = page.url();

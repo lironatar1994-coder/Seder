@@ -312,9 +312,9 @@ Shared fields use the work surface, strong line, normal body size and lg corners
 
 Pale neutral desktop rail, concise labels and semantic 20px SVG icons with a 1.7px stroke. Daily lists lead in the order Inbox, Today, Upcoming, Anytime, Someday and Logbook; Today uses a star. The current daily list gets the action wash; collection and utility selection gets a neutral wash. Labels remain neutral, current labels are semibold, counts stay muted and icon colors keep their meaning. Nonzero open-task counts are visually subordinate and supplied through accessible descriptions.
 
-Projects and saved filters start open; labels start closed. Saved-filter and label collections appear when populated. Disclosure choices persist on the device, and visiting a project, label or saved filter opens its collection. The project directory separates owned projects from projects shared with the user; ownership and shared membership remain readable through grouping and the collaborator icon. Calendar, focus/planning and the filter builder follow below a separator. Account and settings stay anchored at the foot; collapsed desktop mode retains account-menu access while hiding the separate settings shortcut and collection action controls.
+Projects and saved filters start open; labels start closed. Saved-filter and label collections appear when populated. Disclosure choices persist on the device, and visiting a project, label or saved filter opens its collection. The project directory separates owned projects from projects shared with the user; ownership and shared membership remain readable through grouping and the collaborator icon. The Filters & Labels directory sits between daily lists and projects. Calendar and focus/planning follow below a separator. Account and settings stay anchored at the foot; collapsed desktop mode retains account-menu access while hiding the separate settings shortcut and collection action controls.
 
-Mobile Inbox / Today / Upcoming / רשימות retains the active route and adds count overlays with accessible descriptions. רשימות uses a collection-grid icon and opens remaining daily lists, projects, saved filters, labels and planning utilities without duplicating the first three tabs. The heading has Settings and Close beside it; full-width search stays beneath it. Filters sits with the task views. A labeled הוספת משימה action and a compact account selector share the fixed footer. Collection rows alone scroll. The mobile rail uses its own hover token directly; it must not alias rail-hover and surface-2 back to each other. Focus stays inside the panel and tab bar; Escape and Close restore focus to רשימות. Hidden navigation leaves the tab order and accessibility tree. Coarse pointers use a 44px floor for links, search, capture, settings, section toggles and project actions at every width. Short-height layouts release the sticky daily group to keep the complete directory reachable.
+Mobile Inbox / Today / Upcoming / רשימות retains the active route and adds count overlays with accessible descriptions. רשימות uses a collection-grid icon and opens remaining daily lists, projects, saved filters, labels and planning utilities without duplicating the first three tabs. The heading has Settings and Close beside it; full-width search stays beneath it. A labeled הוספת משימה action and a compact account selector share the fixed footer. Collection rows alone scroll. The mobile rail uses its own hover token directly; it must not alias rail-hover and surface-2 back to each other. Focus stays inside the panel and tab bar; Escape and Close restore focus to רשימות. Hidden navigation leaves the tab order and accessibility tree. Coarse pointers use a 44px floor for links, search, capture, settings, section toggles and project actions at every width. Short-height layouts release the sticky daily group to keep the complete directory reachable.
 
 Settings uses a seven-section directory, a sticky section header with All settings and Return to tasks, and a desktop side directory from 1024px. Smaller screens use one column and hide workspace tabs and Add. The הוספת משימה section follows מראה and precedes יומנים.
 
@@ -341,6 +341,27 @@ This surface shows customer identity, aggregate counts, activity and connections
 Each customer identity includes a compact, underlined `איפוס סיסמה` button with a generous target (44px), labeled for the stored recipient email. Pending and resend cooldown disable repeat requests; wrapping feedback distinguishes sent, error and truthful local preview states. A current administrator check precedes customer lookup, and only the recipient completes the existing one-hour, single-use recovery; password and sessions change upon completion. Recovery URLs are excluded from visitor analytics. The addition's local ship evidence is recorded in `.impeccable/review/admin-reset-review.md`; deployment and live email delivery require separate evidence.
 
 The overdue group has a compact `תזמון מחדש` ghost button with a hairline neutral border and a small CalendarClock icon. One click schedules each displayed overdue task according to its last original relative choice: today, tomorrow, or the coming Sunday for next week. Existing tasks without a saved choice and custom calendar dates default to today. The button preserves filters, deadlines, and each task's saved choice, clears elapsed individual times, and resets reminder delivery state. Coarse-pointer targets retain the 44px floor.
+
+### Filters and list vocabulary
+
+The mobile directory stays named רשימות. Its three extra daily rows carry one
+short explanatory line; היסטוריה names completed and canceled tasks, distinct
+from לוח שנה. Project rows use a consistent colored Hash glyph. מסננים ותוויות
+is a secondary directory entry between daily lists and projects, not a permanent
+filter form or a mobile tab.
+
+The bare /app/filters route is a flat directory: saved filters, six useful lists,
+and personal labels. Each useful list names its concrete matching rule. Creation
+of a label is inline. A new filter opens a labeled form without task results;
+applying criteria opens the matching list. Results show a short condition summary,
+with the form behind עריכת מסנן. Saving preserves the current criteria as a
+dynamic personal search; editing a saved filter updates its criteria in place.
+Saved-filter options contain Save as new and Delete.
+An explicitly applied empty filter means all open tasks, and never redirects to
+the directory. A visible back link returns to מסננים ותוויות. List-local search,
+priority and sorting remain under תצוגת הרשימה in each task list.
+Mobile task capture appears on results and stays out of the filter directory
+and expanded criteria form, where it would overlap filter/label creation.
 
 ## Do's and Don'ts
 

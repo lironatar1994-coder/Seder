@@ -42,7 +42,7 @@ Concretely, and not truthfully copyable by a translated competitor:
 
 ## Operating Context
 
-Views: תיבה נכנסת, היום, בקרוב, בכל עת, מתישהו, יומן, מסננים, plus a project directory, labels and a calendar
+Views: תיבה נכנסת, היום, בקרוב, בכל עת, מתישהו, היסטוריה, מסננים ותוויות, plus a project directory, labels and a calendar
 (month and week). Two independent axes: **where** (filed into a project, or Inbox) and **when**
 (scheduled with a date / בכל עת / מתישהו), with an optional deadline on top.
 

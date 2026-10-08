@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Bookmark, CalendarRange, ChevronDown, ChevronLeft, Folder, FolderKanban, LogOut, PanelRightClose, PanelRightOpen, Plus, Search, Settings, SlidersHorizontal, Tag, Timer, Users, X } from 'lucide-react';
+import { Bookmark, CalendarRange, ChevronDown, ChevronLeft, Hash, FolderKanban, LogOut, PanelRightClose, PanelRightOpen, Plus, Search, Settings, SlidersHorizontal, Tag, Timer, Users, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { swatchVar } from '@/lib/constants';
 import type { SidebarData } from '@/server/tasks/queries';
@@ -92,7 +92,7 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
   function projectRows(projects: SidebarData['projects']) {
     return <ul className="space-y-0.5">{projects.map(project => <li key={project.id}>
       <NavLink href={`/app/project/${project.id}`} label={project.name} active={pathname === `/app/project/${project.id}`} description={`${taskCountLabel(project.openCount)}${project.memberCount ? project.joined ? ", שותף איתכם" : ", פרויקט משותף" : ""}`}>
-        <Folder className="size-5 shrink-0" style={{ color: swatchVar(project.color) }} strokeWidth={1.7} aria-hidden />
+        <Hash className="size-5 shrink-0" style={{ color: swatchVar(project.color) }} strokeWidth={1.7} aria-hidden />
         <span dir="auto" className="rail-label min-w-0 flex-1 truncate">{project.name}</span>
         {project.memberCount > 0 && <Users className="rail-label size-3.5 shrink-0" aria-label={project.joined ? 'שותפו איתכם' : 'משותף'} />}
         {project.openCount > 0 && <Count value={project.openCount} />}
@@ -114,18 +114,20 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
       </div>
       <div className="rail-capture shrink-0 px-3 pb-3 pt-1">
         <button type="button" aria-label="הוספת משימה" className="rail-add" onClick={compose}><Plus className="size-5 shrink-0" aria-hidden /><span className="rail-label">הוספת משימה</span></button>
-        <button type="button" aria-label="חיפוש" className="rail-search" onClick={() => { setOpen(false); window.dispatchEvent(new Event('seder:search')); }}><Search className="size-5 shrink-0" aria-hidden /><span className="rail-label flex-1 text-start"><span className="md:hidden">חיפוש משימות ורשימות</span><span className="hidden md:inline">חיפוש</span></span><kbd className="rail-label num text-xs">Ctrl K</kbd></button>
+        <button type="button" aria-label="חיפוש" className="rail-search" onClick={() => { setOpen(false); window.dispatchEvent(new Event('seder:search')); }}><Search className="size-5 shrink-0" aria-hidden /><span className="rail-label flex-1 text-start"><span className="md:hidden">חיפוש בסדר</span><span className="hidden md:inline">חיפוש</span></span><kbd className="rail-label num text-xs">Ctrl K</kbd></button>
       </div>
       <nav aria-label="ניווט ראשי" className="rail-nav scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3" onClick={event => { if ((event.target as HTMLElement).closest('a')) setOpen(false); }}>
         <div className="rail-primary" data-testid="primary-navigation">
           <ul className="space-y-0.5">{NAVIGATION_VIEWS.map(view => <li key={view.slug} className={['inbox','today','upcoming'].includes(view.slug) ? 'mobile-tab-destination' : undefined}>
             <NavLink href={view.href} label={view.label} active={pathname === view.href} description={`${taskCountLabel(data.counts[view.slug])}, ${view.hint}`}>
               <view.icon className="size-5 shrink-0" strokeWidth={1.7} style={{ color: view.color }} aria-hidden />
-              <span className="rail-label flex-1 truncate">{view.label}</span>
+              <span className="rail-label min-w-0 flex-1"><span className="block truncate">{view.label}</span><span className="rail-view-hint">{view.hint}</span></span>
               {data.counts[view.slug] > 0 && <Count value={data.counts[view.slug]} />}
             </NavLink>
           </li>)}</ul>
-          <NavLink href="/app/filters" label="מסננים" active={pathname === '/app/filters' && !searchParams.get('id')}><SlidersHorizontal className="size-5 shrink-0" aria-hidden /><span className="rail-label">מסננים</span></NavLink>
+        </div>
+        <div className="rail-organize">
+          <NavLink href="/app/filters" label="מסננים ותוויות" active={pathname === '/app/filters' && !searchParams.get('id')} description="חיפוש לפי תנאים ושמירת רשימות מותאמות"><SlidersHorizontal className="size-5 shrink-0" aria-hidden /><span className="rail-label">מסננים ותוויות</span></NavLink>
         </div>
         <NavSection name="פרויקטים" expanded={sections.projects} onToggle={() => toggleSection('projects')} count={data.projects.length} actions={<NewProjectDialog trigger={<IconButton label="פרויקט חדש" className="size-8"><Plus className="size-4" aria-hidden /></IconButton>} />}>
           <NavLink href="/app/projects" label="כל הפרויקטים" active={pathname === '/app/projects'}><FolderKanban className="size-5 shrink-0" aria-hidden /><span className="rail-label">כל הפרויקטים</span></NavLink>

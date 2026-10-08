@@ -23,3 +23,15 @@ export async function deleteFilterAction(id: string) {
   revalidatePath('/app', 'layout');
   return { ok: true };
 }
+
+export async function updateFilterAction(id: string, config: unknown) {
+  const user = await requireUser();
+  const parsedId = z.string().min(1).max(100).safeParse(id);
+  const parsed = taskFilterSchema.safeParse(config);
+  if (!parsedId.success || !parsed.success) return { ok: false, error: 'יש לבדוק את תנאי המסנן ולנסות שוב.' };
+  if (parsed.data.projectId && !(await canUseProject(user.id, parsed.data.projectId))) return { ok: false, error: 'הפרויקט לא נמצא' };
+  const result = await db.savedFilter.updateMany({ where: { id: parsedId.data, userId: user.id }, data: { config: JSON.stringify(parsed.data) } });
+  if (!result.count) return { ok: false, error: 'המסנן לא נמצא. אפשר לחזור למסננים ותוויות.' };
+  revalidatePath('/app', 'layout');
+  return { ok: true };
+}
