@@ -2,24 +2,23 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { LoopVideo } from './loop-video';
+import { CalendarScene, CaptureScene, FocusScene, TogetherScene } from './scenes';
+
+const SCENES = { capture: CaptureScene, focus: FocusScene, calendar: CalendarScene, together: TogetherScene };
 
 export interface FeatureStep {
   id: string;
   eyebrow: string;
   title: string;
-  body: React.ReactNode;
-  clip: string;
-  clipLabel: string;
-  /** Width / height of the recording, so the frame hugs it exactly. */
-  aspect: number;
+  line: string;
+  scene: keyof typeof SCENES;
 }
 
 /**
- * The scroll-driven feature tour: copy scrolls on the inline-start side while
- * one sticky stage on the other side swaps to the matching recording. Below
- * `lg` there is no room for a sticky column, so each step simply carries its
- * own recording under its copy.
+ * Todoist's scroll-driven tour: on a wide screen the copy scrolls on one side
+ * while a sticky stage on the other plays the matching scene. On a phone there
+ * is no room for a sticky column, so each step is a short headline followed by
+ * its own scene, full width.
  */
 export function FeatureScroller({ steps }: { steps: FeatureStep[] }) {
   const [active, setActive] = useState(steps[0].id);
@@ -35,8 +34,7 @@ export function FeatureScroller({ steps }: { steps: FeatureStep[] }) {
   }, []);
 
   useEffect(() => {
-    // A thin band across the middle of the viewport: whichever step is
-    // crossing it owns the stage.
+    // Whichever step crosses the middle of the viewport owns the stage.
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -50,76 +48,61 @@ export function FeatureScroller({ steps }: { steps: FeatureStep[] }) {
   }, []);
 
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16">
-      <ol className="space-y-20 lg:space-y-0">
-        {steps.map((step) => (
-          <li
-            key={step.id}
-            data-step={step.id}
-            ref={(node) => {
-              if (node) refs.current.set(step.id, node);
-            }}
-            className="lg:flex lg:min-h-[78vh] lg:flex-col lg:justify-center"
-          >
-            <p className="text-sm font-bold text-accent">{step.eyebrow}</p>
-            <h3
-              className={cn(
-                'mt-3 text-3xl font-extrabold leading-tight text-ink transition-colors duration-300 md:text-[2.5rem]',
-                wide && active !== step.id && 'lg:text-muted',
-              )}
+    <div className="lg:grid lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
+      <ol className="space-y-16 lg:space-y-0">
+        {steps.map((step) => {
+          const Scene = SCENES[step.scene];
+          return (
+            <li
+              key={step.id}
+              data-step={step.id}
+              ref={(node) => {
+                if (node) refs.current.set(step.id, node);
+              }}
+              className="lg:flex lg:min-h-[72vh] lg:flex-col lg:justify-center"
             >
-              {step.title}
-            </h3>
-            <div className="mt-4 max-w-md text-lg leading-relaxed text-ink-2">{step.body}</div>
-            {!wide && (
-              <Stage className="mt-8">
-                <Frame step={step}>
-                  <LoopVideo name={step.clip} label={step.clipLabel} />
-                </Frame>
-              </Stage>
-            )}
-          </li>
-        ))}
+              <p className="text-sm font-bold text-accent">{step.eyebrow}</p>
+              <h3
+                className={cn(
+                  'mt-2 text-[2rem] font-extrabold leading-[1.1] text-ink transition-colors duration-300 lg:text-5xl',
+                  wide && active !== step.id && 'lg:text-line-strong',
+                )}
+              >
+                {step.title}
+              </h3>
+              <p className="mt-3 text-lg text-ink-2 lg:text-xl">{step.line}</p>
+              {!wide && (
+                <div className="mt-6">
+                  <Scene />
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ol>
 
       {wide && (
         <div className="relative">
-          <div className="sticky top-[calc(50vh-16.5rem)]">
-            <Stage className="aspect-[1.18] w-full">
-              {steps.map((step) => (
+          <div className="sticky top-[calc(50vh-17rem)] aspect-[1.12] w-full">
+            {steps.map((step) => {
+              const Scene = SCENES[step.scene];
+              const on = active === step.id;
+              return (
                 <div
                   key={step.id}
-                  aria-hidden={active !== step.id}
+                  aria-hidden={!on}
                   className={cn(
-                    'absolute inset-0 grid place-items-center p-[7%] transition-[opacity,transform] duration-500 ease-out',
-                    active === step.id ? 'opacity-100' : 'pointer-events-none translate-y-3 opacity-0',
+                    'absolute inset-0 transition-[opacity,transform] duration-500 ease-out',
+                    on ? 'opacity-100' : 'pointer-events-none translate-y-4 opacity-0',
                   )}
                 >
-                  <Frame step={step}>
-                    <LoopVideo name={step.clip} label={step.clipLabel} active={active === step.id} />
-                  </Frame>
+                  <Scene active={on} />
                 </div>
-              ))}
-            </Stage>
+              );
+            })}
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/** The warm ground the recordings sit on — the page's one decorative surface. */
-export function Stage({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn('landing-stage relative overflow-hidden rounded-[1.75rem] p-[6%]', className)}>{children}</div>;
-}
-
-function Frame({ step, children }: { step: FeatureStep; children: React.ReactNode }) {
-  return (
-    <div
-      className="w-full overflow-hidden rounded-xl bg-paper shadow-pop ring-1 ring-line"
-      style={{ aspectRatio: step.aspect }}
-    >
-      {children}
     </div>
   );
 }

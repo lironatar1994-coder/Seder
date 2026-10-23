@@ -1178,6 +1178,32 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
     color-mix(in oklch, var(--accent-soft) 70%, var(--paper));
 }
 
+/* Landing scenes. A scene can wear an accent other than the page's: --accent
+   was resolved on :root, so it is re-derived here from the hue axis that
+   [data-accent] sets on the scene itself. */
+.scene-accent {
+  --accent: light-dark(oklch(50% var(--accent-c) var(--accent-h)), oklch(72% var(--accent-c-dark) var(--accent-h)));
+  --accent-soft: light-dark(oklch(95% calc(var(--accent-c) * 0.12) var(--accent-h)), oklch(25% calc(var(--accent-c-dark) * 0.25) var(--accent-h)));
+}
+.scene-ripple {
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+  animation: scene-ripple 520ms ease-out forwards;
+}
+@keyframes scene-ripple {
+  from { scale: 0.3; opacity: 0.9; }
+  to { scale: 1.6; opacity: 0; }
+}
+.scene-burst {
+  translate: -50% -50%;
+  animation: scene-burst 600ms cubic-bezier(.2,.7,.3,1) forwards;
+}
+@keyframes scene-burst {
+  from { transform: translate(0, 0) scale(1); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)) scale(0.4); opacity: 0; }
+}
+
 /* Calendar ----------------------------------------------------------------
    Tasks wear a soft wash of their priority hue, as in Todoist: red, orange,
    blue, and a neutral grey for the default. Mixed against the surface, so the
