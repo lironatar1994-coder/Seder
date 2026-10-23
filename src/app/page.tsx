@@ -17,6 +17,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ArrowLeft, Check } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import { getCurrentUser } from '@/server/auth/session';
 import { PROJECT_TEMPLATES } from '@/lib/project-templates';
 import { BrandMark } from '@/components/brand/brand-mark';
@@ -46,7 +47,7 @@ const FAQ = [
   { q: 'אפשר לעבוד על פרויקט ביחד עם חברים?', a: 'כן. יוצרים פרויקט, שולחים קישור הזמנה ומנהלים משימות משותפות. אפשר לשייך משימה למשתתף, להוסיף תגובות ולעקוב אחר העבודה בתצוגת רשימה או לוח.' },
   { q: 'מה ההבדל בין תזמון למועד הגשה?', a: 'התזמון קובע מתי מתכננים לעבוד על המשימה. מועד ההגשה קובע עד מתי צריך לסיים אותה. אפשר להגדיר כל אחד מהם בנפרד ולראות את המשימות ביומן עברי ולועזי.' },
   { q: 'אפשר להשתמש בסדר בטלפון וגם במחשב?', a: 'כן. סדר פועל בדפדפן ומתאים למסכים קטנים וגדולים. נכנסים לאותו חשבון מהטלפון ומהמחשב.' },
-  { q: 'כמה זה עולה?', a: 'פתיחת חשבון ושימוש בסדר הם בחינם, בלי כרטיס אשראי.' },
+  { q: 'כמה זה עולה?', a: 'פתיחת חשבון ושימוש בסדר הם בחינם.' },
 ];
 
 export default async function LandingPage() {
@@ -94,9 +95,8 @@ export default async function LandingPage() {
                 <span className="text-accent">סדר.</span>
               </h1>
               <p className="mx-auto mt-5 max-w-sm text-xl text-ink-2 lg:mx-0 lg:text-2xl">כותבים משפט. מקבלים משימה.</p>
-              <div data-hero-cta className="mt-8 flex flex-col items-center gap-3 lg:items-start">
+              <div data-hero-cta className="mt-8 flex justify-center lg:justify-start">
                 <Cta />
-                <p className="text-sm text-muted">חינם. בלי כרטיס אשראי.</p>
               </div>
             </div>
             <CaptureScene />
@@ -105,7 +105,8 @@ export default async function LandingPage() {
 
         {/* ── Three facts, Todoist's quote row ── */}
         <section aria-label="מה מיוחד בסדר" className="border-y border-line bg-surface-2/60">
-          <Container className="flex flex-wrap justify-center gap-x-10 gap-y-3 py-6 md:py-8">
+          {/* A column on a phone — three short facts wrap raggedly as a row. */}
+          <Container className="flex w-fit flex-col items-start gap-2.5 py-6 sm:w-full sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-10 sm:gap-y-3 md:py-8">
             {['עברית מימין לשמאל', 'תאריך עברי בכל יום', 'שישי־שבת סוף שבוע'].map((fact) => (
               <span key={fact} className="inline-flex items-center gap-2 font-bold text-ink-2 md:text-lg">
                 <Check className="size-5 text-accent" strokeWidth={3} aria-hidden />
@@ -145,12 +146,15 @@ export default async function LandingPage() {
             <ul className="-mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4">
               {templates.map((template) => (
                 <li key={template.id} className="w-[78%] shrink-0 snap-center sm:w-auto">
-                  <Link href="/register" className="block rounded-2xl border border-line bg-paper p-4 transition-shadow duration-200 hover:shadow-pop">
+                  <Link href="/register" className="block h-full rounded-2xl border border-line bg-paper p-4 transition-shadow duration-200 hover:shadow-pop">
+                    {/* An illustration of the board. Its column names were
+                        truncated to "עיצ…" in cards this narrow, so the stages
+                        are written out in full under the name instead. */}
                     <div className="landing-stage flex gap-2 rounded-xl p-3" aria-hidden>
                       {template.sections.map((section, i) => (
                         <div key={section} className="min-w-0 flex-1 rounded-lg bg-paper/90 p-2 shadow-row">
-                          <p className="truncate text-[0.7rem] font-bold text-ink-2">{section}</p>
-                          <div className="mt-2 space-y-1.5">
+                          <span className="block h-2 w-3/4 rounded-full bg-line-strong/60" />
+                          <div className="mt-2.5 space-y-1.5">
                             {Array.from({ length: 3 - (i % 2) }, (_, k) => (
                               <span key={k} className="block h-2 rounded-full bg-line" style={{ width: `${90 - k * 25}%` }} />
                             ))}
@@ -159,6 +163,7 @@ export default async function LandingPage() {
                       ))}
                     </div>
                     <p className="mt-4 text-lg font-bold">{template.name}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted">{template.sections.join(' · ')}</p>
                   </Link>
                 </li>
               ))}
@@ -229,7 +234,9 @@ export default async function LandingPage() {
 }
 
 function Container({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>;
+  // Merged, not concatenated: a section asking for a narrower column (the FAQ's
+  // max-w-3xl) has to win over the default width.
+  return <div className={cn('mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8', className)}>{children}</div>;
 }
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
