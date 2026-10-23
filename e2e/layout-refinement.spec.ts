@@ -64,7 +64,7 @@ test('dates and hours have separate urgency, consistent picker colors and a work
   await expect(picker.getByRole('button', { name: /^מחר / })).toHaveAttribute('data-date-tone', 'tomorrow');
   await page.screenshot({ path: '.local-artifacts/layout-refinement/date-picker-390.png', animations: 'disabled' });
   await picker.getByRole('button', { name: 'ללא תאריך', exact: true }).click();
-  await expect(page.getByRole('group', { name: 'מתוזמן ל', exact: true })).toContainText('בכל עת');
+  await expect(page.getByRole('group', { name: 'מתוזמן ל', exact: true })).toContainText('ללא תאריך');
   await expect(page.getByRole('button', { name: 'עריכת שעה', exact: true })).toHaveCount(0);
   await page.getByRole('dialog').getByRole('button', { name: 'סגירה', exact: true }).click();
   await page.reload();

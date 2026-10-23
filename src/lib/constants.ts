@@ -41,16 +41,21 @@ export function swatchVar(color: string): string {
   return `var(--swatch-${safe})`;
 }
 
-/** The six standing views, in sidebar order. Slugs stay ASCII so URLs are
- *  shareable and typeable; every label the user sees is Hebrew. */
+/** The standing list views. Slugs stay ASCII so URLs are shareable and
+ *  typeable; every label the user sees is Hebrew. As in Todoist, the days
+ *  ahead live in the calendar rather than in a list of their own. */
 export const VIEWS = [
   { slug: 'inbox', label: 'תיבה נכנסת', hint: 'משימות שעוד לא שויכו לפרויקט' },
   { slug: 'today', label: 'היום', hint: 'מה שקורה היום' },
-  { slug: 'upcoming', label: 'בקרוב', hint: 'הימים הבאים' },
-  { slug: 'anytime', label: 'בכל עת', hint: 'משימות בפרויקטים, בלי תאריך' },
-  { slug: 'someday', label: 'מתישהו', hint: 'רעיונות ומשימות להמשך' },
   { slug: 'logbook', label: 'היסטוריה', hint: 'משימות שהושלמו או בוטלו' },
 ] as const;
+
+/** Views that were folded into others, and where their old links now land. */
+export const RETIRED_VIEWS: Record<string, string> = {
+  upcoming: '/app/calendar?v=week',
+  anytime: '/app/projects',
+  someday: '/app/inbox',
+};
 
 export type ViewSlug = (typeof VIEWS)[number]['slug'];
 

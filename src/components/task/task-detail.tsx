@@ -246,11 +246,7 @@ export function TaskDetail({
             <Button variant="secondary" size="sm" className="flex-1 justify-between" data-date-tone={scheduleStyle?.dateTone ?? 'none'}>
               {task.scheduledFor
                 ? relativeDayLabel(task.scheduledFor, today())
-                : task.whenBucket === 'ANYTIME'
-                  ? 'בכל עת'
-                  : task.whenBucket === 'SOMEDAY'
-                    ? 'מתישהו'
-                    : 'בלי תאריך'}
+                : 'ללא תאריך'}
             </Button>
           </PopoverTrigger>
           <PopoverContent>

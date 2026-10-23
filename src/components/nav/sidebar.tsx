@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Bookmark, CalendarRange, ChevronDown, ChevronLeft, Hash, FolderKanban, LogOut, PanelRightClose, PanelRightOpen, Plus, Search, Settings, SlidersHorizontal, Tag, Timer, Users, X } from 'lucide-react';
+import { Bookmark, ChevronDown, ChevronLeft, Hash, FolderKanban, LogOut, PanelRightClose, PanelRightOpen, Plus, Search, Settings, SlidersHorizontal, Tag, Timer, Users, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { swatchVar } from '@/lib/constants';
 import type { SidebarData } from '@/server/tasks/queries';
@@ -15,7 +15,7 @@ import { useRail } from './use-rail';
 import { ThemeToggle } from './theme-toggle';
 import { NewProjectDialog } from './new-project-dialog';
 import { requestCompose } from '@/components/task/compose-bus';
-import { COLLECTIONS_LABEL, NAVIGATION_VIEWS, taskCountLabel } from './navigation-model';
+import { COLLECTIONS_LABEL, HISTORY_DESTINATION, PRIMARY_DESTINATIONS, isDestinationActive, taskCountLabel, type Destination } from './navigation-model';
 
 type SectionKey = 'projects' | 'filters' | 'labels';
 const STORAGE_KEY = 'seder-nav-sections';
@@ -89,6 +89,14 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
     document.addEventListener('keydown', keydown);
     return () => { document.removeEventListener('keydown', keydown); if (main) main.inert = false; };
   }, [open]);
+  function destinationLink(item: Destination) {
+    const count = item.countKey ? data.counts[item.countKey] : 0;
+    return <NavLink href={item.href} label={item.label} active={isDestinationActive(item, pathname)} description={item.countKey ? `${taskCountLabel(count)}, ${item.hint}` : item.hint}>
+      <item.icon className="size-5 shrink-0" strokeWidth={1.7} style={{ color: item.color }} aria-hidden />
+      <span className="rail-label min-w-0 flex-1"><span className="block truncate">{item.label}</span><span className="rail-view-hint">{item.hint}</span></span>
+      {count > 0 && <Count value={count} />}
+    </NavLink>;
+  }
   function projectRows(projects: SidebarData['projects']) {
     return <ul className="space-y-0.5">{projects.map(project => <li key={project.id}>
       <NavLink href={`/app/project/${project.id}`} label={project.name} active={pathname === `/app/project/${project.id}`} description={`${taskCountLabel(project.openCount)}${project.memberCount ? project.joined ? ", שותף איתכם" : ", פרויקט משותף" : ""}`}>
@@ -118,16 +126,14 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
       </div>
       <nav aria-label="ניווט ראשי" className="rail-nav scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3" onClick={event => { if ((event.target as HTMLElement).closest('a')) setOpen(false); }}>
         <div className="rail-primary" data-testid="primary-navigation">
-          <ul className="space-y-0.5">{NAVIGATION_VIEWS.map(view => <li key={view.slug} className={['inbox','today','upcoming'].includes(view.slug) ? 'mobile-tab-destination' : undefined}>
-            <NavLink href={view.href} label={view.label} active={pathname === view.href} description={`${taskCountLabel(data.counts[view.slug])}, ${view.hint}`}>
-              <view.icon className="size-5 shrink-0" strokeWidth={1.7} style={{ color: view.color }} aria-hidden />
-              <span className="rail-label min-w-0 flex-1"><span className="block truncate">{view.label}</span><span className="rail-view-hint">{view.hint}</span></span>
-              {data.counts[view.slug] > 0 && <Count value={data.counts[view.slug]} />}
-            </NavLink>
-          </li>)}</ul>
-        </div>
-        <div className="rail-organize">
-          <NavLink href="/app/filters" label="מסננים ותוויות" active={pathname === '/app/filters' && !searchParams.get('id')} description="חיפוש לפי תנאים ושמירת רשימות מותאמות"><SlidersHorizontal className="size-5 shrink-0" aria-hidden /><span className="rail-label">מסננים ותוויות</span></NavLink>
+          {/* On the phone these three are the tab bar, so the drawer skips them. */}
+          <ul className="space-y-0.5">
+            {PRIMARY_DESTINATIONS.map(item => <li key={item.slug} className="mobile-tab-destination">{destinationLink(item)}</li>)}
+            {/* One group, in Todoist's order: Inbox, Today, Upcoming, Filters &
+                Labels, Completed. */}
+            <li><NavLink href="/app/filters" label="מסננים ותוויות" active={pathname === '/app/filters' && !searchParams.get('id')} description="חיפוש לפי תנאים ושמירת רשימות מותאמות"><SlidersHorizontal className="size-5 shrink-0" strokeWidth={1.7} aria-hidden /><span className="rail-label min-w-0 flex-1"><span className="block truncate">מסננים ותוויות</span><span className="rail-view-hint">רשימות לפי תנאים ונושאים</span></span></NavLink></li>
+            <li>{destinationLink(HISTORY_DESTINATION)}</li>
+          </ul>
         </div>
         <NavSection name="פרויקטים" expanded={sections.projects} onToggle={() => toggleSection('projects')} count={data.projects.length} actions={<NewProjectDialog trigger={<IconButton label="פרויקט חדש" className="size-8"><Plus className="size-4" aria-hidden /></IconButton>} />}>
           <NavLink href="/app/projects" label="כל הפרויקטים" active={pathname === '/app/projects'}><FolderKanban className="size-5 shrink-0" aria-hidden /><span className="rail-label">כל הפרויקטים</span></NavLink>
@@ -142,7 +148,6 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
           <ul className="space-y-0.5">{data.labels.map(label => <li key={label.id}><NavLink href={`/app/label/${label.id}`} label={label.name} active={pathname === `/app/label/${label.id}`}><Tag className="size-5 shrink-0" style={{ color: swatchVar(label.color) }} aria-hidden /><span className="rail-label min-w-0 flex-1 truncate">{label.name}</span></NavLink></li>)}</ul>
         </NavSection>}
         <div className="rail-utilities mt-3 border-bs border-[var(--rail-line)] pt-3">
-          <NavLink href="/app/calendar" label="לוח שנה" active={pathname.startsWith('/app/calendar')}><CalendarRange className="size-5 shrink-0" aria-hidden /><span className="rail-label">לוח שנה</span></NavLink>
           <NavLink href="/app/focus" label="מיקוד ותכנון" active={pathname === '/app/focus'}><Timer className="size-5 shrink-0" aria-hidden /><span className="rail-label">מיקוד ותכנון</span></NavLink>
         </div>
       </nav>

@@ -1,16 +1,16 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getCurrentUser } from '@/server/auth/session';
 import { getLogbookPage, getSidebarData, getViewTasks } from '@/server/tasks/queries';
 import { LogbookView } from '@/components/task/logbook-view';
-import { VIEWS, isViewSlug, type ViewSlug } from '@/lib/constants';
+import { RETIRED_VIEWS, VIEWS, isViewSlug, type ViewSlug } from '@/lib/constants';
 import { ViewHeader } from '@/components/nav/view-header';
 import { TaskList } from '@/components/task/task-list';
 import { ViewActions } from '@/components/nav/view-actions';
 import { getGoogleEvents } from '@/server/google/queries';
 import { GoogleEventList, GoogleSyncBar } from '@/components/calendar/google-events';
 import { db } from '@/server/db';
-import { today, addDays } from '@/lib/dates';
+import { today } from '@/lib/dates';
 
 /* Empty screens are invitations, not apologies — each one says what this view
    is for and offers the next action. */
@@ -21,19 +21,7 @@ const EMPTY: Record<ViewSlug, { title: string; body: string }> = {
   },
   today: {
     title: 'אין משימות להיום',
-    body: 'שום דבר לא מתוזמן להיום ואין דדליינים פתוחים. אפשר למשוך משהו מ״בקרוב״ או להוסיף משימה.',
-  },
-  upcoming: {
-    title: 'החודש הקרוב פנוי',
-    body: 'אין משימות מתוזמנות לשלושים הימים הבאים.',
-  },
-  anytime: {
-    title: 'אין משימות זמינות',
-    body: 'משימות ששויכו לפרויקט, בלי תאריך, ומוכנות לביצוע מתי שמתאים.',
-  },
-  someday: {
-    title: 'אין רעיונות שמורים',
-    body: 'מקום לדברים שתרצו לעשות מתישהו, בלי להתחייב מתי.',
+    body: 'שום דבר לא מתוזמן להיום ואין דדליינים פתוחים. אפשר למשוך משהו מלוח השנה או להוסיף משימה.',
   },
   logbook: {
     title: 'עוד לא נסגרה משימה',
@@ -53,6 +41,8 @@ export async function generateMetadata({
 
 export default async function ViewPage({ params }: { params: Promise<{ view: string }> }) {
   const { view } = await params;
+  // Old bookmarks to a folded view land on the place that replaced it.
+  if (RETIRED_VIEWS[view]) permanentRedirect(RETIRED_VIEWS[view]);
   if (!isViewSlug(view)) notFound();
 
   const user = await getCurrentUser();
@@ -75,9 +65,9 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
     );
   }
 
-  const showGoogle = view === 'today' || view === 'upcoming';
-  const from = view === 'upcoming' ? addDays(today(), 1) : today();
-  const to = view === 'upcoming' ? addDays(today(), 30) : today();
+  const showGoogle = view === 'today';
+  const from = today();
+  const to = today();
   const [data, sidebar, googleEvents, googleConnection] = await Promise.all([
     getViewTasks(user.id, view),
     getSidebarData(user.id),
@@ -97,16 +87,12 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
       <div className={view === 'today' ? 'today-workspace' : undefined}>
       <div className="min-w-0">
       {googleConnection && <GoogleSyncBar connected lastError={googleConnection.lastError} />}
-      <GoogleEventList events={googleEvents} showDates={view === 'upcoming'} />
+      <GoogleEventList events={googleEvents} />
       <TaskList
         groups={data.groups}
         context={{ view }}
         projects={sidebar.projects}
         labels={sidebar.labels}
-        dayHeadings={view === 'upcoming'}
-        // Upcoming is ordered by date, so dragging inside it would be a lie.
-        // The logbook returned above and never reaches here.
-        reorderable={view !== 'upcoming'}
         empty={EMPTY[view]}
       />
       </div>

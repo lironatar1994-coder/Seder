@@ -120,8 +120,8 @@ test('mobile task and calendar day history work inside the workspace', async ({ 
   await page.goForward();
   await expect(page.getByLabel('שם המשימה')).toHaveValue('משימת טלפון');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'רשימות', exact: true }).click();
-  await page.getByRole('link', { name: 'לוח שנה', exact: true }).click();
+  // The calendar is a tab of its own on the phone.
+  await page.getByRole('navigation', { name: 'ניווט מהיר' }).getByRole('link', { name: 'לוח', exact: true }).click();
   const days = page.locator('[data-strip-day]');
   await days.nth(5).click();
   const selected = page.url();
@@ -175,8 +175,8 @@ test('returning to a view restores the workspace scroll position', async ({ page
   for (let i = 0; i < 12; i++) await add(page, `משימת גלילה ${i} היום`);
   await page.locator('main').evaluate((main) => { main.scrollTop = 260; });
   await expect.poll(() => page.locator('main').evaluate((main) => main.scrollTop)).toBe(260);
-  await page.getByRole('link', { name: 'בקרוב', exact: true }).click();
-  await expect(page).toHaveURL(/\/app\/upcoming$/);
+  await page.getByRole('link', { name: 'היסטוריה', exact: true }).click();
+  await expect(page).toHaveURL(/\/app\/logbook$/);
   await page.goBack();
   await expect(page.getByTestId('task-list')).toContainText('משימת גלילה 11');
   await expect.poll(() => page.locator('main').evaluate((main) => main.scrollTop)).toBe(260);

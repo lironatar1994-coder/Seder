@@ -902,7 +902,6 @@
    capture out of their controls, and restore it on the resulting task list. */
 body:has(.filter-directory, .filter-builder:not([hidden])) .mobile-add { display: none; }
 .rail-view-hint { display: none; }
-.rail-organize { padding-block: .5rem; border-block-end: 1px solid var(--rail-line); }
 .project-workspace-toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; margin-block: .5rem 1.5rem; padding-block: .75rem; border-block: 1px solid var(--line); }
 .view-switch { display: flex; gap: .25rem; padding: .25rem; background: var(--surface-2); border-radius: .65rem; }
 .view-switch button { display: flex; align-items: center; gap: .5rem; min-block-size: 2.25rem; padding-inline: .9rem; border-radius: .45rem; color: var(--muted); font-size: .875rem; }

@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, CalendarSearch, CalendarX2, Layers, Moon, Sun } from 'lucide-react';
+import { CalendarDays, CalendarSearch, CalendarX2, Sun } from 'lucide-react';
 import { MenuItem } from '@/components/ui/overlays';
 import { addDays, today, weekdayName } from '@/lib/dates';
 import { dateTone } from '@/lib/date-presentation';
@@ -51,14 +51,6 @@ export function WhenMenuItems({
         <CalendarDays className="size-4" aria-hidden />
         <span className="flex-1">שבוע הבא</span>
         <span className="text-xs text-muted">{weekdayName(nextWeek)}</span>
-      </MenuItem>
-      <MenuItem onSelect={() => onSelect({ bucket: 'ANYTIME' })}>
-        <Layers className="size-4 text-muted" aria-hidden />
-        <span className="flex-1">בכל עת</span>
-      </MenuItem>
-      <MenuItem onSelect={() => onSelect({ bucket: 'SOMEDAY' })}>
-        <Moon className="size-4 text-muted" aria-hidden />
-        <span className="flex-1">מתישהו</span>
       </MenuItem>
       <MenuItem onSelect={() => onSelect({ bucket: 'ANYTIME' })}>
         <CalendarX2 className="size-4 text-muted" aria-hidden />

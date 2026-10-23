@@ -538,7 +538,7 @@ export function PhoneScene({ active = true }: SceneProps) {
             {[
               [Inbox, 'תיבה'],
               [Star, 'היום'],
-              [CalendarDays, 'בקרוב'],
+              [CalendarDays, 'לוח'],
               [LayoutGrid, 'רשימות'],
             ].map(([Icon, label], i) => {
               const I = Icon as typeof Inbox;
@@ -665,7 +665,7 @@ export function ThemeScene({ active = true }: SceneProps) {
             [Search, 'חיפוש', false],
             [Inbox, 'תיבה נכנסת', false],
             [Star, 'היום', true],
-            [CalendarDays, 'בקרוב', false],
+            [CalendarDays, 'לוח שנה', false],
           ].map(([Icon, label, on]) => {
             const I = Icon as typeof Inbox;
             return (

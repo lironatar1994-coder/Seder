@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CalendarX2, ChevronLeft, ChevronRight, Clock, Layers, Moon, Sun, CalendarDays } from 'lucide-react';
+import { CalendarX2, ChevronLeft, ChevronRight, Clock, Sun, CalendarDays } from 'lucide-react';
 import { TimePickerPanel } from './time-picker';
 import { cn } from '@/lib/cn';
 import { buildMonthGrid, WEEKDAY_HEADERS, parseISODay } from '@/lib/calendar';
@@ -65,8 +65,6 @@ export function DatePickerPanel({
         { key: 'today', icon: Sun, label: 'היום', hint: null, value: { bucket: 'SCHEDULED' as const, date: iso(base) } },
         { key: 'tomorrow', icon: CalendarDays, label: 'מחר', hint: weekdayName(tomorrow), value: { bucket: 'SCHEDULED' as const, date: iso(tomorrow) } },
         { key: 'next', icon: CalendarDays, label: 'שבוע הבא', hint: formatShortDate(nextWeek), value: { bucket: 'SCHEDULED' as const, date: iso(nextWeek) } },
-        { key: 'anytime', icon: Layers, label: 'בכל עת', hint: null, value: { bucket: 'ANYTIME' as const } },
-        { key: 'someday', icon: Moon, label: 'מתישהו', hint: null, value: { bucket: 'SOMEDAY' as const } },
       ]
     : [
         { key: 'today', icon: Sun, label: 'היום', hint: null, value: { bucket: 'SCHEDULED' as const, date: iso(base) } },

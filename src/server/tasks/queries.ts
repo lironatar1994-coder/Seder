@@ -154,68 +154,12 @@ export async function getViewTasks(userId: string, view: ViewSlug): Promise<View
       return { groups, progress: { done: doneToday, total: doneToday + tasks.length } };
     }
 
-    case 'upcoming': {
-      const horizon = addDays(base, 30);
-      const rows = await db.task.findMany({
-        where: {
-          ...mine,
-          ...TOP_LEVEL,
-          status: 'TODO',
-          scheduledFor: { gt: base, lte: horizon },
-        },
-        select: taskSelect(userId),
-        orderBy: [{ scheduledFor: 'asc' }, { scheduledTime: 'asc' }, { position: 'asc' }],
-      });
-
-      // Group by calendar day; the header renders the weekday and date.
-      const byDay = new Map<string, TaskDTO[]>();
-      for (const row of rows) {
-        const dto = toDTO(row);
-        const key = dto.scheduledFor!.toISOString().slice(0, 10);
-        const bucket = byDay.get(key);
-        if (bucket) bucket.push(dto);
-        else byDay.set(key, [dto]);
-      }
-
-      return {
-        groups: [...byDay.entries()].map(([key, tasks]) => ({ key, title: key, tasks })),
-      };
-    }
-
     case 'inbox': {
       // The Inbox is a *place*, not a date: everything not yet filed into a
       // project, whether or not it is scheduled. A task added for tomorrow and
-      // never filed belongs both here and in "בקרוב".
+      // never filed belongs both here and on the calendar.
       const rows = await db.task.findMany({
         where: { userId, ...TOP_LEVEL, status: 'TODO', projectId: null },
-        select: taskSelect(userId),
-        orderBy: [{ position: 'asc' }],
-      });
-      return { groups: [{ key: view, title: null, tasks: rows.map(toDTO) }] };
-    }
-
-    case 'anytime': {
-      // Filed, undated and ready. Unfiled work stays in the Inbox until it is
-      // sorted, so the two views never say the same thing twice.
-      const rows = await db.task.findMany({
-        where: {
-          ...mine,
-          ...TOP_LEVEL,
-          status: 'TODO',
-          whenBucket: 'ANYTIME',
-          projectId: { not: null },
-        },
-        select: taskSelect(userId),
-        orderBy: [{ position: 'asc' }],
-      });
-      return { groups: [{ key: view, title: null, tasks: rows.map(toDTO) }] };
-    }
-
-    case 'someday': {
-      // Deferring is an explicit decision, so it holds whether or not the task
-      // has been filed.
-      const rows = await db.task.findMany({
-        where: { ...mine, ...TOP_LEVEL, status: 'TODO', whenBucket: 'SOMEDAY' },
         select: taskSelect(userId),
         orderBy: [{ position: 'asc' }],
       });
@@ -527,15 +471,14 @@ export interface SidebarData {
   counts: Record<ViewSlug, number>;
 }
 
-/** One pass for the whole sidebar — six separate count queries per navigation
- *  would be six round trips on every page. */
+/** One pass for the whole sidebar — a count query per row on every
+ *  navigation would be a round trip each. */
 export async function getSidebarData(userId: string): Promise<SidebarData> {
   const savedFilters = await db.savedFilter.findMany({ where: { userId }, select: { id: true, name: true }, orderBy: { createdAt: 'asc' } });
   const base = today();
-  const horizon = addDays(base, 30);
   const mine = await myWork(userId);
 
-  const [projects, labels, grouped, byProject, todayCount, upcomingCount, inboxCount] =
+  const [projects, labels, byProject, todayCount, inboxCount] =
     await Promise.all([
       db.project.findMany({
         where: {
@@ -555,12 +498,6 @@ export async function getSidebarData(userId: string): Promise<SidebarData> {
         where: { userId },
         select: { id: true, name: true, color: true },
         orderBy: { position: 'asc' },
-      }),
-      // Bucket counts are "my plate", so they match what the views will show.
-      db.task.groupBy({
-        by: ['whenBucket', 'projectId'],
-        where: { ...mine, parentId: null, status: 'TODO' },
-        _count: { _all: true },
       }),
       /* A project's own badge counts everything open in it, including work
          assigned to other people. A shared list has a length, and it is the
@@ -584,22 +521,9 @@ export async function getSidebarData(userId: string): Promise<SidebarData> {
           OR: [{ scheduledFor: { lte: base } }, { deadline: { lte: base } }],
         },
       }),
-      db.task.count({
-        where: {
-          ...mine,
-          parentId: null,
-          status: 'TODO',
-          scheduledFor: { gt: base, lte: horizon },
-        },
-      }),
       // The Inbox is unfiled and mine by definition, so it needs no scope.
       db.task.count({ where: { userId, parentId: null, status: 'TODO', projectId: null } }),
     ]);
-
-  const sumBucket = (bucket: WhenBucket, filedOnly = false) =>
-    grouped
-      .filter((g) => g.whenBucket === bucket && (!filedOnly || g.projectId !== null))
-      .reduce((n, g) => n + g._count._all, 0);
 
   const perProject = new Map<string, number>();
   for (const row of byProject) {
@@ -619,9 +543,6 @@ export async function getSidebarData(userId: string): Promise<SidebarData> {
     counts: {
       inbox: inboxCount,
       today: todayCount,
-      upcoming: upcomingCount,
-      anytime: sumBucket('ANYTIME', true),
-      someday: sumBucket('SOMEDAY'),
       logbook: 0,
     },
   };

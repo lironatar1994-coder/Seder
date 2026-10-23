@@ -5,13 +5,10 @@ import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
 import {
   BookCheck,
-  CalendarDays,
   CalendarRange,
   Check,
   Folder,
   Inbox,
-  Layers,
-  Moon,
   Sun,
   SlidersHorizontal,
   Tag,
@@ -25,13 +22,11 @@ import type { TaskDTO } from '@/server/tasks/queries';
 import { TaskDetail } from '@/components/task/task-detail';
 import { useToast } from '@/components/ui/toast';
 import { useNavigationParam } from './navigation-state';
+import { SHORTCUT_HREFS } from './navigation-model';
 
 const VIEW_ICONS: Record<ViewSlug, typeof Inbox> = {
   inbox: Inbox,
   today: Sun,
-  upcoming: CalendarDays,
-  anytime: Layers,
-  someday: Moon,
   logbook: BookCheck,
 };
 
@@ -45,7 +40,7 @@ interface Destination {
 }
 
 /** Ctrl/Cmd+K — find a task by name, or jump to any view, project or label.
- *  Ctrl+1…6 go straight to the six standing views. */
+ *  Ctrl+1…5 go straight to the sidebar's top destinations, in order. */
 export function CommandPalette({
   projects,
   labels,
@@ -86,9 +81,9 @@ export function CommandPalette({
         setOpen((v) => !v);
         return;
       }
-      if (mod && /^[1-6]$/.test(event.key)) {
+      if (mod && /^[1-5]$/.test(event.key)) {
         event.preventDefault();
-        router.push(`/app/${VIEWS[Number(event.key) - 1].slug}`);
+        router.push(SHORTCUT_HREFS[Number(event.key) - 1]);
       }
     }
     window.addEventListener('keydown', onKeyDown);

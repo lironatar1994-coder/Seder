@@ -101,7 +101,8 @@ test('mobile Browse keeps orientation, counts, capture, collections and settings
   }
   await page.setViewportSize({width:390,height:844});
   await tabs.getByRole('button',{name:'רשימות',exact:true}).click();
-  await page.locator('.rail').getByRole('link',{name:'לוח שנה',exact:true}).click();
+  // A destination that lives only in Browse makes Browse the current tab.
+  await page.locator('.rail').getByRole('link',{name:'היסטוריה',exact:true}).click();
   await expect(tabs.getByRole('button',{name:'רשימות',exact:true})).toHaveAttribute('aria-current','page');
   await expect(tabs.getByRole('button',{name:'רשימות',exact:true})).toHaveAttribute('aria-expanded','false');
   await page.goBack();

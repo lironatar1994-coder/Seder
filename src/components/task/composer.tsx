@@ -141,13 +141,13 @@ export function Composer({
     ? projects.find(project => project.id === selection.projectId)?.name
     : parsed.projectName ?? projects.find(project => project.id === context.projectId)?.name;
   const dateLabel = schedule.date ? relativeDayLabel(new Date(`${schedule.date}T00:00:00.000Z`), today())
-    : schedule.bucket === 'SOMEDAY' ? 'מתישהו' : 'תאריך';
+    : 'תאריך';
   const deadline = selection.deadline !== undefined ? selection.deadline : parsed.deadline;
   const priority = selection.priority ?? parsed.priority;
   const labelNames = selection.labelNames ?? parsed.labelNames;
   const recurrence = selection.recurrence !== undefined ? selection.recurrence : parsed.recurrence;
   const hiddenFields = COMPOSER_FIELDS.filter(field => !preferences.fields.includes(field));
-  const selectedFields: Record<ComposerField, boolean> = { date: Boolean(schedule.date || schedule.bucket === 'SOMEDAY'), project: Boolean(projectName), priority: priority !== 4, deadline: Boolean(deadline), labels: labelNames.length > 0, repeat: Boolean(recurrence) };
+  const selectedFields: Record<ComposerField, boolean> = { date: Boolean(schedule.date), project: Boolean(projectName), priority: priority !== 4, deadline: Boolean(deadline), labels: labelNames.length > 0, repeat: Boolean(recurrence) };
   const extraCount = hiddenFields.filter(field => selectedFields[field]).length;
   const filteredProjects = projects.filter(project => project.name.toLocaleLowerCase().includes(projectSearch.toLocaleLowerCase()));
   const controlClass = 'inline-flex h-9 min-w-0 items-center gap-1.5 rounded-md border border-line px-2.5 text-sm text-ink-2 transition-colors hover:bg-surface-2 disabled:opacity-50 [@media(pointer:coarse)]:h-11';

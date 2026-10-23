@@ -114,10 +114,12 @@ test('one reschedule click gives each overdue task its own original relative des
     await expect(page.getByTestId('task-list')).toContainText('בדיקת א');
     await expect(page.getByTestId('task-list')).not.toContainText('בדיקת ב');
     await expect(late).toHaveCount(0);
-    await page.getByRole('link', { name: /^בקרוב/ }).click();
-    await expect(page.getByTestId('task-list')).toContainText('בדיקת ב');
-    await expect(page.getByTestId('task-list')).toContainText('בדיקת ג');
-    await expect(page.getByTestId('task-list')).toContainText('בדיקת ד');
+    // Tomorrow's two are on the calendar; the stored dates above cover all three.
+    const tomorrow = addDays(today(), 1).toISOString().slice(0, 10);
+    await page.goto(`${BASE_PATH}/app/calendar?v=week&w=${tomorrow}`);
+    const day = page.locator(`[data-day="${tomorrow}"], [data-timecol="${tomorrow}"]`);
+    await expect(day.getByText('בדיקת ב')).toBeVisible();
+    await expect(day.getByText('בדיקת ד')).toBeVisible();
   } finally { await db.$disconnect(); }
 });
 

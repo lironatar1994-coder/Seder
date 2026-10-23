@@ -59,6 +59,22 @@ async function addTask(page: Page, text: string) {
 
 const list = (page: Page) => page.getByTestId('task-list');
 
+/** "YYYY-MM-DD", `offset` days from today in Israel. */
+function isoFromToday(offset: number) {
+  const base = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const day = new Date(`${base}T00:00:00.000Z`);
+  day.setUTCDate(day.getUTCDate() + offset);
+  return day.toISOString().slice(0, 10);
+}
+
+/** The days ahead live on the calendar: opens the week holding the day and
+ *  returns the day's all-day cell and hour column together. */
+async function calendarDay(page: Page, offset: number) {
+  const iso = isoFromToday(offset);
+  await page.goto(at(`/app/calendar?v=week&w=${iso}`));
+  return page.locator(`[data-day="${iso}"], [data-timecol="${iso}"]`);
+}
+
 test.describe('auth', () => {
   test('registers, lands on today, and stays signed in', async ({ page }) => {
     await register(page);
@@ -302,11 +318,11 @@ test.describe('settings', () => {
     await openSettings(page);
     await page.getByRole('link', { name: 'מראה', exact: true }).click();
 
-    await page.getByLabel('תצוגת פתיחה').selectOption('someday');
+    await page.getByLabel('תצוגת פתיחה').selectOption('logbook');
     await expect(page.getByText('נשמר')).toBeVisible();
 
     await page.goto(at('/app'));
-    await expect(page).toHaveURL(/\/app\/someday/);
+    await expect(page).toHaveURL(/\/app\/logbook/);
   });
 
   test('signs the other devices out on demand', async ({ browser, page }) => {
@@ -657,7 +673,7 @@ test.describe('composer pickers', () => {
     await page.goto(at('/app/inbox'));
     await page.reload();
     await page.getByRole('button', { name: 'פתיחת לבדוק בהמשך', exact: true }).click();
-    await expect(page.getByRole('group', { name: 'מתוזמן ל', exact: true })).toContainText('בכל עת');
+    await expect(page.getByRole('group', { name: 'מתוזמן ל', exact: true })).toContainText('ללא תאריך');
     await expect(page.getByRole('combobox', { name: 'פרויקט', exact: true })).toHaveValue('');
   });
 
@@ -721,16 +737,16 @@ test.describe('tasks', () => {
 
     // Scheduled for tomorrow, so it must not show up in today — and the toast
     // has to say where it did go, or the task appears to have vanished.
-    await expect(page.getByTestId('toasts')).toContainText('נוספה לבקרוב');
+    await expect(page.getByTestId('toasts')).toContainText('נוספה ללוח השנה');
     await expect(list(page).getByText('לסיים מצגת')).toHaveCount(0);
 
-    await page.goto(at('/app/upcoming'));
-    await expect(list(page).getByText('לסיים מצגת')).toBeVisible();
-    // The tokens were consumed, not left in the title.
-    await expect(list(page).getByText('#עבודה')).toHaveCount(0);
-    // …and became real metadata on the row.
-    await expect(list(page).getByText('14:30')).toBeVisible();
-    await expect(list(page).getByText('עבודה')).toBeVisible();
+    const tomorrow = await calendarDay(page, 1);
+    // The tokens were consumed, not left in the title…
+    const block = tomorrow.getByRole('button', { name: 'לסיים מצגת', exact: true });
+    // …and became real metadata: the hour on the grid, the project it is filed in.
+    await expect(block).toHaveAttribute('title', /14:30–/);
+    await page.getByRole('link', { name: /עבודה/ }).click();
+    await expect(list(page).getByText('לסיים מצגת', { exact: true })).toBeVisible();
   });
 
   test('a dated but unfiled task stays in the Inbox', async ({ page }) => {
@@ -741,9 +757,8 @@ test.describe('tasks', () => {
     await page.goto(at('/app/inbox'));
     await expect(list(page).getByText('לתאם ביקורת')).toBeVisible();
 
-    // …and it is in Upcoming too, because the two axes are independent.
-    await page.goto(at('/app/upcoming'));
-    await expect(list(page).getByText('לתאם ביקורת')).toBeVisible();
+    // …and it is on the calendar too, because the two axes are independent.
+    await expect((await calendarDay(page, 1)).getByText('לתאם ביקורת')).toBeVisible();
   });
 
   test('filing a task into a project takes it out of the Inbox', async ({ page }) => {
@@ -753,18 +768,15 @@ test.describe('tasks', () => {
     await page.goto(at('/app/inbox'));
     await expect(list(page).getByText('להזמין ציוד')).toHaveCount(0);
 
-    await page.goto(at('/app/upcoming'));
-    await expect(list(page).getByText('להזמין ציוד')).toBeVisible();
+    await expect((await calendarDay(page, 1)).getByText('להזמין ציוד')).toBeVisible();
   });
 
-  test('an undated unfiled task is in the Inbox but not in בכל עת', async ({ page }) => {
+  test('links to the folded views land on what replaced them', async ({ page }) => {
     await register(page);
-    await page.goto(at('/app/inbox'));
-    await addTask(page, 'רעיון לבדיקה');
-
-    await expect(list(page).getByText('רעיון לבדיקה')).toBeVisible();
-    await page.goto(at('/app/anytime'));
-    await expect(list(page).getByText('רעיון לבדיקה')).toHaveCount(0);
+    for (const [from, to] of [['upcoming', /\/app\/calendar\?v=week$/], ['anytime', /\/app\/projects$/], ['someday', /\/app\/inbox$/]] as const) {
+      await page.goto(at(`/app/${from}`));
+      await expect(page).toHaveURL(to);
+    }
   });
 
   test('a project named in the quick-add appears in the sidebar', async ({ page }) => {
@@ -930,11 +942,11 @@ test.describe('content navigation', () => {
   async function expectContinuity(page: Page) {
     expect(await page.evaluate(() => ({ document: (window as any).__document === document, shell: (window as any).__shell === document.querySelector('[data-app-shell]'), rail: (window as any).__rail === document.querySelector('.rail'), snapshots: (window as any).__snapshots }))).toEqual({ document: true, shell: true, rail: true, snapshots: 0 });
   }
-  test('Inbox, Today and Upcoming swap content without document reloads or page snapshots', async ({ page }) => {
+  test('Inbox, Today and History swap content without document reloads or page snapshots', async ({ page }) => {
     await register(page); await rememberShell(page);
     let documents = 0;
     page.on('request', request => { if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents++; });
-    for (const [route, label] of [['inbox', 'תיבה נכנסת'], ['upcoming', 'בקרוב'], ['today', 'היום']]) {
+    for (const [route, label] of [['inbox', 'תיבה נכנסת'], ['logbook', 'היסטוריה'], ['today', 'היום']]) {
       await page.getByRole('link', { name: label, exact: true }).click();
       await page.waitForURL(`**/app/${route}`);
       await expect(page.getByRole('heading', { name: label, level: 1, exact: true })).toBeVisible();
@@ -1173,8 +1185,7 @@ test.describe('multi-select', () => {
     await expect(page.getByTestId('toasts')).toContainText('2 הושלמו · 1 חוזרות בהמשך');
 
     // The repeat is alive on its next date, not sitting in the Logbook as dead.
-    await page.goto(at('/app/upcoming'));
-    await expect(list(page).getByText('לבדוק גיבויים')).toBeVisible();
+    await expect((await calendarDay(page, 1)).getByText('לבדוק גיבויים')).toBeVisible();
   });
 
   test('reschedules and moves a selection in one go', async ({ page }) => {
@@ -1188,9 +1199,9 @@ test.describe('multi-select', () => {
     await page.getByRole('menuitem', { name: /מחר/ }).click();
     await expect(page.getByTestId('toasts')).toContainText('2 משימות תוזמנו מחדש');
 
-    await page.goto(at('/app/upcoming'));
-    await expect(list(page).getByText('אלף')).toBeVisible();
+    await expect((await calendarDay(page, 1)).getByText('אלף')).toBeVisible();
 
+    await page.goto(at('/app/inbox'));
     await page.getByRole('button', { name: 'פתיחת אלף' }).click({ modifiers: ['Control'] });
     await bar(page).getByRole('button', { name: 'העברה לפרויקט' }).click();
     await page.getByRole('menuitem', { name: 'עבודה' }).click();
@@ -1264,8 +1275,7 @@ test.describe('repeating tasks', () => {
     await expect(page.getByTestId('toasts')).toContainText('חוזר במחר');
 
     // Still open, now scheduled for tomorrow.
-    await page.goto(at('/app/upcoming'));
-    await expect(list(page).getByText('לבדוק גיבויים')).toBeVisible();
+    await expect((await calendarDay(page, 1)).getByText('לבדוק גיבויים')).toBeVisible();
 
     // …and the completed occurrence is logged.
     await page.goto(at('/app/logbook'));
@@ -1561,16 +1571,15 @@ test.describe('rtl', () => {
     const mixed = 'שלום John 050-1234567 ₪1,234';
     await addTask(page, `${mixed} מחר`);
 
-    await page.goto(at('/app/upcoming'));
-    await expect(list(page).getByText(mixed)).toBeVisible();
+    await expect((await calendarDay(page, 1)).getByText(mixed)).toBeVisible();
   });
 
   test('the command palette opens on Ctrl+K and navigates', async ({ page }) => {
     await register(page);
     await page.keyboard.press('Control+k');
     await expect(page.getByPlaceholder(/חיפוש משימה/)).toBeVisible();
-    await page.getByRole('option', { name: /מתישהו/ }).first().click();
-    await expect(page).toHaveURL(/\/app\/someday/);
+    await page.getByRole('option', { name: /היסטוריה/ }).first().click();
+    await expect(page).toHaveURL(/\/app\/logbook/);
   });
 
   test('the palette finds a task by title and by note', async ({ page }) => {

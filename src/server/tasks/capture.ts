@@ -75,18 +75,18 @@ function parseDay(value: string | null | undefined): Date | null {
 function landingView(
   bucket: WhenBucket,
   scheduledFor: Date | null,
-  projectId: string | null,
+  projectName: string | null,
 ): string {
-  const unfiled = projectId === null;
+  const unfiled = projectName === null;
 
   if (bucket === 'SCHEDULED' && scheduledFor) {
     const startOfToday = today();
-    const when = scheduledFor.getTime() <= startOfToday.getTime() ? 'היום' : 'בקרוב';
+    const when = scheduledFor.getTime() <= startOfToday.getTime() ? 'היום' : 'לוח השנה';
     return unfiled ? `${when} ולתיבה הנכנסת` : when;
   }
 
-  if (bucket === 'SOMEDAY') return unfiled ? 'מתישהו ולתיבה הנכנסת' : 'מתישהו';
-  return unfiled ? 'תיבה נכנסת' : 'בכל עת';
+  // Undated work lives where it was filed.
+  return unfiled ? 'תיבה נכנסת' : projectName;
 }
 
 /** Resolves a `#project` or `@label` name to an id, creating it if new, so a
@@ -229,10 +229,12 @@ export async function captureTask(
     select: { id: true },
   });
 
+  const projectName = projectId ? knownProjects.find(project => project.id === projectId)?.name ?? parsed.projectName ?? null : null;
+
   return {
     ok: true,
     id: task.id,
-    landedIn: landingView(whenBucket, scheduledFor, projectId),
+    landedIn: landingView(whenBucket, scheduledFor, projectName),
     understood: {
       title: titleCheck.data,
       // Report what was *stored*, not what the text said: the view context can
@@ -240,7 +242,7 @@ export async function captureTask(
       scheduledFor: scheduledFor ? scheduledFor.toISOString().slice(0, 10) : null,
       scheduledTime: schedule.time,
       deadline: deadline ?? null,
-      projectName: projectId ? knownProjects.find(project => project.id === projectId)?.name ?? parsed.projectName : null,
+      projectName,
       labelNames,
       priority,
       recurrence,
