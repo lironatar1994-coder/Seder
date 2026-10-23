@@ -90,12 +90,12 @@ export default async function LandingPage() {
           <Container className="grid items-center gap-10 pb-16 pt-10 md:pt-14 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16 lg:pb-24 lg:pt-20">
             <div className="text-center lg:text-start">
               <h1 className="text-[3.25rem] font-extrabold leading-[1.02] text-ink sm:text-6xl lg:text-7xl">
-                <span className="mb-4 block text-base font-bold leading-normal text-accent md:text-lg">ניהול משימות בעברית</span>
+                <span className="mb-4 block text-base font-bold leading-normal text-accent md:text-lg">מסדר את המשימות שלכם, בעברית</span>
                 סוף סוף,
                 <br />
                 <span className="text-accent">סדר.</span>
               </h1>
-              <p className="mx-auto mt-5 max-w-md text-xl text-ink-2 lg:mx-0 lg:text-2xl">כותבים כמו שמדברים. סדר מסדר את השאר.</p>
+              <p className="mx-auto mt-5 max-w-md text-xl text-ink-2 lg:mx-0 lg:text-2xl">כותבים כמו שמדברים, והשאר מסתדר לבד.</p>
               <div data-hero-cta className="mt-8 flex justify-center lg:justify-start">
                 <Cta />
               </div>

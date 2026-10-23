@@ -1,6 +1,7 @@
 /** Public, production-only search identity. Never include personal task URLs. */
 export const PUBLIC_SITE_URL = 'https://lawebs.co.il/seder/';
-export const SITE_TITLE = 'סדר (Seder) — ניהול משימות בעברית ופרויקטים משותפים';
+// The brand's own line first; the phrase people search for stays in the title.
+export const SITE_TITLE = 'סדר (Seder) — מסדר את המשימות שלכם | ניהול משימות בעברית';
 export const SITE_DESCRIPTION = 'אפליקציית משימות בעברית: כותבים כמו שמדברים וסדר קובע תאריך ושעה. לוח שנה עברי ולועזי, פרויקטים משותפים ותזכורות בוואטסאפ. בחינם, בטלפון ובמחשב.';
 export const SITE_IMAGE = 'https://lawebs.co.il/images/portfolio-shares-20261008/seder.png';
 export const SITE_STRUCTURED_DATA = {

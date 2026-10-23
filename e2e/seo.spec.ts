@@ -15,7 +15,7 @@ test('public homepage has one canonical URL and indexable Hebrew metadata', asyn
   expect(head).toContain(`rel="canonical" href="${PUBLIC_SITE_URL}"`);
   await page.goto(`${BASE_PATH}/`);
   await expect(page).toHaveTitle(/ניהול משימות בעברית/);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('ניהול משימות בעברית');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('מסדר את המשימות שלכם');
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'index, follow');
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', PUBLIC_SITE_URL);
   const data = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}');
