@@ -21,7 +21,7 @@ test('public homepage has one canonical URL and indexable Hebrew metadata', asyn
   const data = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}');
   expect(data['@graph'].map((entry: { '@type': string }) => entry['@type'])).toEqual(['WebSite', 'WebApplication']);
   expect(JSON.stringify(data)).not.toContain('aggregateRating');
-  await expect(page.getByRole('heading', { name: 'שאלות על ניהול משימות בסדר' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'שאלות נפוצות על סדר' })).toBeVisible();
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await page.evaluate(() => document.fonts.ready);

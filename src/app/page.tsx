@@ -37,17 +37,18 @@ export const metadata: Metadata = {
 };
 
 const STEPS: FeatureStep[] = [
-  { id: 'focus', eyebrow: 'להתמקד', title: 'רק מה שחשוב היום', line: 'עיגול אחד, והמשימה יוצאת מהדרך.', scene: 'focus' },
-  { id: 'plan', eyebrow: 'לתכנן', title: 'לוח עברי ולועזי', line: 'שני התאריכים בכל יום. גוררים — וזה זז.', scene: 'calendar' },
-  { id: 'together', eyebrow: 'ביחד', title: 'פרויקטים משותפים', line: 'מזמינים בקישור, מחלקים ומגיבים.', scene: 'together' },
+  { id: 'focus', eyebrow: 'פוקוס', title: 'רק מה שעל הפרק היום', line: 'שמים וי, והמשימה יורדת מהרשימה.', scene: 'focus' },
+  { id: 'plan', eyebrow: 'תכנון', title: 'גם עברי, גם לועזי', line: 'שני התאריכים בכל יום. משהו השתנה? גוררים.', scene: 'calendar' },
+  { id: 'together', eyebrow: 'ביחד', title: 'פרויקט משותף, בלי בלגן', line: 'שולחים קישור, מחלקים משימות ומתעדכנים בתגובות.', scene: 'together' },
 ];
 
 const FAQ = [
-  { q: 'איך מוסיפים משימה בעברית?', a: 'כותבים משפט כמו ״להכין מצגת מחר בשעה 15:30 #עבודה״. סדר מזהה את התאריך, השעה והפרויקט ומציג אותם לפני שמירת המשימה.' },
-  { q: 'אפשר לעבוד על פרויקט ביחד עם חברים?', a: 'כן. יוצרים פרויקט, שולחים קישור הזמנה ומנהלים משימות משותפות. אפשר לשייך משימה למשתתף, להוסיף תגובות ולעקוב אחר העבודה בתצוגת רשימה או לוח.' },
-  { q: 'מה ההבדל בין תזמון למועד הגשה?', a: 'התזמון קובע מתי מתכננים לעבוד על המשימה. מועד ההגשה קובע עד מתי צריך לסיים אותה. אפשר להגדיר כל אחד מהם בנפרד ולראות את המשימות ביומן עברי ולועזי.' },
-  { q: 'אפשר להשתמש בסדר בטלפון וגם במחשב?', a: 'כן. סדר פועל בדפדפן ומתאים למסכים קטנים וגדולים. נכנסים לאותו חשבון מהטלפון ומהמחשב.' },
-  { q: 'כמה זה עולה?', a: 'פתיחת חשבון ושימוש בסדר הם בחינם.' },
+  { q: 'איך מוסיפים משימה?', a: 'כותבים כמו שמדברים, למשל ״להכין מצגת מחר ב־15:30 #עבודה״. סדר מזהה לבד את התאריך, השעה והפרויקט, ומראה מה הבין עוד לפני שהמשימה נשמרת.' },
+  { q: 'אפשר לעבוד על פרויקט עם עוד אנשים?', a: 'בטח. פותחים פרויקט, שולחים קישור — וכולם עובדים על אותה רשימה. אפשר לשייך משימה למישהו, להגיב ולעקוב אחרי ההתקדמות ברשימה או בעמודות.' },
+  { q: 'מה ההבדל בין תזמון לדדליין?', a: 'התזמון הוא היום שבו מתכננים לעבוד על המשימה. הדדליין (בסדר: ״מועד הגשה״) הוא עד מתי היא צריכה להיות גמורה. קובעים כל אחד מהם בנפרד, ושניהם מופיעים בלוח השנה.' },
+  { q: 'התזכורות בוואטסאפ הן חובה?', a: 'ממש לא. מפעילים אותן בהגדרות רק אם רוצים, ואפשר לכבות בכל רגע.' },
+  { q: 'זה עובד גם בטלפון?', a: 'כן. סדר עובד בדפדפן, בטלפון ובמחשב, ומתאים את עצמו לכל מסך. נכנסים לאותו חשבון — והכול מסונכרן.' },
+  { q: 'כמה זה עולה?', a: 'כלום. פותחים חשבון ומתחילים — בחינם.' },
 ];
 
 export default async function LandingPage() {
@@ -67,10 +68,10 @@ export default async function LandingPage() {
             סדר
           </Link>
           <nav aria-label="ניווט בדף" className="hidden items-center gap-1 md:flex">
-            <NavLink href="#features">תכונות</NavLink>
+            <NavLink href="#features">איך זה עובד</NavLink>
             <NavLink href="#whatsapp">וואטסאפ</NavLink>
             <NavLink href="#templates">תבניות</NavLink>
-            <NavLink href="#faq">שאלות</NavLink>
+            <NavLink href="#faq">שאלות נפוצות</NavLink>
           </nav>
           <div className="ms-auto flex items-center gap-1 md:gap-2">
             <Link href="/login" className="rounded-lg px-3 py-2 font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink">
@@ -94,7 +95,7 @@ export default async function LandingPage() {
                 <br />
                 <span className="text-accent">סדר.</span>
               </h1>
-              <p className="mx-auto mt-5 max-w-sm text-xl text-ink-2 lg:mx-0 lg:text-2xl">כותבים משפט. מקבלים משימה.</p>
+              <p className="mx-auto mt-5 max-w-md text-xl text-ink-2 lg:mx-0 lg:text-2xl">כותבים כמו שמדברים. סדר מסדר את השאר.</p>
               <div data-hero-cta className="mt-8 flex justify-center lg:justify-start">
                 <Cta />
               </div>
@@ -116,7 +117,7 @@ export default async function LandingPage() {
             <div className="text-center lg:text-start">
               <p className="text-sm font-bold text-accent">וואטסאפ</p>
               <h2 className="mt-2 text-balance text-[2.5rem] font-extrabold leading-[1.1] md:text-6xl">סדר — בתזכורת בוואטסאפ</h2>
-              <p className="mt-3 text-lg text-ink-2 lg:text-xl">משימה עם שעה? התזכורת מגיעה לוואטסאפ.</p>
+              <p className="mt-3 text-balance text-lg text-ink-2 lg:text-xl">קובעים שעה, והתזכורת מגיעה למקום שאתם בודקים גם ככה.</p>
             </div>
             <PhoneScene />
           </Container>
@@ -127,7 +128,7 @@ export default async function LandingPage() {
           <Container className="py-16 lg:py-24">
             <div className="text-center">
               <p className="text-sm font-bold text-accent">תבניות</p>
-              <h2 className="mt-2 text-[2.5rem] font-extrabold leading-[1.1] md:text-6xl">מתחילים מתבנית</h2>
+              <h2 className="mt-2 text-[2.5rem] font-extrabold leading-[1.1] md:text-6xl">לא מתחילים מדף ריק</h2>
             </div>
             {/* A swipeable row on a phone, a grid from tablet up. */}
             <ul className="-mx-4 mt-10 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4">
@@ -162,9 +163,9 @@ export default async function LandingPage() {
         <section className="border-t border-line">
           <Container className="grid items-center gap-10 py-16 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:py-24">
             <div className="text-center lg:text-start">
-              <p className="text-sm font-bold text-accent">בדיוק כמו שנוח</p>
+              <p className="text-sm font-bold text-accent">עיצוב</p>
               <h2 className="mt-2 text-[2.5rem] font-extrabold leading-[1.1] md:text-6xl">בצבעים שלכם</h2>
-              <p className="mt-3 text-lg text-ink-2 lg:text-xl">שמונה צבעים, בהיר או כהה.</p>
+              <p className="mt-3 text-lg text-ink-2 lg:text-xl">שמונה צבעים, ומצב כהה לשעות הקטנות של הלילה.</p>
             </div>
             <ThemeScene />
           </Container>
@@ -173,7 +174,7 @@ export default async function LandingPage() {
         {/* ── FAQ ── */}
         <section id="faq" className="scroll-mt-16 bg-surface-sunk" aria-labelledby="faq-title">
           <Container className="max-w-3xl py-16 lg:py-24">
-            <h2 id="faq-title" className="text-center text-3xl font-extrabold md:text-4xl">שאלות על ניהול משימות בסדר</h2>
+            <h2 id="faq-title" className="text-center text-3xl font-extrabold md:text-4xl">שאלות נפוצות על סדר</h2>
             <div className="mt-8 divide-y divide-line rounded-2xl bg-paper px-5 shadow-row">
               {FAQ.map((item) => (
                 <details key={item.q} className="group py-4">
@@ -193,7 +194,7 @@ export default async function LandingPage() {
         {/* ── Last ask ── */}
         <section className="landing-stage">
           <Container className="py-20 text-center lg:py-28">
-            <h2 className="text-[2.5rem] font-extrabold leading-[1.1] md:text-6xl">המשימה הראשונה מחכה.</h2>
+            <h2 className="text-[2.5rem] font-extrabold leading-[1.1] md:text-6xl">יאללה, עושים סדר.</h2>
             <div data-closing-cta className="mt-8 flex justify-center">
               <Cta />
             </div>
@@ -210,7 +211,7 @@ export default async function LandingPage() {
           <nav aria-label="קישורים" className="flex flex-wrap gap-x-6 gap-y-2">
             <Link href="/register" className="hover:text-ink">פתיחת חשבון</Link>
             <Link href="/login" className="hover:text-ink">כניסה</Link>
-            <Link href="/privacy" className="hover:text-ink">פרטיות</Link>
+            <Link href="/privacy" className="hover:text-ink">מדיניות פרטיות</Link>
           </nav>
         </Container>
       </footer>
