@@ -2,7 +2,7 @@
 export const PUBLIC_SITE_URL = 'https://lawebs.co.il/seder/';
 export const SITE_TITLE = 'סדר (Seder) — ניהול משימות בעברית ופרויקטים משותפים';
 export const SITE_DESCRIPTION = 'סדר הוא מנהל משימות בעברית: כותבים משפט ומקבלים משימה מתוזמנת, מתכננים ביומן עברי ולועזי ומשתפים פרויקטים עם חברים. מתאים למחשב ולטלפון.';
-export const SITE_IMAGE = 'https://lawebs.co.il/seder/brand/seder-logo-v2.png';
+export const SITE_IMAGE = 'https://lawebs.co.il/images/portfolio-shares-20261008/seder.png';
 export const SITE_STRUCTURED_DATA = {
   '@context': 'https://schema.org',
   '@graph': [
