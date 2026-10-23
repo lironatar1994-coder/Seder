@@ -494,7 +494,9 @@ export function PhoneScene({ active = true }: SceneProps) {
   const sheet = t >= 1150 && t < P_SEND + 150;
   const count = Math.max(0, Math.min(P_TOTAL, Math.floor((t - P_TYPE_FROM) / P_TYPE_MS)));
   const saved = t >= P_SEND + 350 && t < PHONE_LOOP - 800;
-  const notice = t >= P_SEND + 2000 && t < P_SEND + 5600;
+  // The reminder is the point of the section, so it stays up until the loop
+  // is about to restart rather than slipping away after a few seconds.
+  const notice = t >= P_SEND + 1600 && t < PHONE_LOOP - 500;
 
   const finger =
     t < P_SEND - 700

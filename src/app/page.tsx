@@ -16,7 +16,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { getCurrentUser } from '@/server/auth/session';
 import { PROJECT_TEMPLATES } from '@/lib/project-templates';
@@ -68,7 +68,7 @@ export default async function LandingPage() {
           </Link>
           <nav aria-label="ניווט בדף" className="hidden items-center gap-1 md:flex">
             <NavLink href="#features">תכונות</NavLink>
-            <NavLink href="#phone">בטלפון</NavLink>
+            <NavLink href="#whatsapp">וואטסאפ</NavLink>
             <NavLink href="#templates">תבניות</NavLink>
             <NavLink href="#faq">שאלות</NavLink>
           </nav>
@@ -103,19 +103,6 @@ export default async function LandingPage() {
           </Container>
         </section>
 
-        {/* ── Three facts, Todoist's quote row ── */}
-        <section aria-label="מה מיוחד בסדר" className="border-y border-line bg-surface-2/60">
-          {/* A column on a phone — three short facts wrap raggedly as a row. */}
-          <Container className="flex w-fit flex-col items-start gap-2.5 py-6 sm:w-full sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-10 sm:gap-y-3 md:py-8">
-            {['עברית מימין לשמאל', 'תאריך עברי בכל יום', 'שישי־שבת סוף שבוע'].map((fact) => (
-              <span key={fact} className="inline-flex items-center gap-2 font-bold text-ink-2 md:text-lg">
-                <Check className="size-5 text-accent" strokeWidth={3} aria-hidden />
-                {fact}
-              </span>
-            ))}
-          </Container>
-        </section>
-
         {/* ── Feature tour ── */}
         <section id="features" className="scroll-mt-16">
           <Container className="py-16 lg:py-12">
@@ -123,13 +110,13 @@ export default async function LandingPage() {
           </Container>
         </section>
 
-        {/* ── Phone + WhatsApp ── */}
-        <section id="phone" className="scroll-mt-16 bg-surface-sunk">
+        {/* ── WhatsApp reminders ── */}
+        <section id="whatsapp" className="scroll-mt-16 bg-surface-sunk">
           <Container className="grid items-center gap-10 py-16 lg:grid-cols-2 lg:py-24">
             <div className="text-center lg:text-start">
-              <p className="text-sm font-bold text-accent">בטלפון</p>
-              <h2 className="mt-2 text-[2.5rem] font-extrabold leading-[1.1] md:text-6xl">סדר בכיס</h2>
-              <p className="mt-3 text-lg text-ink-2 lg:text-xl">ותזכורת בוואטסאפ, אם רוצים.</p>
+              <p className="text-sm font-bold text-accent">וואטסאפ</p>
+              <h2 className="mt-2 text-balance text-[2.5rem] font-extrabold leading-[1.1] md:text-6xl">סדר — בתזכורת בוואטסאפ</h2>
+              <p className="mt-3 text-lg text-ink-2 lg:text-xl">משימה עם שעה? התזכורת מגיעה לוואטסאפ.</p>
             </div>
             <PhoneScene />
           </Container>
