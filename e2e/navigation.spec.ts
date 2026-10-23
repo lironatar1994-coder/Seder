@@ -99,7 +99,7 @@ test('calendar day panel and period changes retrace on desktop', async ({ page }
   await page.goForward();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
-  await page.getByRole('link', { name: 'לתקופה הבאה' }).click();
+  await page.getByRole('link', { name: 'לחודש הבא' }).click();
   await expect(page).toHaveURL(/\?m=/);
   await page.goBack();
   await expect(page).not.toHaveURL(/\?m=/);

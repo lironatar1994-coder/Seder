@@ -1177,3 +1177,37 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
     radial-gradient(90% 80% at 0% 100%, color-mix(in oklch, var(--flag) 14%, transparent), transparent 65%),
     color-mix(in oklch, var(--accent-soft) 70%, var(--paper));
 }
+
+/* Calendar ----------------------------------------------------------------
+   Tasks wear a soft wash of their priority hue, as in Todoist: red, orange,
+   blue, and a neutral grey for the default. Mixed against the surface, so the
+   same rule holds in both themes. */
+.cal-tone {
+  --tone: var(--p4);
+  background-color: color-mix(in oklch, var(--tone) 10%, var(--surface));
+  color: var(--ink);
+  transition: background-color 120ms ease;
+}
+.cal-tone[data-priority='1'] { --tone: var(--p1); }
+.cal-tone[data-priority='2'] { --tone: var(--p2); }
+.cal-tone[data-priority='3'] { --tone: var(--p3); }
+.cal-tone[data-priority='4'] { background-color: color-mix(in oklch, var(--p4) 12%, var(--surface)); }
+.cal-tone:hover { background-color: color-mix(in oklch, var(--tone) 17%, var(--surface)); }
+
+.cal-chip-deadline {
+  background-color: var(--flag-soft);
+  color: var(--flag);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--flag) 32%, transparent);
+}
+
+/* One hairline per hour, drawn by the column itself rather than 24 elements
+   per day. */
+.cal-hours {
+  background-image: linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 100% var(--cal-hour);
+}
+
+.cal-scroll {
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}

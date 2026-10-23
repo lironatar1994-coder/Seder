@@ -492,6 +492,25 @@ export async function getCalendarView(
   return { entriesByDay, total };
 }
 
+/**
+ * Open work with no day on it — the calendar's "ללא תאריך" tray, from which a
+ * task is dragged onto the grid to give it one.
+ */
+export async function getUndatedTasks(userId: string, limit = 80): Promise<TaskDTO[]> {
+  const rows = await db.task.findMany({
+    where: {
+      ...(await myWork(userId)),
+      ...TOP_LEVEL,
+      status: 'TODO',
+      scheduledFor: null,
+    },
+    select: taskSelect(userId),
+    orderBy: [{ priority: 'asc' }, { position: 'asc' }],
+    take: limit,
+  });
+  return rows.map(toDTO);
+}
+
 export interface SidebarData {
   savedFilters: { id: string; name: string }[];
   projects: {

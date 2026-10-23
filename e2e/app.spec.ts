@@ -1361,14 +1361,15 @@ test.describe('calendar', () => {
   test('navigates months and back to today', async ({ page }) => {
     await register(page);
     await page.goto(at('/app/calendar'));
-    const heading = page.getByRole('heading', { level: 1 });
-    const start = (await heading.textContent())!;
+    // The month on screen is the title's picker, "אוקטובר 2026 ⌄".
+    const month = page.getByRole('button', { name: /^בחירת חודש/ });
+    const start = (await month.getAttribute('aria-label'))!;
 
-    await page.getByRole('link', { name: 'לתקופה הבאה' }).click();
-    await expect(heading).not.toHaveText(start);
+    await page.getByRole('link', { name: 'לחודש הבא' }).click();
+    await expect(month).not.toHaveAttribute('aria-label', start);
 
     await page.getByRole('main').getByRole('link', { name: 'היום' }).click();
-    await expect(heading).toHaveText(start);
+    await expect(month).toHaveAttribute('aria-label', start);
   });
 
   test('switches to the week view', async ({ page }) => {
@@ -1396,8 +1397,13 @@ test.describe('calendar', () => {
 
     await expect(cell(page, base)).toContainText('לתאם פגישה');
 
-    const chip = cell(page, base).getByRole('button', { name: /לתאם פגישה/ }).first();
+    // The title is the drag handle; the circle beside it completes.
+    const chip = cell(page, base).getByRole('button', { name: 'לתאם פגישה', exact: true });
     const target = cell(page, targetIso);
+    // The month runs past a 720px window; both ends of the drag must be on
+    // screen for the pointer to reach them.
+    await target.scrollIntoViewIfNeeded();
+    await chip.scrollIntoViewIfNeeded();
     const from = (await chip.boundingBox())!;
     const to = (await target.boundingBox())!;
 
@@ -1414,6 +1420,32 @@ test.describe('calendar', () => {
     // And it survives a reload, so the move was persisted, not just optimistic.
     await page.reload();
     await expect(cell(page, targetIso)).toContainText('לתאם פגישה');
+  });
+
+  test('clicking an hour in the week adds a task at that time', async ({ page }) => {
+    await register(page);
+    await page.goto(at('/app/calendar?v=week'));
+
+    const base = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jerusalem',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const column = page.locator(`[data-timecol="${base}"]`);
+    await column.scrollIntoViewIfNeeded();
+    // 52px an hour: the middle of the 15:00 row.
+    await column.click({ position: { x: 20, y: 15 * 52 + 10 } });
+
+    const popover = page.getByRole('dialog', { name: /^משימה חדשה ל/ });
+    await expect(popover).toContainText('15:00');
+    await popover.getByLabel('משימה חדשה').fill('שיחה עם הבנק');
+    await popover.getByRole('button', { name: 'הוספה' }).click();
+
+    const block = column.getByRole('button', { name: 'שיחה עם הבנק', exact: true });
+    await expect(block).toHaveAttribute('title', /15:00–15:30/);
+    await page.reload();
+    await expect(page.locator(`[data-timecol="${base}"]`).getByRole('button', { name: 'שיחה עם הבנק', exact: true })).toBeVisible();
   });
 
   test('the day panel adds a task onto that day', async ({ page }) => {

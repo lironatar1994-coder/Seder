@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getCurrentUser } from '@/server/auth/session';
-import { getCalendarView, getSidebarData } from '@/server/tasks/queries';
+import { getCalendarView, getSidebarData, getUndatedTasks } from '@/server/tasks/queries';
 import { today } from '@/lib/dates';
 import { buildMonthGrid, buildWeekGrid, parseMonthAnchor, parseISODay } from '@/lib/calendar';
 import { CalendarView } from '@/components/calendar/calendar-view';
@@ -35,11 +35,12 @@ export default async function CalendarPage({
       : buildMonthGrid(parseMonthAnchor(params.m, base), base);
 
   const days = 'weeks' in grid ? grid.days : grid.days;
-  const [calendar, sidebar, googleEvents, connection] = await Promise.all([
+  const [calendar, sidebar, googleEvents, connection, undated] = await Promise.all([
     getCalendarView(user.id, days[0].iso, days[days.length - 1].iso),
     getSidebarData(user.id),
     getGoogleEvents(user.id, days[0].iso, days[days.length - 1].iso),
     db.googleCalendarConnection.findUnique({ where: { userId: user.id }, select: { lastError: true } }),
+    getUndatedTasks(user.id),
   ]);
 
   return (
@@ -53,6 +54,7 @@ export default async function CalendarPage({
       googleEventsByDay={groupGoogleEvents(googleEvents, days[0].iso, days[days.length - 1].iso)}
       googleConnected={Boolean(connection)}
       googleError={connection?.lastError}
+      undated={undated}
     />
   );
 }

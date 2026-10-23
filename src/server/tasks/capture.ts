@@ -53,6 +53,8 @@ export interface QuickAddContext {
   /** "YYYY-MM-DD". Set by the calendar's day panel: adding from inside a day
    *  means that day, unless the text says otherwise. */
   defaultDate?: string | null;
+  /** "HH:mm" — the calendar's time grid: adding from a slot means that hour. */
+  defaultTime?: string | null;
   /** Explicit choices from the web composer. The server validates these and
    * checks project membership just as it does for a typed project name. */
   selection?: QuickAddSelection;
@@ -177,7 +179,10 @@ export async function captureTask(
     return { ok: false, error: fieldErrors(titleCheck.error)._ ?? 'לכל משימה צריך שם' };
   }
 
-  const schedule = quickAddSchedule(parsed, context, selection);
+  // Arrives from the client like everything else in `context`; it is written
+  // straight into `scheduledTime`, so it has to be a real clock time.
+  const defaultTime = context.defaultTime && /^([01]\d|2[0-3]):[0-5]\d$/.test(context.defaultTime) ? context.defaultTime : null;
+  const schedule = quickAddSchedule(parsed, { ...context, defaultTime }, selection);
   const whenBucket = schedule.bucket;
   const scheduledFor = parseDay(schedule.date);
   const deadline = selection.deadline !== undefined ? selection.deadline : parsed.deadline;

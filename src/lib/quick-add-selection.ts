@@ -35,6 +35,8 @@ export type QuickAddSelection = z.infer<typeof quickAddSelectionSchema>;
 export interface QuickAddDefaults {
   view?: string;
   defaultDate?: string | null;
+  /** "HH:mm". Set by a calendar time slot, and only honoured with a date. */
+  defaultTime?: string | null;
 }
 
 export function quickAddSchedule(
@@ -67,7 +69,7 @@ export function quickAddSchedule(
   const base = defaults.defaultDate ? new Date(`${defaults.defaultDate}T00:00:00.000Z`) : today(now);
   const rule = parseRecurrence(recurrence);
   if (rule) return { bucket: 'SCHEDULED' as const, date: firstOccurrenceOnOrAfter(rule, base).toISOString().slice(0, 10), time: null };
-  if (defaults.defaultDate || defaults.view === 'today') return { bucket: 'SCHEDULED' as const, date: base.toISOString().slice(0, 10), time: null };
+  if (defaults.defaultDate || defaults.view === 'today') return { bucket: 'SCHEDULED' as const, date: base.toISOString().slice(0, 10), time: defaults.defaultDate ? defaults.defaultTime ?? null : null };
   return { bucket: defaults.view === 'someday' ? 'SOMEDAY' as const : 'ANYTIME' as const, date: null, time: null };
 }
 

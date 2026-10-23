@@ -1,43 +1,51 @@
 'use client';
 
 import { useDroppable } from '@dnd-kit/core';
+import { Plus } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { CalendarDay } from '@/lib/calendar';
-import { WEEKDAY_HEADERS } from '@/lib/calendar';
 import type { CalendarEntry } from '@/server/tasks/queries';
 import { EntryChip } from './entry-chip';
 import { GoogleEventRow } from './google-events';
 import type { GoogleEventDTO } from '@/lib/calendar-event-types';
+import { useCalendarActions } from './calendar-context';
 
-/** Beyond this a cell would overflow; the rest collapse into a counter. */
-const MAX_CHIPS = 3;
+/** Beyond this a cell would grow; the rest collapse into a counter. */
+const MAX_ITEMS = 4;
 
+const WEEKDAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'] as const;
+
+/**
+ * The month, Todoist-quiet: hairline cells, the date in the corner, tasks as
+ * soft priority-tinted lines. Clicking empty space in a day adds a task to it;
+ * the date itself opens the day.
+ */
 export function MonthGrid({
   weeks,
   entriesByDay,
   googleEventsByDay = {},
   selectedDay,
   onSelectDay,
-  onOpenTask,
 }: {
   weeks: { key: string; days: CalendarDay[] }[];
   entriesByDay: Record<string, CalendarEntry[]>;
   googleEventsByDay?: Record<string, GoogleEventDTO[]>;
   selectedDay: string | null;
   onSelectDay: (iso: string) => void;
-  onOpenTask: (taskId: string) => void;
 }) {
+  const todayWeekday = weeks.flatMap((w) => w.days).find((d) => d.isToday)?.date.getUTCDay();
+
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-surface">
       {/* dir="rtl" on the document already puts column 1 on the right, so the
           days are emitted Sunday-first in plain logical order. */}
-      <div className="grid grid-cols-7 border-be border-line bg-surface-2">
-        {WEEKDAY_HEADERS.map((label, index) => (
+      <div className="grid grid-cols-7 border-be border-line">
+        {WEEKDAYS.map((label, index) => (
           <div
             key={label}
             className={cn(
-              'px-2 py-2 text-center text-xs font-bold',
-              index >= 5 ? 'text-muted' : 'text-ink-2',
+              'py-2.5 text-center text-sm',
+              index === todayWeekday ? 'font-bold text-ink' : 'text-muted',
             )}
           >
             {label}
@@ -45,7 +53,7 @@ export function MonthGrid({
         ))}
       </div>
 
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 [&>*:nth-child(7n)]:border-e-0">
         {weeks.flatMap((week) =>
           week.days.map((day) => (
             <DayCell
@@ -55,7 +63,6 @@ export function MonthGrid({
               googleEvents={googleEventsByDay[day.iso] ?? []}
               selected={selectedDay === day.iso}
               onSelectDay={onSelectDay}
-              onOpenTask={onOpenTask}
             />
           )),
         )}
@@ -70,93 +77,103 @@ function DayCell({
   googleEvents,
   selected,
   onSelectDay,
-  onOpenTask,
 }: {
   day: CalendarDay;
   entries: CalendarEntry[];
   googleEvents: GoogleEventDTO[];
   selected: boolean;
   onSelectDay: (iso: string) => void;
-  onOpenTask: (taskId: string) => void;
 }) {
+  const { quickAdd, draft } = useCalendarActions();
   const { setNodeRef, isOver } = useDroppable({ id: `day:${day.iso}`, data: { iso: day.iso } });
 
-  const visibleGoogle = googleEvents.slice(0, googleEvents.length > 0 && entries.length > 0 ? 1 : MAX_CHIPS);
-  const visible = entries.slice(0, MAX_CHIPS - visibleGoogle.length);
-  const hidden = entries.length + googleEvents.length - visible.length - visibleGoogle.length;
+  const total = entries.length + googleEvents.length;
+  // When something has to give, keep at least one event and fill with tasks.
+  const room = total > MAX_ITEMS ? MAX_ITEMS - 1 : MAX_ITEMS;
+  const visibleGoogle = googleEvents.slice(0, entries.length > 0 ? Math.min(1, room) : room);
+  const visible = entries.slice(0, room - visibleGoogle.length);
+  const hidden = total - visible.length - visibleGoogle.length;
+  const drafting = draft?.iso === day.iso;
 
-  const dayLabel = `${day.weekdayLong} ${day.dayOfMonth}, ${entries.length + googleEvents.length} פריטים`;
-
-  /* Shared by both, so the two layouts cannot drift into showing different
-     dates. The Hebrew month is named once, on Rosh Chodesh, rather than
-     repeated in all thirty cells. */
-  const dateLine = (
-    <>
-      <span className="flex items-baseline gap-1.5">
-        <span
-          className={cn(
-            'num text-sm leading-none',
-            day.isToday
-              ? 'grid size-6 place-items-center rounded-full bg-accent font-bold text-[var(--on-accent)]'
-              : day.inMonth
-                ? 'font-semibold text-ink'
-                : 'text-muted',
-          )}
-        >
-          {day.dayOfMonth}
-        </span>
-        <span className="text-[0.7rem] leading-none text-muted">{day.hebrewDay}</span>
-      </span>
-
-      {day.hebrewMonthLabel && (
-        <span className="truncate text-[0.7rem] font-semibold leading-none text-accent">
-          {day.hebrewMonthLabel}
-        </span>
-      )}
-    </>
-  );
+  const addHere = (event: React.MouseEvent) =>
+    quickAdd({ iso: day.iso, time: null, x: event.clientX, y: event.clientY });
 
   return (
     <div
       ref={setNodeRef}
       data-day={day.iso}
+      onClick={(event) => {
+        // Only the empty ground of the day adds; chips and the date are their
+        // own controls.
+        if ((event.target as HTMLElement).closest('button, a')) return;
+        addHere(event);
+      }}
       className={cn(
-        'relative flex min-h-28 flex-col gap-1 border-be border-s border-line p-1.5',
-        // Friday and Saturday are the Israeli weekend — a quieter ground, not a
-        // different colour.
-        day.isWeekend ? 'bg-surface-sunk' : 'bg-surface',
-        !day.inMonth && 'opacity-45',
-        selected && 'ring-2 ring-inset ring-accent',
-        isOver && 'bg-accent-soft',
+        'group/day relative flex min-h-[7.75rem] cursor-pointer flex-col gap-0.5 border-be border-e border-line p-1.5 pt-1',
+        'transition-colors duration-120',
+        // Friday and Saturday are the Israeli weekend — a quieter ground.
+        day.isWeekend && 'bg-surface-sunk/60',
+        'hover:bg-surface-2/60',
+        (selected || drafting) && 'bg-accent-soft/50 hover:bg-accent-soft/50',
+        isOver && 'bg-accent-soft hover:bg-accent-soft',
       )}
     >
-      {/* The date opens the day, and each entry below is its own control, so
-          the cell cannot be one button. */}
-      <button
-        type="button"
-        onClick={() => onSelectDay(day.iso)}
-        aria-label={dayLabel}
-        className="flex items-baseline justify-between gap-1 rounded-sm text-start"
-      >
-        {dateLine}
-      </button>
-
-      <div className="flex min-h-0 flex-1 flex-col gap-0.5">
-        {visibleGoogle.map(event => <GoogleEventRow key={event.id} event={event} compact />)}
-        {visible.map((entry) => (
-          <EntryChip key={entry.key} entry={entry} compact onOpen={onOpenTask} />
-        ))}
-
-        {hidden > 0 && (
-          <button
-            type="button"
-            onClick={() => onSelectDay(day.iso)}
-            className="rounded-sm px-1.5 py-0.5 text-start text-[0.7rem] font-semibold text-muted hover:text-ink"
-          >
-            <span className="num">+{hidden}</span> נוספות
-          </button>
+      <div className="mb-0.5 flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => onSelectDay(day.iso)}
+          aria-label={`${day.weekdayLong} ${day.dayOfMonth}, ${total} פריטים`}
+          className={cn(
+            'num grid h-6 min-w-6 place-items-center rounded-md px-1 text-[0.8125rem] leading-none transition-colors',
+            day.isToday
+              ? 'bg-accent font-bold text-[var(--on-accent)] hover:bg-accent-hover'
+              : day.inMonth
+                ? 'font-semibold text-ink hover:bg-surface-2'
+                : 'text-muted/70 hover:bg-surface-2',
+          )}
+        >
+          {day.dayOfMonth}
+        </button>
+        <span className={cn('text-[0.6875rem] leading-none', day.inMonth ? 'text-muted' : 'text-muted/60')}>
+          {day.hebrewDay}
+        </span>
+        {/* The Hebrew month is named once, on Rosh Chodesh, rather than
+            repeated in all thirty cells. */}
+        {day.hebrewMonthLabel && (
+          <span className="truncate text-[0.6875rem] font-semibold leading-none text-accent">
+            {day.hebrewMonthLabel}
+          </span>
         )}
+
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            addHere(event);
+          }}
+          aria-label={`הוספת משימה ל${day.weekdayLong} ${day.dayOfMonth}`}
+          className="ms-auto grid size-6 place-items-center rounded-md text-muted opacity-0 transition-opacity hover:bg-surface hover:text-accent focus-visible:opacity-100 group-hover/day:opacity-100"
+        >
+          <Plus className="size-4" aria-hidden />
+        </button>
       </div>
+
+      {visibleGoogle.map((event) => (
+        <GoogleEventRow key={event.id} event={event} compact />
+      ))}
+      {visible.map((entry) => (
+        <EntryChip key={entry.key} entry={entry} compact />
+      ))}
+
+      {hidden > 0 && (
+        <button
+          type="button"
+          onClick={() => onSelectDay(day.iso)}
+          className="self-start rounded-sm px-1.5 py-0.5 text-start text-xs font-semibold text-muted hover:text-ink"
+        >
+          עוד <span className="num">{hidden}</span>
+        </button>
+      )}
     </div>
   );
 }
