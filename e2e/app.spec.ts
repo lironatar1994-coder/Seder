@@ -639,6 +639,9 @@ test.describe('composer pickers', () => {
   test('clears an inherited day and project, and really saves an undated Inbox task', async ({ page }) => {
     await register(page);
     await page.getByRole('link', { name: /עבודה/ }).click();
+    // The page being left has its own "משימה חדשה"; clicking before the
+    // project arrives opens a composer that the navigation then discards.
+    await expect(page.getByRole('heading', { level: 1, name: 'עבודה' })).toBeVisible();
     await page.getByRole('button', { name: /^משימה חדשה/ }).click();
     const composer = page.getByTestId('task-composer');
     await composer.getByLabel('משימה חדשה', { exact: true }).fill('לבדוק בהמשך');
