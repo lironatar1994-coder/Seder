@@ -33,6 +33,7 @@ import {
   DeadlineChip,
   LabelChip,
   ProjectChip,
+  InboxChip,
   RepeatChip,
   SubtaskChip,
   WhenChip,
@@ -56,6 +57,8 @@ export interface TaskRowProps {
   onSelect?: (task: TaskDTO, mode: 'toggle' | 'range') => void;
   /** Hide the project chip inside a project view — it is the same for every row. */
   hideProject?: boolean;
+  /** Name the Inbox for an unfiled task, so every row says where it lives. */
+  showInbox?: boolean;
   draggable?: boolean;
   onToggle: (task: TaskDTO, done: boolean) => void;
   onOpen: (task: TaskDTO) => void;
@@ -81,6 +84,7 @@ export const TaskRow = memo(function TaskRow({
   checked = false,
   onSelect,
   hideProject = false,
+  showInbox = false,
   draggable = true,
   onToggle,
   onOpen,
@@ -208,15 +212,24 @@ export const TaskRow = memo(function TaskRow({
           )}
           {task.deadline && <DeadlineChip date={task.deadline} muted={done} />}
           {task.recurrence && <RepeatChip rule={task.recurrence} compact />}
-          {!hideProject && task.project && (
-            <ProjectChip name={task.project.name} color={task.project.color} />
-          )}
+
           {task.subtasks.length > 0 && (
             <SubtaskChip done={subtasksDone} total={task.subtasks.length} />
           )}
           {task.labels.map((label) => (
             <LabelChip key={label.id} name={label.name} color={label.color} />
           ))}
+          {/* Where it lives sits at the far end of the line — the first thing a
+              scanning eye uses to sort a mixed list, as in Todoist. */}
+          {!hideProject && task.project ? (
+            <span className="ms-auto">
+              <ProjectChip name={task.project.name} color={task.project.color} />
+            </span>
+          ) : showInbox && !task.project ? (
+            <span className="ms-auto">
+              <InboxChip />
+            </span>
+          ) : null}
         </span>
       </button>
 

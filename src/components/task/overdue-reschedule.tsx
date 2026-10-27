@@ -28,7 +28,7 @@ export function OverdueReschedule({ tasks }: { tasks: TaskDTO[] }) {
         onClick={reschedule}
         title="כל משימה לפי הבחירה המקורית שלה: היום, מחר או שבוע הבא"
         aria-label="תזמון מחדש של המשימות שבאיחור"
-        className="h-8 gap-1.5 border border-line px-2 text-sm font-normal">
+        className="h-8 gap-1.5 px-2 text-sm font-semibold text-accent hover:bg-accent-soft hover:text-accent">
         <CalendarClock className="size-3.5" aria-hidden />
         {pending ? 'מתזמנים…' : 'תזמון מחדש'}
       </Button>;

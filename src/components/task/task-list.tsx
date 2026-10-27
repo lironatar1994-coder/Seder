@@ -17,7 +17,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Plus, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { TaskDTO, TaskGroup } from '@/server/tasks/queries';
 import type { Priority } from '@/lib/constants';
@@ -126,6 +126,28 @@ export function TaskList({
     window.addEventListener('popstate', reset);
     return () => window.removeEventListener('popstate', reset);
   }, []);
+  /* Collapsed group headings, remembered per view like Todoist's. Read after
+     mount so the server and the first client render agree. */
+  const collapseKey = `seder-collapsed:${context.view ?? context.projectId ?? 'list'}`;
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(collapseKey) ?? '[]');
+      if (Array.isArray(stored)) setCollapsed(new Set(stored.filter((key): key is string => typeof key === 'string')));
+    } catch {}
+  }, [collapseKey]);
+  const toggleGroup = useCallback(
+    (key: string) => {
+      setCollapsed((current) => {
+        const next = new Set(current);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        try { localStorage.setItem(collapseKey, JSON.stringify([...next])); } catch {}
+        return next;
+      });
+    },
+    [collapseKey],
+  );
   const [controlsHost, setControlsHost] = useState<Element | null>(null);
   const [displayOpen, setDisplayOpen] = useState(false);
   const displaySummary = [
@@ -192,8 +214,9 @@ export function TaskList({
     [projects, labels],
   );
 
-  const flat = useMemo(() => visibleGroups.flatMap((g) => g.tasks), [visibleGroups]);
-  const isEmpty = flat.length === 0;
+  // Keyboard stepping and dragging only reach rows that are on screen.
+  const flat = useMemo(() => visibleGroups.flatMap((g) => (collapsed.has(g.key) ? [] : g.tasks)), [visibleGroups, collapsed]);
+  const isEmpty = visibleGroups.every((g) => g.tasks.length === 0);
   const openTask = useNavigationTask(openTaskId, groups.flatMap((group) => group.tasks).find((t) => t.id === openTaskId) ?? null, groups);
 
   /* Stepping through the list from inside the editor. The list is the only
@@ -744,7 +767,9 @@ export function TaskList({
         >
           <SortableContext items={flat.map((t) => t.id)} strategy={verticalListSortingStrategy}>
             {visibleGroups.map((group) =>
-              group.tasks.length === 0 && group.key === 'loose' ? null : (
+              /* Today shows only the groups that have something in them: an
+                 empty "היום 0" under a long overdue list is noise. */
+              group.tasks.length === 0 && (group.key === 'loose' || context.view === 'today') ? null : (
                 <section key={group.key} data-task-group={group.key} className="task-group mb-5">
                   {group.title && (
                     <GroupHeading
@@ -752,10 +777,12 @@ export function TaskList({
                       subtitle={group.subtitle}
                       isDay={dayHeadings}
                       count={group.tasks.length}
+                      collapsed={collapsed.has(group.key)}
+                      onToggle={group.tasks.length > 0 ? () => toggleGroup(group.key) : undefined}
                       action={group.key === 'overdue' && group.tasks.length > 0 ? <OverdueReschedule tasks={group.tasks} /> : undefined}
                     />
                   )}
-                  {group.tasks.length === 0 ? (
+                  {collapsed.has(group.key) && group.title ? null : group.tasks.length === 0 ? (
                     <p className="px-2 py-3 text-sm text-muted">אין כאן משימות.</p>
                   ) : (
                     <ul>
@@ -770,6 +797,7 @@ export function TaskList({
                           checked={checkedIds.has(task.id)}
                           onSelect={handleSelect}
                           hideProject={hideProject}
+                          showInbox={!hideProject && context.view !== 'inbox'}
                           // Dragging and selecting compete for the same press.
                           draggable={reorderable && checkedIds.size === 0 && sort === 'manual' && !search && priorityFilter === 'all'}
                           onToggle={handleToggle}
@@ -890,12 +918,16 @@ function GroupHeading({
   isDay,
   count,
   action,
+  collapsed = false,
+  onToggle,
 }: {
   title: string;
   subtitle?: string | null;
   isDay: boolean;
   count: number;
   action?: React.ReactNode;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }) {
   let primary = title;
   let secondary: string | null = subtitle ?? null;
@@ -913,7 +945,18 @@ function GroupHeading({
   }
 
   return (
-    <div className="task-group-heading mb-1 flex items-baseline gap-2.5 border-be border-line px-2 pb-1.5">
+    <div className="task-group-heading relative mb-1 flex items-baseline gap-2.5 border-be border-line px-2 pb-1.5">
+      {onToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={!collapsed}
+          aria-label={collapsed ? `הצגת ${primary}` : `הסתרת ${primary}`}
+          className="task-group-toggle grid size-7 shrink-0 place-items-center self-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          <ChevronDown className={cn('size-4 transition-transform duration-200', collapsed && 'rotate-90')} aria-hidden />
+        </button>
+      )}
       <h2 className="text-base font-semibold text-ink">{primary}</h2>
       {secondary && <span className="num text-xs text-muted">{secondary}</span>}
       <span className={cn('num text-xs text-muted', !action && 'ms-auto')}>{count}</span>

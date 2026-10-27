@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarDays, Clock, Flag, ListChecks, Repeat } from 'lucide-react';
+import { CalendarDays, Clock, Flag, Hash, Inbox, ListChecks, Repeat } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { describeStored } from '@/lib/recurrence';
 import { relativeDayLabel, isOverdue, today } from '@/lib/dates';
@@ -33,7 +33,9 @@ export function WhenChip({
       aria-label={`${dayLabel}${time ? ` בשעה ${time}` : ''}${presentation.dateTone === 'overdue' || presentation.timeOverdue ? ', באיחור' : ''}`}
     >
       <span data-date-tone={presentation.dateTone} className="inline-flex items-center gap-1">
-        {!compact && <CalendarDays className="size-3.5 shrink-0" aria-hidden />}
+        {/* Compact rows drop the icon, except when late: then the date is the
+            reason the row is here and should read as a date at a glance. */}
+        {(!compact || presentation.dateTone === 'overdue') && <CalendarDays className="size-3.5 shrink-0" aria-hidden />}
         <span>{dayLabel}</span>
       </span>
       {time && (
@@ -72,13 +74,18 @@ export function DeadlineChip({ date, muted }: { date: Date; muted?: boolean }) {
 
 export function ProjectChip({ name, color }: { name: string; color: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-muted">
-      <span
-        aria-hidden
-        className="size-2 shrink-0 rounded-full"
-        style={{ backgroundColor: swatchVar(color) }}
-      />
-      {name}
+    <span className="inline-flex max-w-[14rem] items-center gap-1 text-xs text-muted" title={name}>
+      <span className="truncate">{name}</span>
+      <Hash className="size-3.5 shrink-0" style={{ color: swatchVar(color) }} aria-hidden />
+    </span>
+  );
+}
+
+export function InboxChip() {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-muted">
+      תיבה נכנסת
+      <Inbox className="size-3.5 shrink-0" aria-hidden />
     </span>
   );
 }

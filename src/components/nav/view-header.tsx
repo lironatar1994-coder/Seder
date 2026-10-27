@@ -1,12 +1,14 @@
 import { buildLockup } from '@/lib/hebrew-date';
 import { today } from '@/lib/dates';
 
-export function ViewHeader({ title, subtitle, accent, progress, showDate = false, action }: {
+export function ViewHeader({ title, subtitle, accent, progress, showDate = false, count, action }: {
   title: string;
   subtitle?: string | null;
   accent?: string;
   progress?: { done: number; total: number };
   showDate?: boolean;
+  /** Open tasks in the view, shown after the date as Todoist does. */
+  count?: number;
   action?: React.ReactNode;
 }) {
   const lockup = showDate ? buildLockup(today()) : null;
@@ -21,6 +23,7 @@ export function ViewHeader({ title, subtitle, accent, progress, showDate = false
           <span>{lockup.weekday}</span><span aria-hidden>·</span>
           <span className="num">{lockup.gregorian}</span>
           {lockup.hebrew && <><span aria-hidden>·</span><span>{lockup.hebrew}</span></>}
+          {count !== undefined && count > 0 && <><span aria-hidden>·</span><span className="font-semibold text-ink-2">{count === 1 ? 'משימה אחת' : <><span className="num">{count}</span> משימות</>}</span></>}
           {progress && progress.done > 0 && <span className="ms-auto text-xs" aria-label={`הושלמו ${progress.done} מתוך ${progress.total} משימות היום`}>{progress.done} הושלמו</span>}
         </p>
       ) : subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}

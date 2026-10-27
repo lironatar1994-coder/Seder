@@ -1318,3 +1318,13 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
 }
 .tracker-scroll { scrollbar-width: thin; scroll-behavior: smooth; }
 .tracker-expand { display: grid; transition: grid-template-rows 320ms var(--ease-out-soft), opacity 240ms; }
+
+/* A focused rail link keeps its ring inside the pill: outside it read as a
+   red frame stuck around the current view. */
+.rail-link:focus-visible { outline-offset: -2px; }
+
+/* On desktop the collapse chevron sits in the checkbox gutter, so the group
+   title stays aligned with the task titles under it, as in Todoist. */
+@media (min-width: 1024px) {
+  .task-group-toggle { position: absolute; inset-inline-start: calc((var(--desktop-text-inset) - 1.75rem) / 2); inset-block-start: 50%; translate: 0 calc(-50% - .3125rem); }
+}

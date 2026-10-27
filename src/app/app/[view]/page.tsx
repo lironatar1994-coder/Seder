@@ -81,6 +81,7 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
         title={meta.label}
         subtitle={view === 'today' ? null : meta.hint}
         showDate={view === 'today'}
+        count={view === 'today' ? data.groups.reduce((sum, group) => sum + group.tasks.length, 0) : undefined}
         progress={data.progress}
         action={<ViewActions planning={view === 'today'} />}
       />

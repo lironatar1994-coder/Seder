@@ -25,10 +25,10 @@ export function GoogleSyncBar({ connected, lastError }: { connected: boolean; la
     const timer = setInterval(() => { if (document.visibilityState === 'visible') router.refresh(); }, 60_000);
     return () => clearInterval(timer);
   }, [connected, router]);
-  return <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted">
+  return <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs text-muted">
     <CalendarDays className="size-3.5" aria-hidden />
-    <Link href="/app/settings/calendar" className="font-semibold text-accent hover:underline">{connected ? 'יומן Google מחובר' : 'חיבור יומן Google'}</Link>
-    {connected && <><span>אירועים לצד המשימות</span><button type="button" disabled={pending} onClick={() => start(async () => { const result = await syncGoogleAction(); if (!result.ok) toast({ tone: 'error', message: result.error === 'BUSY' ? 'הסנכרון כבר מתבצע. אפשר לנסות בעוד רגע.' : 'הסנכרון לא הושלם. אפשר לבדוק את החיבור בהגדרות.' }); router.refresh(); })} className="ms-auto inline-flex min-h-9 items-center gap-1 rounded-md px-2 font-semibold hover:bg-surface-2 disabled:opacity-50" aria-label="סנכרון יומן Google"><RefreshCw className={cn('size-3.5', pending && 'animate-spin motion-reduce:animate-none')} aria-hidden />{pending ? 'מסנכרנים…' : 'סנכרון'}</button></>}
+    <Link href="/app/settings/calendar" className="hover:text-ink hover:underline">{connected ? 'יומן Google' : 'חיבור יומן Google'}</Link>
+    {connected && <button type="button" disabled={pending} title="סנכרון עכשיו" onClick={() => start(async () => { const result = await syncGoogleAction(); if (!result.ok) toast({ tone: 'error', message: result.error === 'BUSY' ? 'הסנכרון כבר מתבצע. אפשר לנסות בעוד רגע.' : 'הסנכרון לא הושלם. אפשר לבדוק את החיבור בהגדרות.' }); router.refresh(); })} className="grid size-7 place-items-center rounded-md hover:bg-surface-2 hover:text-ink disabled:opacity-50" aria-label="סנכרון יומן Google"><RefreshCw className={cn('size-3.5', pending && 'animate-spin motion-reduce:animate-none')} aria-hidden /></button>}
     {lastError && <Link href="/app/settings/calendar" className="w-full text-p1">יש לבדוק את החיבור ליומן. המידע המוצג הוא מהסנכרון האחרון.</Link>}
   </div>;
 }
