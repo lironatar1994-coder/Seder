@@ -53,7 +53,7 @@ test('dates and hours have separate urgency, consistent picker colors and a work
       return { titleRight: a.right, centerDifference: Math.abs(a.top + parseFloat(getComputedStyle(title).lineHeight) / 2 - (b.top + b.height / 2)), font: parseFloat(getComputedStyle(title).fontSize) };
     }));
     expect(Math.max(...geometry.map(item => item.titleRight)) - Math.min(...geometry.map(item => item.titleRight))).toBeLessThan(1);
-    expect(geometry.every(item => item.centerDifference <= 1 && item.font >= 17)).toBe(true);
+    expect(geometry.every(item => item.centerDifference <= 1 && item.font >= 16)).toBe(true);
     await page.screenshot({ path: `.local-artifacts/layout-refinement/inbox-${width}.png`, animations: 'disabled' });
   }
   await page.setViewportSize({ width: 390, height: 844 });

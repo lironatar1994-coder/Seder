@@ -406,14 +406,16 @@ function Checkbox({
   onToggle: (task: TaskDTO, done: boolean) => void;
 }) {
   const filled = done || completing;
+  // Todoist's ring: priorities get a 2px border and a faint fill of their own
+  // colour; no priority is a thin grey circle. Hover previews the check.
   const ring =
     task.priority === 1
-      ? 'border-p1'
+      ? 'border-2 border-p1 bg-p1/10 text-p1'
       : task.priority === 2
-        ? 'border-p2'
+        ? 'border-2 border-p2 bg-p2/10 text-p2'
         : task.priority === 3
-          ? 'border-p3'
-          : 'border-p4';
+          ? 'border-2 border-p3 bg-p3/10 text-p3'
+          : 'border-[1.5px] border-p4 text-p4';
 
   return (
     <button
@@ -425,19 +427,19 @@ function Checkbox({
       title={PRIORITY_LABELS[task.priority]}
       onClick={() => onToggle(task, !done)}
       className={cn(
-        'task-complete-control relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border-[1.5px]',
+        'task-complete-control group/check relative mt-0.5 grid size-5 shrink-0 place-items-center rounded-full',
         'transition-colors duration-120',
         // A 20px box is right for the row's density and wrong for a thumb. The
         // target extends past it on touch only; completing the wrong task is
         // the most annoying mistake this list can produce.
         "before:absolute before:content-[''] [@media(pointer:coarse)]:before:-inset-3",
-        filled ? 'border-accent bg-accent' : `${ring} hover:border-accent`,
+        filled ? 'border-[1.5px] border-accent bg-accent' : ring,
       )}
     >
       <Check
         className={cn(
-          'size-3 text-[var(--on-accent)] transition-opacity duration-150',
-          filled ? 'opacity-100' : 'opacity-0',
+          'size-3 transition-opacity duration-150',
+          filled ? 'text-[var(--on-accent)] opacity-100' : 'opacity-0 group-hover/check:opacity-100',
         )}
         strokeWidth={3.5}
         aria-hidden

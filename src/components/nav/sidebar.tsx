@@ -3,12 +3,11 @@
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Bookmark, ChevronDown, ChevronLeft, Hash, FolderKanban, LogOut, PanelRightClose, PanelRightOpen, Plus, Search, Settings, SlidersHorizontal, Tag, Timer, Users, X } from 'lucide-react';
+import { Bookmark, ChevronDown, ChevronLeft, Hash, FolderKanban, Keyboard, LogOut, PanelRightClose, PanelRightOpen, Plus, Search, Settings, SlidersHorizontal, Tag, Timer, Users, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { swatchVar } from '@/lib/constants';
 import type { SidebarData } from '@/server/tasks/queries';
 import { IconButton } from '@/components/ui/button';
-import { BrandMark } from '@/components/brand/brand-mark';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/ui/overlays';
 import { RollingNumber } from '@/components/ui/rolling-number';
 import { useRail } from './use-rail';
@@ -89,10 +88,24 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
     document.addEventListener('keydown', keydown);
     return () => { document.removeEventListener('keydown', keydown); if (main) main.inert = false; };
   }, [open]);
+  /* Todoist keeps the person at the top of the sidebar; the phone drawer keeps
+     them in its footer, beside capture, where a thumb reaches. */
+  function accountMenu(side: 'top' | 'bottom') {
+    return <Menu><MenuTrigger aria-label={user.name} className={cn('flex min-w-0 items-center gap-2 rounded-lg text-start hover:bg-[var(--rail-hover)]', side === 'bottom' ? 'min-h-11 flex-1 gap-2.5 px-2.5 py-2' : 'rail-user min-h-9 px-1.5 py-1')}>
+      <span aria-hidden className={cn('grid shrink-0 place-items-center rounded-full bg-[var(--rail-active)] font-bold text-accent', side === 'bottom' ? 'size-8 text-sm' : 'size-7 text-[0.8125rem]')}>{user.name.trim().charAt(0) || '·'}</span>
+      <span className="rail-label min-w-0 truncate text-sm font-semibold">{user.name}</span>
+      <ChevronDown className="rail-label size-3.5 shrink-0 text-[var(--rail-muted)]" aria-hidden />
+    </MenuTrigger><MenuContent align="start" side={side === 'top' ? 'bottom' : 'top'} className="w-60">
+      <p title={user.email} className="truncate px-3 py-2 text-sm text-muted"><bdi dir="ltr">{user.email}</bdi></p><MenuSeparator />
+      <MenuItem asChild><Link href="/app/settings" onClick={() => setOpen(false)}><Settings className="size-4" aria-hidden />הגדרות</Link></MenuItem>
+      <MenuItem className="hidden md:flex" onSelect={() => window.dispatchEvent(new Event('seder:shortcuts'))}><Keyboard className="size-4" aria-hidden /><span className="flex-1">קיצורי מקלדת</span><kbd className="num text-xs text-muted">?</kbd></MenuItem><MenuSeparator />
+      <MenuItem tone="danger" onSelect={() => startTransition(() => void onLogout())}><LogOut className="size-4 icon-flip" aria-hidden />יציאה</MenuItem>
+    </MenuContent></Menu>;
+  }
   function destinationLink(item: Destination) {
     const count = item.countKey ? data.counts[item.countKey] : 0;
     return <NavLink href={item.href} label={item.label} active={isDestinationActive(item, pathname)} description={item.countKey ? `${taskCountLabel(count)}, ${item.hint}` : item.hint}>
-      <item.icon className="size-5 shrink-0" strokeWidth={1.7} style={{ color: item.color }} aria-hidden />
+      <item.icon className="size-5 shrink-0" strokeWidth={1.7} aria-hidden />
       <span className="rail-label min-w-0 flex-1"><span className="block truncate">{item.label}</span><span className="rail-view-hint">{item.hint}</span></span>
       {count > 0 && <Count value={count} />}
     </NavLink>;
@@ -111,17 +124,17 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
     {open && <button type="button" aria-label="סגירת הרשימות" onClick={() => setOpen(false)} className="fixed inset-0 z-40 bg-scrim md:hidden" />}
     <aside ref={drawerRef} data-open={open} aria-label="ניווט בסדר" className="rail drawer z-50 flex min-h-0 shrink-0 flex-col overflow-hidden border-e border-[var(--rail-line)] bg-[var(--rail)] text-[var(--rail-ink)] max-md:fixed max-md:inset-bs-0 max-md:inset-be-0 max-md:inset-s-0">
       <div className="rail-header flex shrink-0 items-center justify-between gap-1 px-4 pb-2 pt-3">
-        <Link href="/app" className="rail-label hidden min-w-0 items-center gap-2 text-xl font-bold md:flex"><BrandMark size={24} priority />סדר</Link>
+        <div className="rail-label hidden min-w-0 md:flex">{accountMenu('top')}</div>
         <h2 className="text-2xl font-bold md:hidden">{COLLECTIONS_LABEL}</h2>
         <div className="flex items-center gap-1">
-          <span className="rail-only-open hidden md:contents"><ThemeToggle /></span>
+          <span className="rail-only-open hidden md:contents"><Link href="/app/settings" title="הגדרות" aria-label="הגדרות" aria-current={pathname.startsWith('/app/settings') ? 'page' : undefined} className="rail-header-settings grid size-9 place-items-center rounded-lg text-[var(--rail-muted)] hover:bg-[var(--rail-hover)] hover:text-[var(--rail-ink)]"><Settings className="size-[1.125rem]" aria-hidden /></Link><ThemeToggle /></span>
           <Link href="/app/settings" title="הגדרות" aria-label="הגדרות" onClick={() => setOpen(false)} className="grid size-11 place-items-center rounded-lg text-muted hover:bg-surface-2 md:hidden"><Settings className="size-5" aria-hidden /></Link>
           <IconButton label="סגירה" className="md:hidden" onClick={() => { setOpen(false); document.querySelector<HTMLButtonElement>('[data-browse-trigger]')?.focus(); }}><X className="size-5" aria-hidden /></IconButton>
           <IconButton label={collapsed ? 'פתיחת הסרגל' : 'צמצום הסרגל'} aria-expanded={!collapsed} onClick={toggle} className="hidden md:inline-flex">{collapsed ? <PanelRightOpen className="size-4" aria-hidden /> : <PanelRightClose className="size-4" aria-hidden />}</IconButton>
         </div>
       </div>
       <div className="rail-capture shrink-0 px-3 pb-3 pt-1">
-        <button type="button" aria-label="הוספת משימה" className="rail-add" onClick={compose}><Plus className="size-5 shrink-0" aria-hidden /><span className="rail-label">הוספת משימה</span></button>
+        <button type="button" aria-label="הוספת משימה" className="rail-add" onClick={compose}><span className="rail-add-icon" aria-hidden><Plus strokeWidth={2.5} /></span><span className="rail-label">הוספת משימה</span></button>
         <button type="button" aria-label="חיפוש" className="rail-search" onClick={() => { setOpen(false); window.dispatchEvent(new Event('seder:search')); }}><Search className="size-5 shrink-0" aria-hidden /><span className="rail-label flex-1 text-start"><span className="md:hidden">חיפוש בסדר</span><span className="hidden md:inline">חיפוש</span></span><kbd className="rail-label num text-xs">Ctrl K</kbd></button>
       </div>
       <nav aria-label="ניווט ראשי" className="rail-nav scroll-quiet min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-3" onClick={event => { if ((event.target as HTMLElement).closest('a')) setOpen(false); }}>
@@ -156,15 +169,7 @@ export function Sidebar({ data, user, onLogout }: { data: SidebarData; user: { n
         <button type="button" aria-label="הוספת משימה" onClick={compose} className="rail-create"><Plus className="size-5 shrink-0" aria-hidden /><span>הוספת משימה</span></button>
       </div>
       <div className="rail-account flex min-w-0 items-center gap-1 p-2">
-        <Menu><MenuTrigger aria-label={user.name} className="flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2.5 py-2 text-start hover:bg-[var(--rail-hover)]">
-          <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--rail-active)] text-sm font-bold">{user.name.trim().charAt(0) || '·'}</span>
-          <span className="rail-label min-w-0 flex-1 truncate text-sm font-semibold">{user.name}</span>
-          <ChevronDown className="rail-label size-4 shrink-0 text-[var(--rail-muted)]" aria-hidden />
-        </MenuTrigger><MenuContent align="start" side="top" className="w-60">
-          <p title={user.email} className="truncate px-3 py-2 text-sm text-muted"><bdi dir="ltr">{user.email}</bdi></p><MenuSeparator />
-          <MenuItem asChild><Link href="/app/settings" onClick={() => setOpen(false)}><Settings className="size-4" aria-hidden />הגדרות</Link></MenuItem><MenuSeparator />
-          <MenuItem tone="danger" onSelect={() => startTransition(() => void onLogout())}><LogOut className="size-4 icon-flip" aria-hidden />יציאה</MenuItem>
-        </MenuContent></Menu>
+        {accountMenu('bottom')}
         <Link href="/app/settings" title="הגדרות" aria-label="הגדרות" aria-current={pathname.startsWith('/app/settings') ? 'page' : undefined} onClick={() => setOpen(false)} className="rail-account-settings grid size-11 shrink-0 place-items-center rounded-lg text-[var(--rail-muted)] hover:bg-[var(--rail-hover)]"><Settings className="size-5" aria-hidden /></Link>
       </div>
       </div>

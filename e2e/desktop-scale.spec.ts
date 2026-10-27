@@ -25,7 +25,7 @@ async function geometry(page: Page) {
       width: innerWidth, overflow: document.documentElement.scrollWidth > innerWidth,
       titleAxis: title.right, headingAxis: box('.view-heading h1').right,
       composerAxis: box('.task-add-trigger > span').right,
-      sidebarGap: rail.left - content.right,
+      sidebarGap: rail.left - content.right, startGap: content.left,
       text: parseFloat(style('.task-title').fontSize),
       icon: box('.rail-link > svg').width, rail: rail.width,
       checkboxCenter: check.top + check.height / 2,
@@ -58,11 +58,13 @@ test('desktop reading scale, shared alignment, zoom, editor wrapping and device 
       await page.setViewportSize({ width, height: 912 });
       const metric = await geometry(page); measurements.push(metric);
       expect(metric.overflow).toBe(false);
-      expect(metric.sidebarGap).toBeCloseTo(0, 0);
+      // The column sits in the middle of the space beside the rail (Todoist).
+      expect(Math.abs(metric.sidebarGap - metric.startGap)).toBeLessThanOrEqual(16);
       expect(Math.abs(metric.titleAxis - metric.headingAxis)).toBeLessThanOrEqual(1);
       expect(Math.abs(metric.titleAxis - metric.composerAxis)).toBeLessThanOrEqual(1);
       expect(Math.abs(metric.checkboxCenter - metric.titleCenter)).toBeLessThanOrEqual(1);
-      expect(metric.text).toBeGreaterThanOrEqual(18);
+      // Todoist's proportions, one step up for Hebrew: 16px task titles.
+      expect(metric.text).toBeGreaterThanOrEqual(16);
       await page.screenshot({ animations: 'disabled', path: `${evidence}/desktop-${width}.png` });
     }
     const zoom = await page.context().browser()!.newContext({ storageState: await context.storageState(), locale: 'he-IL', timezoneId: 'Asia/Jerusalem', viewport: { width: 2517, height: 1216 }, deviceScaleFactor: .75 });

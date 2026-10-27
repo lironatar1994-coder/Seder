@@ -1,4 +1,5 @@
-import { BookCheck, CalendarDays, Inbox, Star, type LucideIcon } from 'lucide-react';
+import { BookCheck, CalendarDays, Inbox, type LucideIcon } from 'lucide-react';
+import { TodayIcon } from './today-icon';
 import { VIEWS, type ViewSlug } from '@/lib/constants';
 import type { SidebarData } from '@/server/tasks/queries';
 
@@ -22,7 +23,7 @@ const view = (slug: ViewSlug, icon: LucideIcon, color: string): Destination => {
  *  Upcoming's place: the days ahead are a calendar here, not another list. */
 export const PRIMARY_DESTINATIONS: Destination[] = [
   view('inbox', Inbox, 'var(--notice)'),
-  view('today', Star, 'var(--date-tomorrow)'),
+  view('today', TodayIcon as unknown as LucideIcon, 'var(--date-tomorrow)'),
   { slug: 'calendar', label: 'לוח שנה', hint: 'הימים הבאים, בשבוע ובחודש', href: '/app/calendar', icon: CalendarDays, color: 'var(--date-week)' },
 ];
 /** Completed work, after Filters & Labels — where Todoist keeps it. */

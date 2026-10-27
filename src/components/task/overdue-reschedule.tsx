@@ -1,7 +1,6 @@
 'use client';
 
 import { useTransition } from 'react';
-import { CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { rescheduleOverdueAction } from '@/server/tasks/actions';
@@ -28,8 +27,7 @@ export function OverdueReschedule({ tasks }: { tasks: TaskDTO[] }) {
         onClick={reschedule}
         title="כל משימה לפי הבחירה המקורית שלה: היום, מחר או שבוע הבא"
         aria-label="תזמון מחדש של המשימות שבאיחור"
-        className="h-8 gap-1.5 px-2 text-sm font-semibold text-accent hover:bg-accent-soft hover:text-accent">
-        <CalendarClock className="size-3.5" aria-hidden />
+        className="h-8 px-2 text-sm font-semibold text-accent hover:bg-accent-soft hover:text-accent">
         {pending ? 'מתזמנים…' : 'תזמון מחדש'}
       </Button>;
 }

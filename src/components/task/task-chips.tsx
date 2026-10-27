@@ -1,9 +1,9 @@
 'use client';
 
-import { CalendarDays, Clock, Flag, Hash, Inbox, ListChecks, Repeat } from 'lucide-react';
+import { CalendarDays, Clock, Flag, Hash, Inbox, ListChecks, Repeat, Tag } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { describeStored } from '@/lib/recurrence';
-import { relativeDayLabel, isOverdue, today } from '@/lib/dates';
+import { relativeDayLabel, isOverdue, today, formatShortDate } from '@/lib/dates';
 import { schedulePresentation } from '@/lib/date-presentation';
 import { useTaskNow } from './task-clock';
 import { swatchVar, PRIORITY_LABELS, type Priority } from '@/lib/constants';
@@ -24,7 +24,9 @@ export function WhenChip({
   // A completed task cannot be late. Leaving it red says the opposite of what
   // the tick next to it says.
   const now = useTaskNow();
-  const dayLabel = relativeDayLabel(date, today(now));
+  // Past the coming week the relative label is "21.10"; Todoist's "18 Mar"
+  // reads as a date without decoding, so do the same in Hebrew.
+  const dayLabel = readableDay(date, today(now));
   const presentation = schedulePresentation(date, time, now, muted);
   return (
     <span
@@ -48,6 +50,20 @@ export function WhenChip({
   );
 }
 
+const SHORT_MONTHS = ['ינו׳', 'פבר׳', 'מרץ', 'אפר׳', 'מאי', 'יוני', 'יולי', 'אוג׳', 'ספט׳', 'אוק׳', 'נוב׳', 'דצמ׳'];
+
+/** "היום", "מחר", a weekday — or "21 אוק׳" once it is past the coming week. */
+export function readableDay(date: Date, base: Date) {
+  const relative = relativeDayLabel(date, base);
+  return relative === formatShortDate(date) ? monthDay(date, base) : relative;
+}
+
+/** "21 אוק׳", with the year only when it is not this one. */
+export function monthDay(date: Date, base: Date) {
+  const label = `${date.getUTCDate()} ${SHORT_MONTHS[date.getUTCMonth()]}`;
+  return date.getUTCFullYear() === base.getUTCFullYear() ? label : `${label} ${date.getUTCFullYear()}`;
+}
+
 /** Deadline. Amber is reserved for this and for overdue — nothing else in the
  *  interface uses it, so the colour always means "time pressure". */
 export function DeadlineChip({ date, muted }: { date: Date; muted?: boolean }) {
@@ -67,7 +83,7 @@ export function DeadlineChip({ date, muted }: { date: Date; muted?: boolean }) {
     >
       <Flag className="size-3.5 shrink-0" aria-hidden />
       {overdue ? 'עבר המועד · ' : 'עד '}
-      {relativeDayLabel(date, today(now))}
+      {readableDay(date, today(now))}
     </span>
   );
 }
@@ -92,10 +108,8 @@ export function InboxChip() {
 
 export function LabelChip({ name, color }: { name: string; color: string }) {
   return (
-    <span
-      className="inline-flex items-center rounded-sm px-1.5 text-xs"
-      style={{ color: swatchVar(color), backgroundColor: `color-mix(in oklab, ${swatchVar(color)} 12%, transparent)` }}
-    >
+    <span className="inline-flex items-center gap-1 text-xs text-muted">
+      <Tag className="size-3.5 shrink-0" style={{ color: swatchVar(color) }} aria-hidden />
       {name}
     </span>
   );

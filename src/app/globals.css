@@ -1328,3 +1328,138 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
 @media (min-width: 1024px) {
   .task-group-toggle { position: absolute; inset-inline-start: calc((var(--desktop-text-inset) - 1.75rem) / 2); inset-block-start: 50%; translate: 0 calc(-50% - .3125rem); }
 }
+
+/* ═══ Todoist parity, 2026-10-27 ═══════════════════════════════════════════
+   Side by side with Todoist the app read heavy: 19px rows, 46px sidebar rows,
+   a grey rail, colourful nav icons, a column pinned to the sidebar. This block
+   brings the default desktop scale and chrome to Todoist's proportions —
+   Hebrew one step larger than Todoist's Latin 14px, because Hebrew letters
+   sit smaller at the same size — and leaves the old scale as "גדול". */
+:root {
+  --rail: #fcfaf8;
+  --rail: light-dark(oklch(98.6% .0035 67), oklch(20% 0 0));
+  --rail-hover: light-dark(oklch(95.6% .006 60), oklch(24% 0 0));
+  --rail-line: light-dark(oklch(93.5% .004 60), oklch(30% 0 0));
+}
+
+@media (min-width: 1024px) {
+  body:has([data-app-shell]) {
+    --desktop-task-size: 1rem;
+    --desktop-task-line: 1.5rem;
+    --desktop-nav-size: .9375rem;
+    --desktop-nav-row: 2.25rem;
+    --desktop-page-size: 1.75rem;
+    --desktop-page-line: 2.25rem;
+    --desktop-section-size: .9375rem;
+    --desktop-control-size: .9375rem;
+    --desktop-prose-size: .9375rem;
+    --desktop-meta-size: .8125rem;
+    --desktop-icon-size: 1.25rem;
+    --desktop-meta-icon: .875rem;
+    --desktop-check-size: 1.25rem;
+    --desktop-row-pad: .5rem;
+    --desktop-rail-width: 17.5rem;
+    --desktop-column: 52rem;
+  }
+  :root[data-desktop-size='compact'] body:has([data-app-shell]) {
+    --desktop-task-size: .9375rem;
+    --desktop-task-line: 1.375rem;
+    --desktop-nav-size: .875rem;
+    --desktop-nav-row: 2.125rem;
+    --desktop-page-size: 1.625rem;
+    --desktop-page-line: 2rem;
+    --desktop-section-size: .875rem;
+    --desktop-meta-size: .75rem;
+    --desktop-icon-size: 1.125rem;
+    --desktop-check-size: 1.125rem;
+    --desktop-row-pad: .4375rem;
+    --desktop-rail-width: 16.5rem;
+  }
+  :root[data-desktop-size='large'] body:has([data-app-shell]) {
+    --desktop-task-size: 1.1875rem;
+    --desktop-task-line: 1.75rem;
+    --desktop-nav-size: 1.0625rem;
+    --desktop-nav-row: 2.625rem;
+    --desktop-page-size: 2.125rem;
+    --desktop-page-line: 2.625rem;
+    --desktop-section-size: 1.125rem;
+    --desktop-meta-size: .875rem;
+    --desktop-icon-size: 1.375rem;
+    --desktop-meta-icon: 1rem;
+    --desktop-check-size: 1.375rem;
+    --desktop-row-pad: .5625rem;
+    --desktop-rail-width: 18.5rem;
+    --desktop-column: 58rem;
+  }
+
+  /* The reading column sits in the middle of the free space, as Todoist's
+     does, instead of hugging the sidebar and leaving the far side empty. */
+  .workspace-content, .workspace-content:not(:has([data-wide])), .workspace-content:has([data-project-mode='list']), .workspace-bar {
+    margin-inline: auto;
+  }
+  .workspace-bar { min-block-size: 3.5rem; }
+  .view-heading { padding-block: 1.75rem 1rem; }
+  .view-heading h1 { font-weight: 700; letter-spacing: normal; }
+  .view-heading button { min-inline-size: 2.25rem; min-block-size: 2.25rem; }
+
+  /* Sidebar rows at Todoist's rhythm. */
+  .rail-header { padding-block: .625rem .25rem; padding-inline: .75rem .5rem; }
+  .rail-capture { padding-block: .25rem .5rem; padding-inline: .5rem; }
+  .rail-add, .rail-search { min-block-size: var(--desktop-nav-row); padding-inline: .5rem; border-radius: .375rem; }
+  .rail-search { margin-block-start: .125rem; }
+  .rail-link { gap: .625rem; padding-inline: .5rem; border-radius: .375rem; }
+  .rail-primary { border-block-end-color: transparent; padding-block-end: .25rem; }
+  .rail-section { margin-block-start: .75rem; }
+  .rail-section-toggle { color: var(--rail-ink); font-weight: 700; font-size: .875rem; }
+  .rail [data-count] { font-size: .75rem; }
+  .rail-footer { display: none; }
+  .rail-utilities { border-block-start-color: transparent; }
+}
+
+/* Sidebar icons are grey; colour belongs to the selected row and to the
+   things that have one of their own — projects and labels. */
+.rail-link > svg, .rail-search > svg { color: var(--rail-muted); }
+.rail-link[aria-current='page'] { font-weight: 600; }
+.rail-primary .rail-link[aria-current='page'], .rail-link[aria-current='page'] { background: var(--rail-active); }
+.rail-link[aria-current='page'] > svg { color: var(--accent); }
+.rail-header-settings[aria-current='page'] { color: var(--accent); background: var(--rail-active); }
+
+/* Add task: Todoist's filled circle. */
+.rail-add { gap: .625rem; }
+.rail-add:hover { filter: none; background: var(--rail-hover); }
+.rail-add-icon { display: grid; flex-shrink: 0; place-items: center; inline-size: 1.5rem; block-size: 1.5rem; border-radius: 999px; background: var(--accent); color: var(--on-accent); transition: background 120ms ease-out; }
+.rail-add-icon > svg { inline-size: .9375rem; block-size: .9375rem; }
+.rail-add:hover .rail-add-icon { background: var(--accent-hover); }
+@media (max-width: 767px) {
+  .rail-add .rail-add-icon { background: transparent; color: inherit; }
+}
+
+/* Rows: no fill on hover, as Todoist; the row's actions are the hover cue. */
+@media (hover: hover) {
+  .task-row:hover { background: transparent; }
+}
+.task-title { font-weight: 400; }
+
+/* Sections: a bold small title over a hairline, nothing louder. */
+.task-group-heading h2 { font-weight: 700; }
+.task-group-heading { padding-block-end: .5rem; }
+
+/* Add task: a red plus that fills on hover; the shortcut appears with it. */
+.task-add-trigger > svg { color: var(--accent); border-radius: 999px; padding: .125rem; transition: background 120ms ease-out, color 120ms ease-out; }
+.task-add-trigger:hover > svg { background: var(--accent); color: var(--on-accent); }
+.task-add-trigger kbd { opacity: 0; transition: opacity 120ms ease-out; }
+.task-add-trigger:hover kbd, .task-add-trigger:focus-visible kbd { opacity: 1; }
+
+/* Todoist draws a hairline under every task, checkbox included, so the list
+   reads as one ruled column; not between rows from the title onward. */
+[data-task-id] + [data-task-id]::before { content: none; }
+[data-task-id]::after { content: ''; position: absolute; inset-block-end: -1px; inset-inline: 0; block-size: 1px; background: var(--line); pointer-events: none; }
+.task-group-heading { border-block-end-color: var(--line); }
+@media (min-width: 1024px) {
+  :root[data-rail='collapsed'] .rail-add { padding-inline: calc((3.25rem - 1.5rem) / 2); }
+}
+/* Todoist's 36px rows are for a mouse. A touch screen at desktop width keeps
+   the 44px target on everything in the sidebar. */
+@media (min-width: 1024px) and (pointer: coarse) {
+  .rail-link, .rail-search, .rail-add, .rail-section-toggle { min-block-size: 2.75rem; }
+}
