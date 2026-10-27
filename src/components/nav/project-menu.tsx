@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { MoreHorizontal, Pencil, Plus, Trash2, UserPlus, Users } from 'lucide-react';
+import { MoreHorizontal, Pencil, Plus, Table2, Trash2, UserPlus, Users } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { SWATCHES, SWATCH_LABELS, swatchVar, type Swatch } from '@/lib/constants';
 import { IconButton, Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/overlays';
 import { useToast } from '@/components/ui/toast';
 import { ShareDialog } from './share-dialog';
+import { NEW_TRACKER_EVENT } from '@/components/tracker/project-trackers';
 import {
   createSectionAction,
   deleteProjectAction,
@@ -92,6 +93,10 @@ export function ProjectMenu({
           <MenuItem onSelect={() => setSectionOpen(true)}>
             <Plus className="size-4" aria-hidden />
             קטע חדש
+          </MenuItem>
+          <MenuItem onSelect={() => window.dispatchEvent(new Event(NEW_TRACKER_EVENT))}>
+            <Table2 className="size-4" aria-hidden />
+            טבלת מעקב חדשה
           </MenuItem>
           {!joined && (
             <>

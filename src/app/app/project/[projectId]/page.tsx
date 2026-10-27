@@ -6,6 +6,7 @@ import { swatchVar } from '@/lib/constants';
 import { ViewHeader } from '@/components/nav/view-header';
 import { ProjectWorkspace } from '@/components/task/project-workspace';
 import { ProjectMenu } from '@/components/nav/project-menu';
+import { getProjectTrackers } from '@/server/trackers/queries';
 
 export async function generateMetadata({
   params,
@@ -28,9 +29,10 @@ export default async function ProjectPage({
   if (!user) notFound();
 
   const { projectId } = await params;
-  const [data, sidebar] = await Promise.all([
+  const [data, sidebar, trackers] = await Promise.all([
     getProjectView(user.id, projectId),
     getSidebarData(user.id),
+    getProjectTrackers(user.id, projectId),
   ]);
   if (!data) notFound();
 
@@ -62,6 +64,7 @@ export default async function ProjectPage({
       />
       <ProjectWorkspace
         projectName={data.project.name}
+        trackers={trackers}
         groups={data.groups}
         context={{ view: 'project', projectId: data.project.id }}
         projects={sidebar.projects}

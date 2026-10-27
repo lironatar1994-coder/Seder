@@ -133,6 +133,7 @@ model Project {
   tasks    Task[]
   members  ProjectMember[]
   invites  ProjectInvite[]
+  trackers Tracker[]
 
   @@index([userId, position])
 }
@@ -182,6 +183,55 @@ model ProjectInvite {
 
   @@index([projectId])
   @@index([expiresAt])
+}
+
+/// A habit table inside a project: one row per recurring item, one column per
+/// chosen weekday across a week, month, quarter or year, and a check in each
+/// cell. Lives beside sections rather than inside the task model because a
+/// cell is not a task — it has no schedule, no priority and no Logbook copy,
+/// and ninety of them a quarter would bury the task list.
+model Tracker {
+  id        String   @id @default(cuid())
+  projectId String
+  name      String
+  /// WEEK | MONTH | QUARTER | YEAR — how much the table shows at once.
+  period    String   @default("WEEK")
+  /// Weekdays the table has columns for, Sunday = 0: "0,1,2,3,4".
+  weekdays  String   @default("0,1,2,3,4,5,6")
+  position  String
+  createdAt DateTime @default(now())
+
+  project Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  rows    TrackerRow[]
+
+  @@index([projectId, position])
+}
+
+model TrackerRow {
+  id        String   @id @default(cuid())
+  trackerId String
+  title     String
+  position  String
+  createdAt DateTime @default(now())
+
+  tracker Tracker        @relation(fields: [trackerId], references: [id], onDelete: Cascade)
+  checks  TrackerCheck[]
+
+  @@index([trackerId, position])
+}
+
+/// A V in one cell. Absence is "not done"; there is no unchecked row.
+model TrackerCheck {
+  id        String   @id @default(cuid())
+  rowId     String
+  /// UTC midnight of the calendar day, like Task.scheduledFor.
+  day       DateTime
+  note      String?
+  createdAt DateTime @default(now())
+
+  row TrackerRow @relation(fields: [rowId], references: [id], onDelete: Cascade)
+
+  @@unique([rowId, day])
 }
 
 /// Things calls these "headings" — a titled break inside a project.

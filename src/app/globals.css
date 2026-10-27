@@ -1236,3 +1236,85 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
 }
+
+/* ── Habit tables ─────────────────────────────────────────────────────────
+   One V lands with a pop, its stroke draws, a ring spreads and a few sparks
+   fly. Reduced motion collapses all of it through the global rule above. */
+.tracker-in { animation: tracker-in 420ms var(--ease-out-soft) both; }
+@keyframes tracker-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+.tracker-row-in { animation: tracker-row-in 360ms var(--ease-out-soft) both; }
+@keyframes tracker-row-in {
+  from { opacity: 0; transform: translateY(-6px); background: var(--accent-soft); }
+  60% { background: var(--accent-soft); }
+  to { opacity: 1; transform: none; background: transparent; }
+}
+.tracker-check-pop { animation: tracker-check-pop 380ms var(--ease-spring) both; }
+@keyframes tracker-check-pop {
+  0% { transform: scale(0.55); }
+  55% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+.tracker-check-path { stroke-dasharray: 22; stroke-dashoffset: 0; }
+.tracker-check-pop .tracker-check-path { animation: tracker-draw 300ms 90ms var(--ease-out-soft) both; }
+@keyframes tracker-draw {
+  from { stroke-dashoffset: 22; }
+  to { stroke-dashoffset: 0; }
+}
+.tracker-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  animation: tracker-ring 560ms ease-out forwards;
+}
+@keyframes tracker-ring {
+  from { transform: scale(0.8); opacity: 0.8; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+.tracker-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 9999px;
+  background: var(--accent);
+  pointer-events: none;
+  animation: tracker-spark 620ms cubic-bezier(.2,.7,.3,1) forwards;
+}
+@keyframes tracker-spark {
+  from { transform: translate(0, 0) scale(1); opacity: 1; }
+  to { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; }
+}
+.tracker-hint { animation: tracker-hint 2600ms var(--ease-out-soft) both; }
+@keyframes tracker-hint {
+  0% { opacity: 0; transform: translate(-50%, 4px) scale(0.92); }
+  10%, 80% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -2px) scale(0.96); }
+}
+.tracker-glow { animation: tracker-glow 1400ms ease-out both; }
+@keyframes tracker-glow {
+  0% { box-shadow: inset 0 0 0 999px color-mix(in oklch, var(--accent) 22%, transparent); }
+  100% { box-shadow: inset 0 0 0 999px transparent; }
+}
+.tracker-confetti {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 10px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: tracker-confetti 1100ms cubic-bezier(.15,.75,.35,1) forwards;
+}
+@keyframes tracker-confetti {
+  from { transform: translate(-50%, -50%) rotate(0deg); opacity: 1; }
+  to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)); opacity: 0; }
+}
+.tracker-scroll { scrollbar-width: thin; scroll-behavior: smooth; }
+.tracker-expand { display: grid; transition: grid-template-rows 320ms var(--ease-out-soft), opacity 240ms; }
