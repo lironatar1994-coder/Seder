@@ -18,13 +18,24 @@ export function GoogleEventRow({ event, compact = false }: { event: GoogleEventD
   const className = cn('flex min-w-0 items-center gap-1.5 rounded-md border-s-2 border-accent/50 bg-accent-soft/40 px-2 py-1.5 text-start text-sm text-ink-2', compact && 'py-1 text-xs', event.htmlLink && 'hover:bg-accent-soft');
   return event.htmlLink ? <a data-testid="google-event" href={event.htmlLink} target="_blank" rel="noopener noreferrer" className={className} title={`${event.title} · ${event.calendar}${event.location ? ` · ${event.location}` : ''}`} aria-label={`${event.title}, ${event.allDay ? 'כל היום' : time.format(new Date(event.startAt))}, פתיחה ביומן Google`}>{content}</a> : <div data-testid="google-event" className={className}>{content}</div>;
 }
-export function GoogleSyncBar({ connected, lastError }: { connected: boolean; lastError?: string | null }) {
+/** Syncs now, reporting a failure the way the bar always did. */
+export function useGoogleSync() {
+  const [pending, start] = useTransition(); const router = useRouter(); const { toast } = useToast();
+  const sync = () => start(async () => { const result = await syncGoogleAction(); if (!result.ok) toast({ tone: 'error', message: result.error === 'BUSY' ? 'הסנכרון כבר מתבצע. אפשר לנסות בעוד רגע.' : 'הסנכרון לא הושלם. אפשר לבדוק את החיבור בהגדרות.' }); else toast({ message: 'יומן Google סונכרן', group: 'google-sync' }); router.refresh(); });
+  return { pending, sync };
+}
+
+/* `quiet` (Today): Todoist shows no status row above the list, so a healthy
+   connection only keeps refreshing in the background; the sync itself lives
+   in the view's "…" menu. A problem still gets its line. */
+export function GoogleSyncBar({ connected, lastError, quiet = false }: { connected: boolean; lastError?: string | null; quiet?: boolean }) {
   const [pending, start] = useTransition(); const router = useRouter(); const { toast } = useToast();
   useEffect(() => {
     if (!connected) return;
     const timer = setInterval(() => { if (document.visibilityState === 'visible') router.refresh(); }, 60_000);
     return () => clearInterval(timer);
   }, [connected, router]);
+  if (quiet) return lastError ? <Link href="/app/settings/calendar" className="mb-3 block text-xs text-p1 hover:underline">יש לבדוק את החיבור ליומן Google. המידע המוצג הוא מהסנכרון האחרון.</Link> : null;
   return <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs text-muted">
     <CalendarDays className="size-3.5" aria-hidden />
     <Link href="/app/settings/calendar" className="hover:text-ink hover:underline">{connected ? 'יומן Google' : 'חיבור יומן Google'}</Link>

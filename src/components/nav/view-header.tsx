@@ -2,7 +2,7 @@ import { CircleCheck } from 'lucide-react';
 import { buildLockup } from '@/lib/hebrew-date';
 import { today } from '@/lib/dates';
 
-export function ViewHeader({ title, subtitle, accent, progress, showDate = false, count, action }: {
+export function ViewHeader({ title, subtitle, accent, progress, showDate = false, count, countOnly = false, action }: {
   title: string;
   subtitle?: string | null;
   accent?: string;
@@ -10,6 +10,8 @@ export function ViewHeader({ title, subtitle, accent, progress, showDate = false
   showDate?: boolean;
   /** Open tasks in the view, shown after the date as Todoist does. */
   count?: number;
+  /** Show the count in place of the subtitle (Inbox). */
+  countOnly?: boolean;
   action?: React.ReactNode;
 }) {
   const lockup = showDate ? buildLockup(today()) : null;
@@ -28,6 +30,8 @@ export function ViewHeader({ title, subtitle, accent, progress, showDate = false
           {lockup.hebrew && <><span aria-hidden>·</span><span>{lockup.hebrew}</span></>}
           {progress && progress.done > 0 && <span className="ms-auto text-xs" aria-label={`הושלמו ${progress.done} מתוך ${progress.total} משימות היום`}>{progress.done} הושלמו</span>}
         </p>
+      ) : countOnly && count ? (
+        <p className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-ink-2" title={subtitle ?? undefined}><CircleCheck className="size-3.5" aria-hidden />{count === 1 ? 'משימה אחת' : <><span className="num">{count}</span> משימות</>}</p>
       ) : subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
     </header>
   );

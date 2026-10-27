@@ -80,14 +80,15 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
       <ViewHeader
         title={meta.label}
         subtitle={view === 'today' ? null : meta.hint}
+        countOnly={view === 'inbox'}
         showDate={view === 'today'}
-        count={view === 'today' ? data.groups.reduce((sum, group) => sum + group.tasks.length, 0) : undefined}
+        count={view === 'today' || view === 'inbox' ? data.groups.reduce((sum, group) => sum + group.tasks.length, 0) : undefined}
         progress={data.progress}
-        action={<ViewActions planning={view === 'today'} />}
+        action={<ViewActions planning={view === 'today'} google={Boolean(googleConnection)} />}
       />
       <div className={view === 'today' ? 'today-workspace' : undefined}>
       <div className="min-w-0">
-      {googleConnection && <GoogleSyncBar connected lastError={googleConnection.lastError} />}
+      {googleConnection && <GoogleSyncBar connected quiet lastError={googleConnection.lastError} />}
       <GoogleEventList events={googleEvents} />
       <TaskList
         groups={data.groups}
