@@ -8,7 +8,10 @@ test('overdue header reschedules the group to today and clears elapsed times wit
   await page.clock.install({ time: wallTimeInstant(today(), '12:00')! });
   await register(page);
   await add(page, `משימה מאתמול ${formatFullDate(addDays(today(), -1))} עד מחר`);
-  await add(page, 'משימה מהבוקר היום בשעה 09:00');
+  // The browser clock is pinned to 12:00 but the server reschedules on real
+  // time, so "earlier today" must be past on both: 09:00 failed every run
+  // made before nine in the morning.
+  await add(page, 'משימה מהבוקר היום בשעה 00:05');
   await add(page, 'משימה להמשך היום בשעה 18:00');
   const late = page.locator('[data-task-group="overdue"]');
   const button = late.getByRole('button', { name: 'תזמון מחדש של המשימות שבאיחור' });
@@ -19,7 +22,7 @@ test('overdue header reschedules the group to today and clears elapsed times wit
   await expect(late).toHaveCount(0);
   await expect(page.getByTestId('task-list').locator('.task-row')).toHaveCount(3);
   await expect(page.getByTestId('task-list')).toContainText('18:00');
-  await expect(page.getByTestId('task-list')).not.toContainText('09:00');
+  await expect(page.getByTestId('task-list')).not.toContainText('00:05');
   await expect(page.getByTestId('task-list')).toContainText('עד מחר');
   await page.reload();
   await expect(late).toHaveCount(0);
