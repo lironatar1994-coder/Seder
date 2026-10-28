@@ -8,6 +8,7 @@ import type { GoogleEventDTO } from '@/lib/calendar-event-types';
 import { syncGoogleAction } from '@/server/google/actions';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/cn';
+import { HeaderSide } from '@/components/nav/header-side';
 
 const time = new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 export function GoogleEventRow({ event, compact = false }: { event: GoogleEventDTO; compact?: boolean }) {
@@ -18,16 +19,8 @@ export function GoogleEventRow({ event, compact = false }: { event: GoogleEventD
   const className = cn('flex min-w-0 items-center gap-1.5 rounded-md border-s-2 border-accent/50 bg-accent-soft/40 px-2 py-1.5 text-start text-sm text-ink-2', compact && 'py-1 text-xs', event.htmlLink && 'hover:bg-accent-soft');
   return event.htmlLink ? <a data-testid="google-event" href={event.htmlLink} target="_blank" rel="noopener noreferrer" className={className} title={`${event.title} · ${event.calendar}${event.location ? ` · ${event.location}` : ''}`} aria-label={`${event.title}, ${event.allDay ? 'כל היום' : time.format(new Date(event.startAt))}, פתיחה ביומן Google`}>{content}</a> : <div data-testid="google-event" className={className}>{content}</div>;
 }
-/** Syncs now, reporting a failure the way the bar always did. */
-export function useGoogleSync() {
-  const [pending, start] = useTransition(); const router = useRouter(); const { toast } = useToast();
-  const sync = () => start(async () => { const result = await syncGoogleAction(); if (!result.ok) toast({ tone: 'error', message: result.error === 'BUSY' ? 'הסנכרון כבר מתבצע. אפשר לנסות בעוד רגע.' : 'הסנכרון לא הושלם. אפשר לבדוק את החיבור בהגדרות.' }); else toast({ message: 'יומן Google סונכרן', group: 'google-sync' }); router.refresh(); });
-  return { pending, sync };
-}
-
-/* `quiet` (Today): Todoist shows no status row above the list, so a healthy
-   connection only keeps refreshing in the background; the sync itself lives
-   in the view's "…" menu. A problem still gets its line. */
+/* `quiet` (Today): no row of its own above the list. The sync and any
+   connection problem sit on the far side of the header's meta row. */
 export function GoogleSyncBar({ connected, lastError, quiet = false }: { connected: boolean; lastError?: string | null; quiet?: boolean }) {
   const [pending, start] = useTransition(); const router = useRouter(); const { toast } = useToast();
   useEffect(() => {
@@ -35,7 +28,11 @@ export function GoogleSyncBar({ connected, lastError, quiet = false }: { connect
     const timer = setInterval(() => { if (document.visibilityState === 'visible') router.refresh(); }, 60_000);
     return () => clearInterval(timer);
   }, [connected, router]);
-  if (quiet) return lastError ? <Link href="/app/settings/calendar" className="mb-3 block text-xs text-p1 hover:underline">יש לבדוק את החיבור ליומן Google. המידע המוצג הוא מהסנכרון האחרון.</Link> : null;
+  if (quiet) return <HeaderSide>
+    {lastError
+      ? <Link href="/app/settings/calendar" className="inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 text-xs font-semibold text-p1 hover:bg-p1/10" title="המידע המוצג הוא מהסנכרון האחרון. אפשר לבדוק את החיבור בהגדרות."><CalendarDays className="size-3.5" aria-hidden />בעיה ביומן Google</Link>
+      : <button type="button" disabled={pending} title="סנכרון יומן Google עכשיו" aria-label="סנכרון יומן Google" onClick={() => start(async () => { const result = await syncGoogleAction(); if (!result.ok) toast({ tone: 'error', message: result.error === 'BUSY' ? 'הסנכרון כבר מתבצע. אפשר לנסות בעוד רגע.' : 'הסנכרון לא הושלם. אפשר לבדוק את החיבור בהגדרות.' }); else toast({ message: 'יומן Google סונכרן', group: 'google-sync' }); router.refresh(); })} className="inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 text-xs text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-60"><RefreshCw className={cn('size-3.5', pending && 'animate-spin motion-reduce:animate-none')} aria-hidden />Google</button>}
+  </HeaderSide>;
   return <div className="mb-3 flex flex-wrap items-center gap-1.5 text-xs text-muted">
     <CalendarDays className="size-3.5" aria-hidden />
     <Link href="/app/settings/calendar" className="hover:text-ink hover:underline">{connected ? 'יומן Google' : 'חיבור יומן Google'}</Link>
@@ -45,5 +42,7 @@ export function GoogleSyncBar({ connected, lastError, quiet = false }: { connect
 }
 export function GoogleEventList({ events, showDates = false }: { events: GoogleEventDTO[]; showDates?: boolean }) {
   if (!events.length) return null;
+  // One row, label inline: a heading of its own spent a full row on two words.
+  if (!showDates) return <section className="mb-5 flex flex-wrap items-center gap-2" aria-label="אירועים מיומן Google"><span className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink"><CalendarDays className="size-4 text-accent" aria-hidden />ביומן Google</span>{events.map(event => <GoogleEventRow key={event.id} event={event} />)}</section>;
   return <section className="mb-6" aria-label="אירועים מיומן Google"><h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink"><CalendarDays className="size-4 text-accent" aria-hidden />ביומן Google</h2><ul className="space-y-1.5">{events.map(event => <li key={event.id}>{showDates && <p className="num mb-0.5 text-xs text-muted">{new Intl.DateTimeFormat('he-IL', { timeZone: 'UTC', day: 'numeric', month: 'numeric' }).format(new Date(`${event.startDay}T00:00:00Z`))}</p>}<GoogleEventRow event={event} /></li>)}</ul></section>;
 }

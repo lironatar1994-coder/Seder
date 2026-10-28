@@ -27,6 +27,7 @@ import { useToast } from '@/components/ui/toast';
 import { TaskRow } from './task-row';
 import { TaskDetail } from './task-detail';
 import { OverdueReschedule } from './overdue-reschedule';
+import { HeaderSide } from '@/components/nav/header-side';
 import { Composer } from './composer';
 import type { Collaborator } from '@/server/access';
 import {
@@ -702,6 +703,29 @@ export function TaskList({
     );
   }
 
+  /* Hugs its content. On desktop it sits on the far side of the header's meta
+     row, beside the date, rather than spending a row of its own above the
+     list; the composer still opens at the top of the list. Hidden on the
+     phone: the tab bar owns capture there. */
+  const addTrigger = (
+    <button
+      type="button"
+      onClick={() => setComposerOpen(true)}
+      // Hugs its content rather than spanning the column. Full width, it
+      // was a 640px band with three small things at one end and a hover
+      // state that lit up the whole empty stretch; the shortcut hint sat
+      // 478px from the label it belongs to.
+      //
+      // Hidden on the phone: the tab bar owns capture there, and a second
+      // add button would spend the fold repeating it.
+      className="task-add-trigger mb-3 hidden items-center gap-2 rounded-md px-0 py-2 text-start text-muted transition-colors hover:text-accent md:inline-flex"
+    >
+      <Plus className="size-5 shrink-0" aria-hidden />
+      <span className="text-base">משימה חדשה</span>
+      <kbd className="num rounded border border-line px-1.5 text-xs text-muted">N</kbd>
+    </button>
+  );
+
   return (
     <div className="pb-24" data-testid="task-list">
       {controlsHost && createPortal(<Popover open={displayOpen} onOpenChange={setDisplayOpen}>
@@ -728,22 +752,7 @@ export function TaskList({
             />
           </ComposerSlot>
         ) : (
-          <button
-            type="button"
-            onClick={() => setComposerOpen(true)}
-            // Hugs its content rather than spanning the column. Full width, it
-            // was a 640px band with three small things at one end and a hover
-            // state that lit up the whole empty stretch; the shortcut hint sat
-            // 478px from the label it belongs to.
-            //
-            // Hidden on the phone: the tab bar owns capture there, and a second
-            // add button would spend the fold repeating it.
-            className="task-add-trigger mb-3 hidden items-center gap-2 rounded-md px-0 py-2 text-start text-muted transition-colors hover:text-accent md:inline-flex"
-          >
-            <Plus className="size-5 shrink-0" aria-hidden />
-            <span className="text-base">משימה חדשה</span>
-            <kbd className="num rounded border border-line px-1.5 text-xs text-muted">N</kbd>
-          </button>
+          <HeaderSide fallback={addTrigger}>{addTrigger}</HeaderSide>
         ))}
 
       {isEmpty ? (

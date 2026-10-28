@@ -84,7 +84,7 @@ export default async function ViewPage({ params }: { params: Promise<{ view: str
         showDate={view === 'today'}
         count={view === 'today' || view === 'inbox' ? data.groups.reduce((sum, group) => sum + group.tasks.length, 0) : undefined}
         progress={data.progress}
-        action={<ViewActions planning={view === 'today'} google={Boolean(googleConnection)} />}
+        action={<ViewActions planning={view === 'today'} />}
       />
       <div className={view === 'today' ? 'today-workspace' : undefined}>
       <div className="min-w-0">

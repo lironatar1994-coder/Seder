@@ -1463,3 +1463,29 @@ body:has([data-settings-shell]) .toast-stack { inset-block-start: auto; inset-bl
 @media (min-width: 1024px) and (pointer: coarse) {
   .rail-link, .rail-search, .rail-add, .rail-section-toggle { min-block-size: 2.75rem; }
 }
+
+/* ═══ Header side slot and column position, 2026-10-28 ═══════════════════ */
+@media (min-width: 1024px) {
+  /* Centred in the free space, then drawn 100px toward the sidebar: centred
+     alone left a wide moat between the list and the navigation. */
+  .workspace-content, .workspace-content:not(:has([data-wide])), .workspace-content:has([data-project-mode='list']), .workspace-bar {
+    margin-inline: max(0px, calc(50% - var(--desktop-column) / 2 - 100px)) auto;
+  }
+  .rail-search kbd { display: none; }
+}
+
+/* Add task on the far side of the header's meta row. */
+[data-header-side] .task-add-trigger { order: 2; margin: 0; min-block-size: 2rem; gap: .375rem; padding: .25rem .5rem; border-radius: .375rem; }
+[data-header-side] .task-add-trigger > span { font-size: .875rem; font-weight: 600; }
+[data-header-side] .task-add-trigger > svg { inline-size: 1.125rem; block-size: 1.125rem; }
+[data-header-side] .task-add-trigger:hover { background: var(--accent-soft); }
+[data-header-side] .task-add-trigger kbd { display: none; }
+
+/* Todoist colours the selected row's label and count, not only its fill. */
+.rail-link[aria-current='page'], .rail-link[aria-current='page'] [data-count] { color: var(--accent); }
+/* Project controls in the header's meta row: one compact group. */
+[data-header-side] .project-header-tools { order: 1; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+[data-header-side] .view-switch { padding: .1875rem; }
+[data-header-side] .view-switch button { min-block-size: 1.875rem; padding-inline: .7rem; }
+[data-header-side] .ui-button { min-block-size: 2rem; block-size: 2rem; }
+.view-meta:has(.project-header-tools) { margin-block-end: .75rem; }

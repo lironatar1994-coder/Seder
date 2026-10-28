@@ -24,7 +24,6 @@ async function geometry(page: Page) {
     return {
       width: innerWidth, overflow: document.documentElement.scrollWidth > innerWidth,
       titleAxis: title.right, headingAxis: box('.view-heading h1').right,
-      composerAxis: box('.task-add-trigger > span').right,
       sidebarGap: rail.left - content.right, startGap: content.left,
       text: parseFloat(style('.task-title').fontSize),
       icon: box('.rail-link > svg').width, rail: rail.width,
@@ -58,10 +57,9 @@ test('desktop reading scale, shared alignment, zoom, editor wrapping and device 
       await page.setViewportSize({ width, height: 912 });
       const metric = await geometry(page); measurements.push(metric);
       expect(metric.overflow).toBe(false);
-      // The column sits in the middle of the space beside the rail (Todoist).
-      expect(Math.abs(metric.sidebarGap - metric.startGap)).toBeLessThanOrEqual(16);
+      // Centred beside the rail, then drawn 100px toward it.
+      expect(Math.abs(metric.sidebarGap - Math.max(0, (metric.sidebarGap + metric.startGap) / 2 - 100))).toBeLessThanOrEqual(16);
       expect(Math.abs(metric.titleAxis - metric.headingAxis)).toBeLessThanOrEqual(1);
-      expect(Math.abs(metric.titleAxis - metric.composerAxis)).toBeLessThanOrEqual(1);
       expect(Math.abs(metric.checkboxCenter - metric.titleCenter)).toBeLessThanOrEqual(1);
       // Todoist's proportions, one step up for Hebrew: 16px task titles.
       expect(metric.text).toBeGreaterThanOrEqual(16);
@@ -84,7 +82,6 @@ test('desktop reading scale, shared alignment, zoom, editor wrapping and device 
     await expect(page.locator('.task-select-control').first()).toBeVisible();
     const selection = await geometry(page);
     expect(Math.abs(selection.titleAxis - selection.headingAxis)).toBeLessThanOrEqual(1);
-    expect(Math.abs(selection.titleAxis - selection.composerAxis)).toBeLessThanOrEqual(1);
     const selectCenter = await page.locator('.task-select-control').first().evaluate(node => { const box = node.getBoundingClientRect(); return box.top + box.height / 2; });
     expect(Math.abs(selection.titleCenter - selectCenter)).toBeLessThanOrEqual(1);
     await page.screenshot({ animations: 'disabled', path: `${evidence}/desktop-selection${suffix}.png` });
