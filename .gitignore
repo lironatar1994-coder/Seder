@@ -27,3 +27,10 @@ e2e-mail.log
 .local-artifacts/
 /output/
 /.codex-remote-attachments/
+
+# Machine-local credentials and assistant settings
+.claude/settings.local.json
+.env.*
+!.env.example
+*.db-*
+*.sqlite*
