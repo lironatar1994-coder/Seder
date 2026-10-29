@@ -17,10 +17,12 @@ import { updateDefaultViewAction } from '@/server/settings/actions';
 import { useToast } from '@/components/ui/toast';
 import { SettingRow, SettingsSection, SavedNote } from './shell';
 
+/** The default leads, then the other fixed choice, then the one that defers to
+ *  something outside the app. */
 const MODES: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
-  { value: 'system', label: 'מערכת', icon: Monitor },
   { value: 'light', label: 'בהיר', icon: Sun },
   { value: 'dark', label: 'כהה', icon: Moon },
+  { value: 'system', label: 'מערכת', icon: Monitor },
 ];
 
 export function AppearanceForm({ defaultView }: { defaultView: string }) {
@@ -65,7 +67,7 @@ export function AppearanceForm({ defaultView }: { defaultView: string }) {
     <SettingsSection title="מראה" hideTitle>
       <SettingRow
         label="בהירות"
-        description="״מערכת״ עוקב אחרי ההגדרה של המכשיר ומתחלף יחד איתה."
+        description="ברירת המחדל היא בהיר. ״מערכת״ עוקב אחרי ההגדרה של המכשיר ומתחלף יחד איתה."
         align="start"
       >
         {/* A segmented control rather than a dropdown: three options that are
